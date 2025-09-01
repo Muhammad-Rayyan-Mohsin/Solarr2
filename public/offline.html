@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Solar Survey Pro</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 400px;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        p {
+            font-size: 16px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+        
+        .retry-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .retry-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .features {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .features h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        .features ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .features li {
+            padding: 5px 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .features li::before {
+            content: "✓ ";
+            color: #4ade80;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">📴</div>
+        <h1>You're Offline</h1>
+        <p>Don't worry! Your survey data is safely stored locally and will sync automatically when you're back online.</p>
+        
+        <a href="/" class="retry-btn" onclick="window.location.reload();">
+            Try Again
+        </a>
+        
+        <div class="features">
+            <h3>Available Offline Features:</h3>
+            <ul>
+                <li>Continue your current survey</li>
+                <li>Take photos and voice notes</li>
+                <li>All data saved locally</li>
+                <li>Auto-sync when connected</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Check connection status and automatically retry
+        function checkConnection() {
+            if (navigator.onLine) {
+                window.location.href = '/';
+            }
+        }
+
+        // Listen for online event
+        window.addEventListener('online', checkConnection);
+        
+        // Check every 5 seconds
+        setInterval(checkConnection, 5000);
+    </script>
+</body>
+</html>
