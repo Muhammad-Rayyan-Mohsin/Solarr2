@@ -96,11 +96,11 @@ function showInstallButton() {
 
 // Background sync registration
 export async function registerBackgroundSync() {
-  if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+  if ('serviceWorker' in navigator && 'sync' in (window as any).ServiceWorkerRegistration.prototype) {
     const registration = await navigator.serviceWorker.ready;
     
     try {
-      await registration.sync.register('background-sync');
+      await (registration as any).sync.register('background-sync');
       console.log('Background sync registered');
     } catch (error) {
       console.error('Background sync registration failed:', error);

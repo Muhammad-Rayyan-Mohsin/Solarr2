@@ -10,7 +10,7 @@ export function Hero() {
           className="w-full h-full object-cover"
           loading="eager"
           decoding="async"
-          fetchpriority="high"
+          fetchPriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent" />
       </div>

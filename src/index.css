@@ -115,8 +115,46 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 2rem;
+  }
+
   body {
     @apply bg-background text-foreground font-system;
+    /* Ultra smooth scrolling with momentum */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    /* Enhanced font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Smooth scroll containers */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  /* Webkit scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+    transition: background-color 0.3s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--border) / 0.8);
   }
 }
 
@@ -151,33 +189,44 @@
   .spacing-24 { padding: 24px; }
   .spacing-32 { padding: 32px; }
   
-  /* Survey card styles - Sleek monochromatic */
+  /* Survey card styles - Ultra fluid animations */
   .survey-card {
     @apply bg-card border border-card-border rounded-xl shadow-sm backdrop-blur-sm;
-    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: translateZ(0); /* Hardware acceleration */
     margin-bottom: 1.5rem;
     min-width: 100%;
+    will-change: transform, box-shadow;
   }
   
   .survey-card:hover {
-    @apply shadow-md;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    @apply shadow-lg;
+    transform: translateY(-2px) translateZ(0);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
   }
   
   .dark .survey-card:hover {
     @apply bg-card/95;
-    box-shadow: 0 0 0 1px hsl(var(--card-border)), 0 4px 12px rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 0 1px hsl(var(--card-border)), 0 8px 20px rgba(255, 255, 255, 0.08);
   }
   
-  /* Input field styles - 64px height for bigger cards */
+  /* Input field styles - Ultra smooth focus transitions */
   .survey-input {
     @apply h-16 px-8 bg-input border border-input-border rounded-lg text-foreground placeholder:text-muted-foreground text-base;
-    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: translateZ(0);
+    will-change: border-color, box-shadow, transform;
   }
   
   .survey-input:focus {
     @apply outline-none ring-2 ring-primary/20 border-primary;
-    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.05);
+    transform: translateY(-1px) translateZ(0);
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.08), 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+  
+  .survey-input:hover:not(:focus) {
+    transform: translateY(-0.5px) translateZ(0);
+    border-color: hsl(var(--border) / 0.8);
   }
   
   /* Progress indicator - Monochromatic */
@@ -240,20 +289,72 @@
     @apply w-32 h-32 rounded-lg object-cover border border-border;
   }
   
-  /* Smooth accordion animation */
+  /* Ultra smooth accordion animation with stagger */
   .accordion-content {
     overflow: hidden;
-    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: translateZ(0);
+    will-change: height, opacity, transform;
   }
   
   .accordion-content[data-state="closed"] {
     height: 0;
     opacity: 0;
+    transform: translateY(-8px) translateZ(0);
   }
   
   .accordion-content[data-state="open"] {
     height: auto;
     opacity: 1;
+    transform: translateY(0) translateZ(0);
+  }
+  
+  /* Stagger animation for child elements */
+  .accordion-content > * {
+    transition: all 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: translateZ(0);
+  }
+  
+  .accordion-content[data-state="closed"] > * {
+    opacity: 0;
+    transform: translateY(8px) translateZ(0);
+  }
+  
+  .accordion-content[data-state="open"] > * {
+    opacity: 1;
+    transform: translateY(0) translateZ(0);
+  }
+  
+  /* Ultra smooth interaction utilities */
+  .smooth-hover {
+    transition: all 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: translateZ(0);
+    will-change: transform;
+  }
+  
+  .smooth-hover:hover {
+    transform: translateY(-2px) translateZ(0);
+  }
+  
+  .smooth-focus {
+    transition: all 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .smooth-focus:focus {
+    transform: translateY(-1px) translateZ(0);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Momentum scrolling for all scrollable areas */
+  .smooth-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+  }
+  
+  /* Page transition animation */
+  .page-transition {
+    animation: fade-in 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 }
 

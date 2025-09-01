@@ -60,7 +60,8 @@ export function PhotoUpload({
           type: 'CREATE',
           section: 'photos',
           field: photoId,
-          value: { filename: file.name, size: file.size }
+          value: { filename: file.name, size: file.size },
+          maxRetries: 3
         });
         
         // Update UI
@@ -110,7 +111,7 @@ export function PhotoUpload({
                 className="photo-thumbnail w-40 h-40 object-cover"
                 loading="lazy"
                 decoding="async"
-                fetchpriority="low"
+                fetchPriority="low"
               />
               
               {/* Overlay buttons */}
