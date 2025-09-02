@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,10 +19,25 @@ export function SurveySection({
   completedFields,
   totalFields,
   flaggedFields,
-  children
+  children,
 }: SurveySectionProps) {
   const hasFlags = flaggedFields > 0;
-  const completionPercentage = totalFields > 0 ? (completedFields / totalFields) * 100 : 0;
+
+  const completionPercentage =
+    totalFields > 0 ? (completedFields / totalFields) * 100 : 0;
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentHeight, setContentHeight] = useState<number>(0);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      if (isOpen) {
+        const height = contentRef.current.scrollHeight;
+        setContentHeight(height);
+      } else {
+        setContentHeight(0);
+      }
+    }
+  }, [isOpen, children]);
 
   return (
     <div className="survey-card">
@@ -41,19 +56,21 @@ export function SurveySection({
             ) : (
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
             )}
-            <h2 className={cn(
-              "text-xl font-semibold",
-              hasFlags ? "text-warning" : "text-foreground"
-            )}>
+            <h2
+              className={cn(
+                "text-xl font-semibold",
+                hasFlags ? "text-warning" : "text-foreground"
+              )}
+            >
               {title}
             </h2>
           </div>
-          
+
           {hasFlags && (
             <div className="flex items-center space-x-1">
               <AlertTriangle className="h-4 w-4 text-warning" />
               <span className="text-sm text-warning font-medium">
-                {flaggedFields} flag{flaggedFields !== 1 ? 's' : ''}
+                {flaggedFields} flag{flaggedFields !== 1 ? "s" : ""}
               </span>
             </div>
           )}
@@ -62,16 +79,11 @@ export function SurveySection({
         {/* Completion Count */}
         <div className="text-right">
           <div className="inline-flex items-center rounded-full border border-border bg-accent/50 px-3 py-1 text-xs font-medium text-foreground">
-            <span className="tabular-nums">
-              {completedFields}
-            </span>
+            <span className="tabular-nums">{completedFields}</span>
             <span className="px-1 text-muted-foreground">/</span>
-            <span className="tabular-nums">
-              {totalFields}
-            </span>
+            <span className="tabular-nums">{totalFields}</span>
           </div>
         </div>
-
       </button>
 
       <div
@@ -80,9 +92,7 @@ export function SurveySection({
           isOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="px-10 pb-10 pt-0 space-y-10">
-          {children}
-        </div>
+        <div className="px-10 pb-10 pt-0 space-y-10">{children}</div>
       </div>
     </div>
   );

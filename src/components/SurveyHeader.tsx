@@ -11,7 +11,7 @@ interface SurveyHeaderProps {
   isDarkMode: boolean;
   onThemeToggle: () => void;
   offlineIndicator?: React.ReactNode;
-  autoSaveStatus?: 'idle' | 'saving' | 'saved' | 'error';
+  autoSaveStatus?: "idle" | "saving" | "saved" | "error";
   isSaving?: boolean;
 }
 
@@ -25,9 +25,8 @@ export function SurveyHeader({
   onThemeToggle,
   offlineIndicator,
   autoSaveStatus,
-  isSaving
+  isSaving,
 }: SurveyHeaderProps) {
-
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-6">
@@ -36,16 +35,14 @@ export function SurveyHeader({
             <h1 className="text-lg font-semibold text-foreground flex items-center">
               Survey
             </h1>
-            <p className="text-sm text-muted-foreground">
-              {customerName}
-            </p>
+            <p className="text-sm text-muted-foreground">{customerName}</p>
           </div>
-          
-          <ProgressIndicator
+
+          {/* <ProgressIndicator
             currentStep={currentStep}
             totalSteps={totalSteps}
             completedSteps={completedSteps}
-          />
+          /> */}
         </div>
 
         <div className="flex items-center space-x-4">
@@ -54,19 +51,19 @@ export function SurveyHeader({
           {/* Auto-save Status */}
           {autoSaveStatus && (
             <div className="flex items-center space-x-2 text-sm">
-              {autoSaveStatus === 'saving' && (
+              {autoSaveStatus === "saving" && (
                 <>
                   <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
                   <span className="text-muted-foreground">Saving...</span>
                 </>
               )}
-              {autoSaveStatus === 'saved' && (
+              {autoSaveStatus === "saved" && (
                 <>
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   <span className="text-muted-foreground">Saved</span>
                 </>
               )}
-              {autoSaveStatus === 'error' && (
+              {autoSaveStatus === "error" && (
                 <>
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                   <span className="text-muted-foreground">Save failed</span>
