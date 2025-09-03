@@ -320,6 +320,306 @@ const budgetRangeOptions = [
   { value: "open", label: "Open" },
 ];
 
+// Default form data (empty form)
+const DEFAULT_FORM_DATA: FormData = {
+  // Section 0 - General & Contact
+  surveyDate: new Date().toISOString().split("T")[0],
+  surveyorName: "",
+  customerName: "",
+  siteAddress: "",
+  postcode: "",
+  gridReference: "",
+  phone: "",
+  email: "",
+  secondaryContactName: "",
+  secondaryContactPhone: "",
+
+  // Section 1 - Electricity Baseline
+  annualConsumption: "",
+  mpanNumber: "",
+  mpanPhoto: [],
+  electricityProvider: "",
+  networkOperator: "",
+  customerPermissionGranted: false,
+  daytimeImportRate: "",
+  nighttimeImportRate: "",
+  standingCharge: "",
+  tariffType: "",
+  smartMeterPresent: null,
+  exportTariffAvailable: null,
+
+  // Section 2 - Property Overview
+  propertyType: "",
+  propertyAge: "",
+  listedBuilding: null,
+  conservationArea: null,
+  newBuild: null,
+  sharedRoof: null,
+  scaffoldAccess: null,
+  scaffoldAccessPhoto: [],
+  storageArea: null,
+  storageAreaPhoto: [],
+  restrictedParking: "",
+
+  // Section 3 - Roof Inspection
+  roofFaces: [
+    {
+      id: "roof-1",
+      label: "Roof-1",
+      orientation: 0,
+      pitch: 30,
+      width: "",
+      length: "",
+      area: "",
+      covering: "",
+      coveringCondition: "",
+      obstructions: [],
+      shading: [],
+      gutterHeight: "",
+      rafterSpacing: "",
+      rafterDepth: "",
+      battenDepth: "",
+      membraneType: "",
+      membraneCondition: "",
+      structuralDefects: "",
+      plannedPanelCount: "",
+      photos: [],
+    },
+  ],
+
+  // Section 4 - Loft / Attic
+  loftHatchWidth: "",
+  loftHatchHeight: "",
+  loftAccessQuality: "",
+  loftHeadroom: "",
+  roofTimberCondition: "",
+  roofTimberPhoto: [],
+  wallSpaceInverter: null,
+  wallSpaceInverterPhoto: [],
+  wallSpaceBattery: null,
+  wallSpaceBatteryPhoto: [],
+  loftInsulationThickness: "",
+  loftLighting: "",
+  loftPowerSocket: null,
+
+  // Section 5 - Electrical Supply
+  supplyType: "",
+  mainFuseRating: "",
+  mainFusePhoto: [],
+  consumerUnitMake: "",
+  consumerUnitLocation: "",
+  consumerUnitLocationPhoto: [],
+  spareFuseWays: "",
+  spareFuseWaysPhoto: [],
+  existingSurgeProtection: null,
+  existingSurgeProtectionPhoto: [],
+  earthBondingVerified: null,
+  earthBondingPhoto: [],
+  earthingSystemType: "",
+  earthingSystemPhoto: [],
+  cableRouteToRoof: [],
+  cableRouteToBattery: [],
+  dnoNotificationRequired: false,
+  evChargerInstalled: null,
+  evChargerLoad: "",
+
+  // Section 6 - Battery & Storage Preferences
+  batteryRequired: "",
+  preferredInstallLocation: "",
+  distanceFromCU: "",
+  mountingSurface: "",
+  ventilationAdequate: null,
+  ventilationPhoto: [],
+  fireEgressCompliance: null,
+  fireEgressPhoto: [],
+  ambientTempMin: "",
+  ambientTempMax: "",
+  ipRatingRequired: "",
+
+  // Section 7 - Health, Safety & Hazards
+  asbestosPresence: "",
+  asbestosPhoto: [],
+  workingAtHeightDifficulties: "",
+  fragileRoofAreas: [],
+  livestockPetsOnSite: null,
+  livestockPetsNotes: "",
+  specialAccessInstructions: "",
+
+  // Section 8 - Customer Preferences & Next Steps
+  preferredContactMethod: "",
+  installationStartDate: "",
+  installationEndDate: "",
+  customerAway: false,
+  customerAwayNotes: "",
+  budgetRange: "",
+  interestedInEvCharger: null,
+  interestedInEnergyMonitoring: null,
+  additionalNotes: "",
+};
+
+// Test form data (pre-filled for testing)
+const TEST_FORM_DATA: FormData = {
+  // Section 0 - General & Contact
+  surveyDate: new Date().toISOString().split("T")[0],
+  surveyorName: "John Smith",
+  customerName: "Sarah Johnson",
+  siteAddress: "123 Solar Street, Green City, GC1 2AB",
+  postcode: "GC1 2AB",
+  gridReference: "TQ123456",
+  phone: "07123 456789",
+  email: "sarah.johnson@email.com",
+  secondaryContactName: "Mike Johnson",
+  secondaryContactPhone: "07987 654321",
+
+  // Section 1 - Electricity Baseline
+  annualConsumption: "4200",
+  mpanNumber: "1234567890123",
+  mpanPhoto: [],
+  electricityProvider: "octopus-energy",
+  networkOperator: "ukpn",
+  customerPermissionGranted: true,
+  daytimeImportRate: "28.5",
+  nighttimeImportRate: "12.3",
+  standingCharge: "0.45",
+  tariffType: "fixed",
+  smartMeterPresent: "yes",
+  exportTariffAvailable: "yes",
+
+  // Section 2 - Property Overview
+  propertyType: "semi",
+  propertyAge: "1980-2000",
+  listedBuilding: "no",
+  conservationArea: "no",
+  newBuild: "no",
+  sharedRoof: "no",
+  scaffoldAccess: "yes",
+  scaffoldAccessPhoto: [],
+  storageArea: "yes",
+  storageAreaPhoto: [],
+  restrictedParking: "Narrow driveway but accessible",
+
+  // Section 3 - Roof Inspection
+  roofFaces: [
+    {
+      id: "roof-1",
+      label: "Roof-1",
+      orientation: 180,
+      pitch: 35,
+      width: "8.5",
+      length: "6.2",
+      area: "52.7",
+      covering: "Concrete tiles",
+      coveringCondition: "good",
+      obstructions: ["Chimney", "TV aerial"],
+      shading: ["Tree to south", "Neighbor's extension"],
+      gutterHeight: "2.1",
+      rafterSpacing: "600",
+      rafterDepth: "150",
+      battenDepth: "50",
+      membraneType: "Bituminous felt",
+      membraneCondition: "good",
+      structuralDefects: "Minor wear on ridge tiles",
+      plannedPanelCount: "12",
+      photos: [],
+    },
+    {
+      id: "roof-2",
+      label: "Roof-2",
+      orientation: 90,
+      pitch: 30,
+      width: "4.2",
+      length: "5.8",
+      area: "24.4",
+      covering: "Concrete tiles",
+      coveringCondition: "good",
+      obstructions: ["Vent pipe"],
+      shading: ["Minimal"],
+      gutterHeight: "2.1",
+      rafterSpacing: "600",
+      rafterDepth: "150",
+      battenDepth: "50",
+      membraneType: "Bituminous felt",
+      membraneCondition: "good",
+      structuralDefects: "None",
+      plannedPanelCount: "6",
+      photos: [],
+    },
+  ],
+
+  // Section 4 - Loft / Attic
+  loftHatchWidth: "60",
+  loftHatchHeight: "60",
+  loftAccessQuality: "easy",
+  loftHeadroom: "2.4",
+  roofTimberCondition: "sound",
+  roofTimberPhoto: [],
+  wallSpaceInverter: "yes",
+  wallSpaceInverterPhoto: [],
+  wallSpaceBattery: "yes",
+  wallSpaceBatteryPhoto: [],
+  loftInsulationThickness: "270",
+  loftLighting: "single-bulb",
+  loftPowerSocket: "no",
+
+  // Section 5 - Electrical Supply
+  supplyType: "single-phase",
+  mainFuseRating: "100",
+  mainFusePhoto: [],
+  consumerUnitMake: "Wylex NHRS",
+  consumerUnitLocation: "Garage",
+  consumerUnitLocationPhoto: [],
+  spareFuseWays: "4",
+  spareFuseWaysPhoto: [],
+  existingSurgeProtection: "no",
+  existingSurgeProtectionPhoto: [],
+  earthBondingVerified: "yes",
+  earthBondingPhoto: [],
+  earthingSystemType: "tn-c-s",
+  earthingSystemPhoto: [],
+  cableRouteToRoof: ["Garage wall", "External conduit", "Roof penetration"],
+  cableRouteToBattery: ["Garage wall", "Internal routing"],
+  dnoNotificationRequired: false,
+  evChargerInstalled: "no",
+  evChargerLoad: "",
+
+  // Section 6 - Battery & Storage Preferences
+  batteryRequired: "yes",
+  preferredInstallLocation: "garage",
+  distanceFromCU: "2.5",
+  mountingSurface: "brick",
+  ventilationAdequate: "yes",
+  ventilationPhoto: [],
+  fireEgressCompliance: "yes",
+  fireEgressPhoto: [],
+  ambientTempMin: "5",
+  ambientTempMax: "35",
+  ipRatingRequired: "ip65",
+
+  // Section 7 - Health, Safety & Hazards
+  asbestosPresence: "no",
+  asbestosPhoto: [],
+  workingAtHeightDifficulties: "Standard safety measures required",
+  fragileRoofAreas: [],
+  livestockPetsOnSite: "yes",
+  livestockPetsNotes: "2 dogs - will need to be secured during installation",
+  specialAccessInstructions: "Side gate access preferred, avoid front door",
+
+  // Section 8 - Customer Preferences & Next Steps
+  preferredContactMethod: "email",
+  installationStartDate: "2024-06-01",
+  installationEndDate: "2024-06-30",
+  customerAway: false,
+  customerAwayNotes: "",
+  budgetRange: "8k-12k",
+  interestedInEvCharger: "yes",
+  interestedInEnergyMonitoring: "yes",
+  additionalNotes:
+    "Customer prefers morning installations. Has existing solar thermal system that needs assessment.",
+};
+
+// Toggle this to switch between test and default data
+const USE_TEST_DATA = true; // Change to false to use empty form
+
 // Ensure a stable draftId per session
 function ensureDraftId(): string {
   try {
@@ -350,141 +650,9 @@ const Index = () => {
     ensureDraftId();
   }, []);
 
-  const [formData, setFormData] = useState<FormData>({
-    // Section 0 - General & Contact
-    surveyDate: new Date().toISOString().split("T")[0],
-    surveyorName: "",
-    customerName: "",
-    siteAddress: "",
-    postcode: "",
-    gridReference: "",
-    phone: "",
-    email: "",
-    secondaryContactName: "",
-    secondaryContactPhone: "",
-
-    // Section 1 - Electricity Baseline
-    annualConsumption: "",
-    mpanNumber: "",
-    mpanPhoto: [],
-    electricityProvider: "",
-    networkOperator: "",
-    customerPermissionGranted: false,
-    daytimeImportRate: "",
-    nighttimeImportRate: "",
-    standingCharge: "",
-    tariffType: "",
-    smartMeterPresent: null,
-    exportTariffAvailable: null,
-
-    // Section 2 - Property Overview
-    propertyType: "",
-    propertyAge: "",
-    listedBuilding: null,
-    conservationArea: null,
-    newBuild: null,
-    sharedRoof: null,
-    scaffoldAccess: null,
-    scaffoldAccessPhoto: [],
-    storageArea: null,
-    storageAreaPhoto: [],
-    restrictedParking: "",
-
-    // Section 3 - Roof Inspection
-    roofFaces: [
-      {
-        id: "roof-1",
-        label: "Roof-1",
-        orientation: 0,
-        pitch: 30,
-        width: "",
-        length: "",
-        area: "",
-        covering: "",
-        coveringCondition: "",
-        obstructions: [],
-        shading: [],
-        gutterHeight: "",
-        rafterSpacing: "",
-        rafterDepth: "",
-        battenDepth: "",
-        membraneType: "",
-        membraneCondition: "",
-        structuralDefects: "",
-        plannedPanelCount: "",
-        photos: [],
-      },
-    ],
-
-    // Section 4 - Loft / Attic
-    loftHatchWidth: "",
-    loftHatchHeight: "",
-    loftAccessQuality: "",
-    loftHeadroom: "",
-    roofTimberCondition: "",
-    roofTimberPhoto: [],
-    wallSpaceInverter: null,
-    wallSpaceInverterPhoto: [],
-    wallSpaceBattery: null,
-    wallSpaceBatteryPhoto: [],
-    loftInsulationThickness: "",
-    loftLighting: "",
-    loftPowerSocket: null,
-
-    // Section 5 - Electrical Supply
-    supplyType: "",
-    mainFuseRating: "",
-    mainFusePhoto: [],
-    consumerUnitMake: "",
-    consumerUnitLocation: "",
-    consumerUnitLocationPhoto: [],
-    spareFuseWays: "",
-    spareFuseWaysPhoto: [],
-    existingSurgeProtection: null,
-    existingSurgeProtectionPhoto: [],
-    earthBondingVerified: null,
-    earthBondingPhoto: [],
-    earthingSystemType: "",
-    earthingSystemPhoto: [],
-    cableRouteToRoof: [],
-    cableRouteToBattery: [],
-    dnoNotificationRequired: false,
-    evChargerInstalled: null,
-    evChargerLoad: "",
-
-    // Section 6 - Battery & Storage Preferences
-    batteryRequired: "",
-    preferredInstallLocation: "",
-    distanceFromCU: "",
-    mountingSurface: "",
-    ventilationAdequate: null,
-    ventilationPhoto: [],
-    fireEgressCompliance: null,
-    fireEgressPhoto: [],
-    ambientTempMin: "",
-    ambientTempMax: "",
-    ipRatingRequired: "",
-
-    // Section 7 - Health, Safety & Hazards
-    asbestosPresence: "",
-    asbestosPhoto: [],
-    workingAtHeightDifficulties: "",
-    fragileRoofAreas: [],
-    livestockPetsOnSite: null,
-    livestockPetsNotes: "",
-    specialAccessInstructions: "",
-
-    // Section 8 - Customer Preferences & Next Steps
-    preferredContactMethod: "",
-    installationStartDate: "",
-    installationEndDate: "",
-    customerAway: false,
-    customerAwayNotes: "",
-    budgetRange: "",
-    interestedInEvCharger: null,
-    interestedInEnergyMonitoring: null,
-    additionalNotes: "",
-  });
+  const [formData, setFormData] = useState<FormData>(
+    USE_TEST_DATA ? TEST_FORM_DATA : DEFAULT_FORM_DATA
+  );
 
   // Submit state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -664,13 +832,27 @@ const Index = () => {
         return;
       }
 
-      // Submit to Supabase when online
-      const result = await SupabaseService.createSurvey(surveyData);
+      // Double-check online status before submission
+      if (!isOnline) {
+        throw new Error("Lost internet connection before submission");
+      }
 
-      toast({
-        title: "Survey Submitted!",
-        description: `Survey ID: ${result.id}`,
-      });
+      // Submit to Supabase when online
+      let result;
+      try {
+        result = await SupabaseService.createSurvey(surveyData);
+        if (!result?.id) {
+          throw new Error("Failed to get survey ID from Supabase");
+        }
+
+        toast({
+          title: "Survey Submitted!",
+          description: `Survey ID: ${result.id}`,
+        });
+      } catch (submitError) {
+        console.error("Supabase submission error:", submitError);
+        throw submitError; // Re-throw to be caught by outer catch block
+      }
 
       // After online create, sync photos for this draft
       try {
@@ -695,141 +877,7 @@ const Index = () => {
 
       if (shouldClearForm) {
         // Reset form to initial state
-        setFormData({
-          // Section 0 - General & Contact
-          surveyDate: new Date().toISOString().split("T")[0],
-          surveyorName: "",
-          customerName: "",
-          siteAddress: "",
-          postcode: "",
-          gridReference: "",
-          phone: "",
-          email: "",
-          secondaryContactName: "",
-          secondaryContactPhone: "",
-
-          // Section 1 - Electricity Baseline
-          annualConsumption: "",
-          mpanNumber: "",
-          mpanPhoto: [],
-          electricityProvider: "",
-          networkOperator: "",
-          customerPermissionGranted: false,
-          daytimeImportRate: "",
-          nighttimeImportRate: "",
-          standingCharge: "",
-          tariffType: "",
-          smartMeterPresent: null,
-          exportTariffAvailable: null,
-
-          // Section 2 - Property Overview
-          propertyType: "",
-          propertyAge: "",
-          listedBuilding: null,
-          conservationArea: null,
-          newBuild: null,
-          sharedRoof: null,
-          scaffoldAccess: null,
-          scaffoldAccessPhoto: [],
-          storageArea: null,
-          storageAreaPhoto: [],
-          restrictedParking: "",
-
-          // Section 3 - Roof Inspection
-          roofFaces: [
-            {
-              id: "roof-1",
-              label: "Roof-1",
-              orientation: 0,
-              pitch: 30,
-              width: "",
-              length: "",
-              area: "",
-              covering: "",
-              coveringCondition: "",
-              obstructions: [],
-              shading: [],
-              gutterHeight: "",
-              rafterSpacing: "",
-              rafterDepth: "",
-              battenDepth: "",
-              membraneType: "",
-              membraneCondition: "",
-              structuralDefects: "",
-              plannedPanelCount: "",
-              photos: [],
-            },
-          ],
-
-          // Section 4 - Loft / Attic
-          loftHatchWidth: "",
-          loftHatchHeight: "",
-          loftAccessQuality: "",
-          loftHeadroom: "",
-          roofTimberCondition: "",
-          roofTimberPhoto: [],
-          wallSpaceInverter: null,
-          wallSpaceInverterPhoto: [],
-          wallSpaceBattery: null,
-          wallSpaceBatteryPhoto: [],
-          loftInsulationThickness: "",
-          loftLighting: "",
-          loftPowerSocket: null,
-
-          // Section 5 - Electrical Supply
-          supplyType: "",
-          mainFuseRating: "",
-          mainFusePhoto: [],
-          consumerUnitMake: "",
-          consumerUnitLocation: "",
-          consumerUnitLocationPhoto: [],
-          spareFuseWays: "",
-          spareFuseWaysPhoto: [],
-          existingSurgeProtection: null,
-          existingSurgeProtectionPhoto: [],
-          earthBondingVerified: null,
-          earthBondingPhoto: [],
-          earthingSystemType: "",
-          earthingSystemPhoto: [],
-          cableRouteToRoof: [],
-          cableRouteToBattery: [],
-          dnoNotificationRequired: false,
-          evChargerInstalled: null,
-          evChargerLoad: "",
-
-          // Section 6 - Battery & Storage Preferences
-          batteryRequired: "",
-          preferredInstallLocation: "",
-          distanceFromCU: "",
-          mountingSurface: "",
-          ventilationAdequate: null,
-          ventilationPhoto: [],
-          fireEgressCompliance: null,
-          fireEgressPhoto: [],
-          ambientTempMin: "",
-          ambientTempMax: "",
-          ipRatingRequired: "",
-
-          // Section 7 - Health, Safety & Hazards
-          asbestosPresence: "",
-          asbestosPhoto: [],
-          workingAtHeightDifficulties: "",
-          fragileRoofAreas: [],
-          livestockPetsOnSite: null,
-          livestockPetsNotes: "",
-          specialAccessInstructions: "",
-
-          // Section 8 - Customer Preferences & Next Steps
-          preferredContactMethod: "",
-          installationStartDate: "",
-          installationEndDate: "",
-          customerAway: false,
-          customerAwayNotes: "",
-          budgetRange: "",
-          interestedInEvCharger: null,
-          interestedInEnergyMonitoring: null,
-          additionalNotes: "",
-        });
+        setFormData(USE_TEST_DATA ? TEST_FORM_DATA : DEFAULT_FORM_DATA);
 
         toast({
           title: "Form Cleared",
@@ -890,13 +938,16 @@ const Index = () => {
   useEffect(() => {
     const loadSavedData = async () => {
       try {
-        const savedData = await offlineStorage.loadFormData();
-        if (savedData) {
-          setFormData(savedData);
-          toast({
-            title: "Draft Loaded",
-            description: "Your previous survey data has been restored",
-          });
+        // Only load saved data if we're not using test data
+        if (!USE_TEST_DATA) {
+          const savedData = await offlineStorage.loadFormData();
+          if (savedData) {
+            setFormData(savedData);
+            toast({
+              title: "Draft Loaded",
+              description: "Your previous survey data has been restored",
+            });
+          }
         }
       } catch (error) {
         console.error("Failed to load saved data:", error);
