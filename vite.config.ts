@@ -10,6 +10,15 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    {
+      name: 'set-cache-control',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          next();
+        });
+      },
+    },
   ],
   resolve: {
     alias: {

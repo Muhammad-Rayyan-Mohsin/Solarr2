@@ -1661,6 +1661,8 @@ const Index = () => {
           offlineIndicator={<OfflineStatusIndicator />}
           autoSaveStatus={saveStatus}
           isSaving={isSaving}
+          onJumpToSection={(key) => setCurrentSection(key)}
+          overallProgressPercent={Math.round((progress.completed / progress.total) * 100)}
         />
       </div>
 
