@@ -33,8 +33,8 @@ export function NumberInput({
   required = false,
   isFlagged = false,
   flagMessage,
-  enableVoice = true,
-  unit
+  enableVoice = false,
+  unit,
 }: NumberInputProps) {
   const [isRecording, setIsRecording] = useState(false);
 
@@ -45,7 +45,7 @@ export function NumberInput({
     } else {
       setIsRecording(true);
       console.log("Voice recording started");
-      
+
       setTimeout(() => {
         setIsRecording(false);
         onChange("123");
@@ -56,20 +56,20 @@ export function NumberInput({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
     const numValue = parseFloat(inputValue);
-    
+
     if (inputValue === "" || isNaN(numValue)) {
       onChange(inputValue);
       return;
     }
-    
+
     if (min !== undefined && numValue < min) {
       return;
     }
-    
+
     if (max !== undefined && numValue > max) {
       return;
     }
-    
+
     onChange(inputValue);
   };
 
@@ -79,7 +79,7 @@ export function NumberInput({
         {label}
         {required && <span className="text-destructive ml-1">*</span>}
       </Label>
-      
+
       <div className="relative">
         <Input
           id={id}
@@ -98,13 +98,13 @@ export function NumberInput({
             isFlagged && "border-destructive focus:ring-destructive/50"
           )}
         />
-        
+
         {unit && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
             {unit}
           </div>
         )}
-        
+
         {enableVoice && (
           <Button
             type="button"
@@ -128,7 +128,7 @@ export function NumberInput({
           </Button>
         )}
       </div>
-      
+
       {isFlagged && flagMessage && (
         <div className="flex items-center space-x-2 text-sm text-destructive">
           <span>⚠</span>

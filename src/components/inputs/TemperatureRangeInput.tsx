@@ -28,7 +28,7 @@ export function TemperatureRangeInput({
   required = false,
   isFlagged = false,
   flagMessage,
-  enableVoice = true
+  enableVoice = false,
 }: TemperatureRangeInputProps) {
   const [isRecording, setIsRecording] = useState(false);
 
@@ -39,7 +39,7 @@ export function TemperatureRangeInput({
     } else {
       setIsRecording(true);
       console.log("Voice recording started");
-      
+
       setTimeout(() => {
         setIsRecording(false);
         onMinTempChange("10");
@@ -51,32 +51,32 @@ export function TemperatureRangeInput({
   const handleMinTempChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const numValue = parseFloat(value);
-    
+
     if (value === "" || isNaN(numValue)) {
       onMinTempChange(value);
       return;
     }
-    
+
     if (numValue < -50 || numValue > 100) {
       return;
     }
-    
+
     onMinTempChange(value);
   };
 
   const handleMaxTempChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const numValue = parseFloat(value);
-    
+
     if (value === "" || isNaN(numValue)) {
       onMaxTempChange(value);
       return;
     }
-    
+
     if (numValue < -50 || numValue > 100) {
       return;
     }
-    
+
     onMaxTempChange(value);
   };
 
@@ -87,7 +87,7 @@ export function TemperatureRangeInput({
           {label}
           {required && <span className="text-destructive ml-1">*</span>}
         </Label>
-        
+
         {enableVoice && (
           <Button
             type="button"
@@ -110,10 +110,13 @@ export function TemperatureRangeInput({
           </Button>
         )}
       </div>
-      
+
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label htmlFor={`${id}-min`} className="text-xs text-muted-foreground">
+          <Label
+            htmlFor={`${id}-min`}
+            className="text-xs text-muted-foreground"
+          >
             Min Temperature
           </Label>
           <div className="relative">
@@ -136,9 +139,12 @@ export function TemperatureRangeInput({
             </div>
           </div>
         </div>
-        
+
         <div className="space-y-1">
-          <Label htmlFor={`${id}-max`} className="text-xs text-muted-foreground">
+          <Label
+            htmlFor={`${id}-max`}
+            className="text-xs text-muted-foreground"
+          >
             Max Temperature
           </Label>
           <div className="relative">
@@ -162,7 +168,7 @@ export function TemperatureRangeInput({
           </div>
         </div>
       </div>
-      
+
       {isFlagged && flagMessage && (
         <div className="flex items-center space-x-2 text-sm text-destructive">
           <span>⚠</span>
@@ -175,4 +181,3 @@ export function TemperatureRangeInput({
     </div>
   );
 }
-

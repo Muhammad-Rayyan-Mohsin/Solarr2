@@ -29,8 +29,8 @@ export function TextInput({
   required = false,
   isFlagged = false,
   flagMessage,
-  enableVoice = true,
-  includeLocation = false
+  enableVoice = false,
+  includeLocation = false,
 }: TextInputProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [location, setLocation] = useState("");
@@ -46,7 +46,7 @@ export function TextInput({
       setIsRecording(true);
       // In a real app, you'd start speech recognition here
       console.log("Voice recording started");
-      
+
       // Simulate voice transcription after 3 seconds
       setTimeout(() => {
         setIsRecording(false);
@@ -62,7 +62,9 @@ export function TextInput({
           const { latitude, longitude } = position.coords;
           // In a real app, you would call the What Three Words API here
           // For now, we'll just use coordinates
-          const locationString = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+          const locationString = `${latitude.toFixed(6)}, ${longitude.toFixed(
+            6
+          )}`;
           setLocation(locationString);
           console.log("Location captured:", locationString);
         },
@@ -84,7 +86,7 @@ export function TextInput({
           </span>
         )}
       </Label>
-      
+
       <div className="relative">
         <Input
           id={id}
@@ -98,7 +100,7 @@ export function TextInput({
             isFlagged && "border-destructive focus:ring-destructive/50"
           )}
         />
-        
+
         {enableVoice && (
           <Button
             type="button"
@@ -121,7 +123,7 @@ export function TextInput({
           </Button>
         )}
       </div>
-      
+
       {includeLocation && (
         <div className="flex items-center space-x-2">
           <Button
@@ -141,7 +143,7 @@ export function TextInput({
           )}
         </div>
       )}
-      
+
       {isFlagged && flagMessage && (
         <div className="flex items-center space-x-2 text-sm text-destructive">
           <span>⚠</span>

@@ -32,9 +32,9 @@ export function SliderInput({
   required = false,
   isFlagged = false,
   flagMessage,
-  enableVoice = true,
+  enableVoice = false,
   unit,
-  presetValues
+  presetValues,
 }: SliderInputProps) {
   const [isRecording, setIsRecording] = useState(false);
 
@@ -45,7 +45,7 @@ export function SliderInput({
     } else {
       setIsRecording(true);
       console.log("Voice recording started");
-      
+
       setTimeout(() => {
         setIsRecording(false);
         onChange(45);
@@ -60,7 +60,7 @@ export function SliderInput({
           {label}
           {required && <span className="text-destructive ml-1">*</span>}
         </Label>
-        
+
         {enableVoice && (
           <Button
             type="button"
@@ -83,7 +83,7 @@ export function SliderInput({
           </Button>
         )}
       </div>
-      
+
       <div className="space-y-2">
         <Slider
           value={[value]}
@@ -93,16 +93,23 @@ export function SliderInput({
           step={step}
           className="w-full"
         />
-        
+
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{min}{unit}</span>
-          <span className="font-medium text-foreground text-sm">
-            {value}{unit}
+          <span>
+            {min}
+            {unit}
           </span>
-          <span>{max}{unit}</span>
+          <span className="font-medium text-foreground text-sm">
+            {value}
+            {unit}
+          </span>
+          <span>
+            {max}
+            {unit}
+          </span>
         </div>
       </div>
-      
+
       {presetValues && (
         <div className="flex flex-wrap gap-1">
           {presetValues.map((preset) => (
@@ -117,12 +124,13 @@ export function SliderInput({
                 value === preset && "bg-primary text-primary-foreground"
               )}
             >
-              {preset}{unit}
+              {preset}
+              {unit}
             </Button>
           ))}
         </div>
       )}
-      
+
       {isFlagged && flagMessage && (
         <div className="flex items-center space-x-2 text-sm text-destructive">
           <span>⚠</span>

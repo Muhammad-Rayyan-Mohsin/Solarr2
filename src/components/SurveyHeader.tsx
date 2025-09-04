@@ -1,5 +1,6 @@
 import { Moon, Sun, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { ProgressIndicator } from "./ProgressIndicator";
 
 interface SurveyHeaderProps {
@@ -46,7 +47,12 @@ export function SurveyHeader({
         </div>
 
         <div className="flex items-center space-x-4">
-          {/* Layout options removed */}
+          {/* Navigation Links */}
+          <Link to="/submissions">
+            <Button variant="ghost" size="sm">
+              View Submissions
+            </Button>
+          </Link>
 
           {/* Auto-save Status */}
           {autoSaveStatus && (
