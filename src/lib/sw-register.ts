@@ -1,6 +1,6 @@
 // Service Worker Registration
 export async function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator && import.meta.env.PROD) {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js', {
         scope: '/',

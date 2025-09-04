@@ -1,0 +1,19 @@
+{
+  "routes": [
+    {
+      "src": "/[^.]+",
+      "dest": "/",
+      "status": 200
+    }
+  ],
+  "build": {
+    "env": {
+      "NODE_VERSION": "18"
+    }
+  },
+  "functions": {
+    "app/api/**/*.js": {
+      "runtime": "@vercel/node"
+    }
+  }
+}
