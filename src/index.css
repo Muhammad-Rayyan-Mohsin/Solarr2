@@ -38,8 +38,18 @@
     --ring: 0 0% 12%;
 
     --radius: 0.75rem;
-  --shadow-low: 0 4px 16px rgba(0,0,0,0.06);
-  --shadow-mid: 0 12px 32px rgba(0,0,0,0.12);
+    --shadow-low: 0 4px 16px rgba(0,0,0,0.06);
+    --shadow-mid: 0 12px 32px rgba(0,0,0,0.12);
+
+    /* Aurora background colors */
+    --white: hsl(0 0% 100%);
+    --black: hsl(0 0% 0%);
+    --transparent: transparent;
+    --blue-300: hsl(219 70% 79%);
+    --blue-400: hsl(219 83% 64%);
+    --blue-500: hsl(219 100% 57%);
+    --indigo-300: hsl(234 56% 75%);
+    --violet-200: hsl(258 61% 86%);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 0 0% 25%;
@@ -82,6 +92,16 @@
     --input: 0 0% 8%;
     --input-border: 0 0% 18%;
     --ring: 0 0% 100%;
+
+    /* Aurora background colors for dark mode */
+    --white: hsl(0 0% 100%);
+    --black: hsl(0 0% 0%);
+    --transparent: transparent;
+    --blue-300: hsl(219 70% 79%);
+    --blue-400: hsl(219 83% 64%);
+    --blue-500: hsl(219 100% 57%);
+    --indigo-300: hsl(234 56% 75%);
+    --violet-200: hsl(258 61% 86%);
 
     --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 0 0% 75%;
@@ -190,7 +210,9 @@
 }
 @keyframes aurora {
   0% { background-position: 50% 50%, 50% 50%; }
-  50% { background-position: 60% 40%, 40% 60%; }
+  25% { background-position: 70% 30%, 30% 70%; }
+  50% { background-position: 30% 70%, 70% 30%; }
+  75% { background-position: 60% 40%, 40% 60%; }
   100% { background-position: 50% 50%, 50% 50%; }
 }
 
