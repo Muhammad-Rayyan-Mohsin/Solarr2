@@ -1,19 +1,13 @@
 {
-  "routes": [
+  "rewrites": [
     {
-      "src": "/[^.]+",
-      "dest": "/",
-      "status": 200
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "build": {
     "env": {
       "NODE_VERSION": "18"
-    }
-  },
-  "functions": {
-    "app/api/**/*.js": {
-      "runtime": "@vercel/node"
     }
   }
 }
