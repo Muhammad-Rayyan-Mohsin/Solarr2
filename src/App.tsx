@@ -23,6 +23,15 @@ const Loading = () => (
 
 const App = () => {
   useEffect(() => {
+    // Unregister any existing service workers to prevent caching issues
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(registration => {
+          registration.unregister();
+        });
+      });
+    }
+
     // Enable ultra smooth scrolling
     document.documentElement.style.scrollBehavior = "smooth";
     document.documentElement.style.scrollPaddingTop = "2rem";
