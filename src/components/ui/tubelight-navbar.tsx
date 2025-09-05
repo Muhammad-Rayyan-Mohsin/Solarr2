@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -9,7 +7,8 @@ import { cn } from "@/lib/utils";
 interface NavItem {
   name: string;
   url: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  onClick?: () => void;
 }
 
 interface NavBarProps {
@@ -58,13 +57,21 @@ export function NavBar({ items, className }: NavBarProps) {
 
   return (
     <div className={cn("fixed bottom-4 sm:top-4 left-1/2 -translate-x-1/2 z-50", className)}>
-      <div className="flex items-center gap-2 bg-background/90 border border-border backdrop-blur-lg py-2 px-2 rounded-full shadow-lg">
+      <div className="flex items-center gap-1 sm:gap-2 bg-background/90 border border-border backdrop-blur-lg py-2 px-2 rounded-full shadow-lg">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.name;
           
           const handleClick = () => {
+            console.log('Navbar clicked:', item.name, item.url);
             setActiveTab(item.name);
+            
+            // If item has custom onClick, use it
+            if (item.onClick) {
+              console.log('Using custom onClick handler for:', item.name);
+              item.onClick();
+              return;
+            }
             
             // Special handling for Home button
             if (item.name === 'Home') {
@@ -81,34 +88,38 @@ export function NavBar({ items, className }: NavBarProps) {
             
             // Handle hash links for smooth scrolling
             if (item.url.startsWith('#')) {
+              console.log('Hash link detected:', item.url);
+              
               // First ensure we're on the landing page
               const currentPath = window.location.pathname;
+              console.log('Current path:', currentPath);
+              
               if (currentPath !== '/') {
                 // Navigate to landing page with hash
+                console.log('Redirecting to landing page with hash');
                 window.location.href = '/' + item.url;
                 return;
               }
               
-              // Remove the hash from URL first to avoid conflicts
-              if (window.location.hash) {
-                history.replaceState(null, '', window.location.pathname);
-              }
-              
               // If already on landing page, scroll to element
-              setTimeout(() => {
-                const element = document.querySelector(item.url);
-                if (element) {
-                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                } else {
-                  // Fallback: try again after a longer delay for dynamic content
-                  setTimeout(() => {
-                    const delayedElement = document.querySelector(item.url);
-                    if (delayedElement) {
-                      delayedElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                  }, 500);
-                }
-              }, 100);
+              console.log('Searching for element:', item.url);
+              const element = document.querySelector(item.url);
+              console.log('Element found:', element);
+              
+              if (element) {
+                console.log('Scrolling to element');
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              } else {
+                console.log('Element not found, trying fallback');
+                // Fallback: try again after a longer delay for dynamic content
+                setTimeout(() => {
+                  const delayedElement = document.querySelector(item.url);
+                  console.log('Delayed element found:', delayedElement);
+                  if (delayedElement) {
+                    delayedElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }, 500);
+              }
             }
           };
           
@@ -117,14 +128,14 @@ export function NavBar({ items, className }: NavBarProps) {
               key={item.name}
               onClick={handleClick}
               className={cn(
-                "relative cursor-pointer text-sm font-semibold px-4 py-2 rounded-full transition-colors",
+                "relative cursor-pointer text-sm font-semibold px-3 py-2 sm:px-4 rounded-full transition-colors min-w-[44px] flex items-center justify-center",
                 "text-foreground/80 hover:text-primary",
                 isActive && "bg-muted text-primary",
               )}
             >
               <span className="hidden md:inline">{item.name}</span>
               <span className="md:hidden">
-                <Icon size={18} strokeWidth={2.5} />
+                <Icon size={20} strokeWidth={2.5} />
               </span>
               {isActive && (
                 <motion.div
@@ -147,14 +158,14 @@ export function NavBar({ items, className }: NavBarProps) {
               to={item.url}
               onClick={handleClick}
               className={cn(
-                "relative cursor-pointer text-sm font-semibold px-4 py-2 rounded-full transition-colors",
+                "relative cursor-pointer text-sm font-semibold px-3 py-2 sm:px-4 rounded-full transition-colors min-w-[44px] flex items-center justify-center",
                 "text-foreground/80 hover:text-primary",
                 isActive && "bg-muted text-primary",
               )}
             >
               <span className="hidden md:inline">{item.name}</span>
               <span className="md:hidden">
-                <Icon size={18} strokeWidth={2.5} />
+                <Icon size={20} strokeWidth={2.5} />
               </span>
               {isActive && (
                 <motion.div

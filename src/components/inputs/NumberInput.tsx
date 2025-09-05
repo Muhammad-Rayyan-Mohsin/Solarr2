@@ -91,7 +91,7 @@ export function NumberInput({
           max={max}
           step={step}
           className={cn(
-            "survey-input [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+            "h-11 text-base rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
             unit && "pr-16",
             enableVoice && "pr-12",
             unit && enableVoice && "pr-20",

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface SurveySectionProps {
@@ -40,25 +41,25 @@ export function SurveySection({
   }, [isOpen, children]);
 
   return (
-    <div className="survey-card">
+    <div className="rounded-xl border border-border bg-card shadow-sm">
       <button
         onClick={onToggle}
         className={cn(
-          "w-full flex items-center justify-between p-10 text-left transition-colors",
+          "w-full flex items-center justify-between p-4 sm:p-6 text-left transition-colors hover:bg-muted/50",
           hasFlags && "border-l-4 border-l-warning"
         )}
         aria-expanded={isOpen}
       >
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex items-center gap-2">
             {isOpen ? (
-              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+              <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
             ) : (
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
             )}
             <h2
               className={cn(
-                "text-xl font-semibold",
+                "text-base sm:text-xl font-semibold truncate",
                 hasFlags ? "text-warning" : "text-foreground"
               )}
             >
@@ -67,22 +68,23 @@ export function SurveySection({
           </div>
 
           {hasFlags && (
-            <div className="flex items-center space-x-1">
-              <AlertTriangle className="h-4 w-4 text-warning" />
-              <span className="text-sm text-warning font-medium">
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-warning" />
+              <span className="text-xs sm:text-sm text-warning font-medium hidden sm:inline">
                 {flaggedFields} flag{flaggedFields !== 1 ? "s" : ""}
+              </span>
+              <span className="text-xs text-warning font-medium sm:hidden">
+                {flaggedFields}
               </span>
             </div>
           )}
         </div>
 
         {/* Completion Count */}
-        <div className="text-right">
-          <div className="inline-flex items-center rounded-full border border-border bg-accent/50 px-3 py-1 text-xs font-medium text-foreground">
-            <span className="tabular-nums">{completedFields}</span>
-            <span className="px-1 text-muted-foreground">/</span>
-            <span className="tabular-nums">{totalFields}</span>
-          </div>
+        <div className="flex-shrink-0">
+          <Badge variant="secondary" className="tabular-nums text-xs">
+            {completedFields}/{totalFields}
+          </Badge>
         </div>
       </button>
 
@@ -92,7 +94,7 @@ export function SurveySection({
           isOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="px-10 pb-10 pt-0 space-y-10">{children}</div>
+        <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0 space-y-4 sm:space-y-6">{children}</div>
       </div>
     </div>
   );

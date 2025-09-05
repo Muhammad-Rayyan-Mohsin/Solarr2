@@ -95,7 +95,7 @@ export function TextInput({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           className={cn(
-            "survey-input",
+            "h-11 text-base rounded-lg",
             enableVoice && "pr-12",
             isFlagged && "border-destructive focus:ring-destructive/50"
           )}
