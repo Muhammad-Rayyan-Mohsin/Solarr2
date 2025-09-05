@@ -25,6 +25,7 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen">
+      <div id="top"></div>
       <Navigation />
       <main>
         <HeroSection />

@@ -89,19 +89,26 @@ export function NavBar({ items, className }: NavBarProps) {
                 return;
               }
               
-              // If already on landing page, scroll to element
-              const element = document.querySelector(item.url);
-              if (element) {
-                element.scrollIntoView({ behavior: 'smooth' });
-              } else {
-                // Fallback: try again after a short delay
-                setTimeout(() => {
-                  const delayedElement = document.querySelector(item.url);
-                  if (delayedElement) {
-                    delayedElement.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }, 100);
+              // Remove the hash from URL first to avoid conflicts
+              if (window.location.hash) {
+                history.replaceState(null, '', window.location.pathname);
               }
+              
+              // If already on landing page, scroll to element
+              setTimeout(() => {
+                const element = document.querySelector(item.url);
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                  // Fallback: try again after a longer delay for dynamic content
+                  setTimeout(() => {
+                    const delayedElement = document.querySelector(item.url);
+                    if (delayedElement) {
+                      delayedElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }, 500);
+                }
+              }, 100);
             }
           };
           

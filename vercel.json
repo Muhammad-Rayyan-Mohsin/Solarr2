@@ -1,13 +1,13 @@
 {
   "rewrites": [
     {
-      "source": "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|manifest.json|sw.js|offline.html|placeholder.svg).*)",
+      "source": "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|manifest.json|sw.js|offline.html|placeholder.svg|assets).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/index.html",
       "headers": [
         {
           "key": "Cache-Control",
@@ -16,7 +16,16 @@
       ]
     },
     {
-      "source": "/static/(.*)",
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
