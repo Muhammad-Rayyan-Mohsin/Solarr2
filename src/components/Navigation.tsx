@@ -5,9 +5,9 @@ import { NavBar } from '@/components/ui/tubelight-navbar';
 const Navigation = () => {
   const navigate = useNavigate();
   const navItems = [
-    { name: 'Home', url: '/', icon: Home },
+    { name: 'Home', url: '#top', icon: Home },
     { name: 'Survey', url: '/survey', icon: FileText },
-    { name: 'About', url: '#about', icon: Users },
+    { name: 'About', url: '#how-it-works', icon: Users },
     { name: 'FAQ', url: '#faq', icon: HelpCircle },
   ];
 
