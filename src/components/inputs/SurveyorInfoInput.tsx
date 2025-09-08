@@ -49,7 +49,7 @@ export function SurveyorInfoInput({
           <Input
             id={`${id}-name`}
             type="text"
-            value={value.name}
+            value={value?.name || ""}
             onChange={(e) => handleChange('name', e.target.value)}
             placeholder="Surveyor name"
             className={cn(
@@ -66,7 +66,7 @@ export function SurveyorInfoInput({
           <Input
             id={`${id}-telephone`}
             type="tel"
-            value={value.telephone}
+            value={value?.telephone || ""}
             onChange={(e) => handleChange('telephone', e.target.value)}
             placeholder="07XXX XXXXXX"
             className={cn(
@@ -83,7 +83,7 @@ export function SurveyorInfoInput({
           <Input
             id={`${id}-email`}
             type="email"
-            value={value.email}
+            value={value?.email || ""}
             onChange={(e) => handleChange('email', e.target.value)}
             placeholder="surveyor@company.com"
             className={cn(
