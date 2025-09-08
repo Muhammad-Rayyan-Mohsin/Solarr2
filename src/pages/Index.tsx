@@ -1722,12 +1722,11 @@ const Index = () => {
                 required
               />
 
-              <TextInput
-                id="surveyor-name"
-                label="👷 Surveyor Name"
-                value={formData.surveyorName}
-                onChange={(value) => updateFormData("surveyorName", value)}
-                placeholder="Enter surveyor name..."
+              <SurveyorInfoInput
+                id="surveyor-info"
+                label="👷 Surveyor Information"
+                value={formData.surveyorInfo}
+                onChange={(value) => updateFormData("surveyorInfo", value)}
                 required
               />
 
@@ -1917,7 +1916,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="smart-meter-present"
                   label="📱 Smart Meter Present"
                   value={formData.smartMeterPresent}
@@ -1927,12 +1926,12 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
-                  id="export-tariff-available"
-                  label="📤 Export Tariff Available"
-                  value={formData.exportTariffAvailable}
+                <YesNoNADropdown
+                  id="seg-tariff-available"
+                  label="📤 SEG Tariff Available"
+                  value={formData.segTariffAvailable}
                   onChange={(value) =>
-                    updateFormData("exportTariffAvailable", value)
+                    updateFormData("segTariffAvailable", value)
                   }
                   required
                 />
@@ -1994,7 +1993,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="listed-building"
                   label="🏛️ Listed Building"
                   value={formData.listedBuilding}
@@ -2002,7 +2001,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="conservation-area"
                   label="🌳 Conservation Area"
                   value={formData.conservationArea}
@@ -2012,7 +2011,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="new-build"
                   label="🏗️ New-Build or Under Construction"
                   value={formData.newBuild}
@@ -2020,7 +2019,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="shared-roof"
                   label="🏠 Shared Roof / Party Wall"
                   value={formData.sharedRoof}
@@ -2028,7 +2027,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="scaffold-access"
                   label="🪜 Clear, Safe Access for Scaffold"
                   value={formData.scaffoldAccess}
@@ -2036,7 +2035,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="storage-area"
                   label="📦 Suitable Storage Area for Panels & Battery"
                   value={formData.storageArea}
@@ -2162,7 +2161,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="wall-space-inverter"
                   label="⚡ Wall Space for Inverter (500×400×200 mm)"
                   value={formData.wallSpaceInverter}
@@ -2172,7 +2171,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="wall-space-battery"
                   label="🔋 Wall Space for Battery"
                   value={formData.wallSpaceBattery}
@@ -2206,7 +2205,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="loft-power-socket"
                   label="🔌 Existing Loft Power Socket"
                   value={formData.loftPowerSocket}
@@ -2309,7 +2308,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="existing-surge-protection"
                   label="🛡️ Existing Surge Protection"
                   value={formData.existingSurgeProtection}
@@ -2319,7 +2318,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="earth-bonding-verified"
                   label="🔗 Earth Bonding Verified"
                   value={formData.earthBondingVerified}
@@ -2352,7 +2351,7 @@ const Index = () => {
                   description="Auto-calculated based on inverter size"
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="ev-charger-installed"
                   label="🚗 EV Charger Already Installed"
                   value={formData.evChargerInstalled}
@@ -2512,7 +2511,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="ventilation-adequate"
                   label="💨 Ventilation Adequate"
                   value={formData.ventilationAdequate}
@@ -2522,7 +2521,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="fire-egress-compliance"
                   label="🚪 Fire Egress Compliance"
                   value={formData.fireEgressCompliance}
@@ -2602,7 +2601,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="livestock-pets-on-site"
                   label="🐕 Livestock / Pets on Site"
                   value={formData.livestockPetsOnSite}
@@ -2721,7 +2720,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="interested-in-ev-charger"
                   label="🚗 Interested in EV Charger"
                   value={formData.interestedInEvCharger}
@@ -2731,7 +2730,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="interested-in-energy-monitoring"
                   label="📊 Interested in Energy Monitoring"
                   value={formData.interestedInEnergyMonitoring}
