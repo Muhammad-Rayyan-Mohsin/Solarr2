@@ -6,7 +6,10 @@ import { RedFlagsSummary } from "@/components/RedFlagsSummary";
 import { TextInput } from "@/components/inputs/TextInput";
 import { NumberInput } from "@/components/inputs/NumberInput";
 import { DropdownSelect } from "@/components/inputs/DropdownSelect";
-import { SegmentedControl } from "@/components/inputs/SegmentedControl";
+import { YesNoNADropdown } from "@/components/inputs/YesNoNADropdown";
+import { TextWithPhotoInput } from "@/components/inputs/TextWithPhotoInput";
+import { SurveyorInfoInput } from "@/components/inputs/SurveyorInfoInput";
+import { LocationInput } from "@/components/inputs/LocationInput";
 import { PhotoUpload } from "@/components/inputs/PhotoUpload";
 import { GPSInput } from "@/components/inputs/GPSInput";
 import { SignatureInput } from "@/components/inputs/SignatureInput";
@@ -54,11 +57,16 @@ interface RoofFace {
 interface FormData {
   // Section 0 - General & Contact
   surveyDate: string;
-  surveyorName: string;
+  surveyorInfo: {
+    name: string;
+    telephone: string;
+    email: string;
+  };
   customerName: string;
   siteAddress: string;
   postcode: string;
   gridReference: string;
+  what3words: string;
   phone: string;
   email: string;
   secondaryContactName: string;
@@ -66,6 +74,7 @@ interface FormData {
 
   // Section 1 - Electricity Baseline
   annualConsumption: string;
+  annualConsumptionPhoto: string[];
   mpanNumber: string;
   mpanPhoto: string[];
   electricityProvider: string;
@@ -76,7 +85,9 @@ interface FormData {
   standingCharge: string;
   tariffType: string;
   smartMeterPresent: "yes" | "no" | "na" | null;
-  exportTariffAvailable: "yes" | "no" | "na" | null;
+  segTariffAvailable: "yes" | "no" | "na" | null;
+  segTariffExplanation: string;
+  smartTariffAvailable: "yes" | "no" | "na" | null;
 
   // Section 2 - Property Overview
   propertyType: string;
@@ -323,11 +334,16 @@ const budgetRangeOptions = [
 const DEFAULT_FORM_DATA: FormData = {
   // Section 0 - General & Contact
   surveyDate: new Date().toISOString().split("T")[0],
-  surveyorName: "",
+  surveyorInfo: {
+    name: "",
+    telephone: "",
+    email: ""
+  },
   customerName: "",
   siteAddress: "",
   postcode: "",
   gridReference: "",
+  what3words: "",
   phone: "",
   email: "",
   secondaryContactName: "",
@@ -335,6 +351,7 @@ const DEFAULT_FORM_DATA: FormData = {
 
   // Section 1 - Electricity Baseline
   annualConsumption: "",
+  annualConsumptionPhoto: [],
   mpanNumber: "",
   mpanPhoto: [],
   electricityProvider: "",
@@ -345,7 +362,9 @@ const DEFAULT_FORM_DATA: FormData = {
   standingCharge: "",
   tariffType: "",
   smartMeterPresent: null,
-  exportTariffAvailable: null,
+  segTariffAvailable: null,
+  segTariffExplanation: "",
+  smartTariffAvailable: null,
 
   // Section 2 - Property Overview
   propertyType: "",
@@ -460,11 +479,16 @@ const DEFAULT_FORM_DATA: FormData = {
 const TEST_FORM_DATA: FormData = {
   // Section 0 - General & Contact
   surveyDate: new Date().toISOString().split("T")[0],
-  surveyorName: "John Smith",
+  surveyorInfo: {
+    name: "John Smith",
+    telephone: "07123 456789",
+    email: "john.smith@surveyor.com"
+  },
   customerName: "Sarah Johnson",
   siteAddress: "123 Solar Street, Green City, GC1 2AB",
   postcode: "GC1 2AB",
   gridReference: "TQ123456",
+  what3words: "///solar.panel.survey",
   phone: "07123 456789",
   email: "sarah.johnson@email.com",
   secondaryContactName: "Mike Johnson",
@@ -472,6 +496,7 @@ const TEST_FORM_DATA: FormData = {
 
   // Section 1 - Electricity Baseline
   annualConsumption: "4200",
+  annualConsumptionPhoto: [],
   mpanNumber: "1234567890123",
   mpanPhoto: [],
   electricityProvider: "octopus-energy",
@@ -482,7 +507,9 @@ const TEST_FORM_DATA: FormData = {
   standingCharge: "0.45",
   tariffType: "fixed",
   smartMeterPresent: "yes",
-  exportTariffAvailable: "yes",
+  segTariffAvailable: "yes",
+  segTariffExplanation: "Smart Export Guarantee at 5.5p/kWh",
+  smartTariffAvailable: "yes",
 
   // Section 2 - Property Overview
   propertyType: "semi",
@@ -662,7 +689,7 @@ const Index = () => {
   function getMissingRequiredFields(): string[] {
     const missing: string[] = [];
     const checks: Array<{ key: keyof FormData; label: string }> = [
-      { key: "surveyorName", label: "Surveyor Name" },
+      { key: "customerName", label: "Customer Name" },
       { key: "customerName", label: "Customer Name" },
       { key: "siteAddress", label: "Site Address" },
       { key: "postcode", label: "Postcode" },
@@ -759,7 +786,7 @@ const Index = () => {
     // Convert form data to match Supabase schema (only core fields that exist)
     const surveyData = {
       // Section 0 - General & Contact
-      surveyor_name: formData.surveyorName || null,
+      surveyor_name: formData.surveyorInfo.name || null,
       customer_name: formData.customerName || null,
       site_address: formData.siteAddress || null,
       postcode: formData.postcode || null,
@@ -781,7 +808,7 @@ const Index = () => {
       standing_charge: parseFloat(formData.standingCharge) || null,
       current_electricity_tariff: formData.tariffType || null,
       smart_meter_present: formData.smartMeterPresent || null,
-      export_tariff_available: formData.exportTariffAvailable || null,
+      seg_tariff_available: formData.segTariffAvailable || null,
 
       // Section 2 - Property Overview
       property_type: formData.propertyType || null,
@@ -1056,7 +1083,11 @@ const Index = () => {
             const convertedFormData = {
               ...DEFAULT_FORM_DATA,
               surveyDate: survey.survey_date || "",
-              surveyorName: survey.surveyor_name || "",
+              surveyorInfo: {
+                name: survey.surveyor_name || "",
+                telephone: "", // Will be added to database schema later
+                email: "" // Will be added to database schema later
+              },
               customerName: survey.customer_name || "",
               siteAddress: survey.site_address || "",
               postcode: survey.postcode || "",
@@ -1078,8 +1109,8 @@ const Index = () => {
               standingCharge: survey.standing_charge?.toString() || "",
               tariffType: survey.current_electricity_tariff || "",
               smartMeterPresent: convertYesNoNa(survey.smart_meter_present),
-              exportTariffAvailable: convertYesNoNa(
-                survey.export_tariff_available
+              segTariffAvailable: convertYesNoNa(
+                survey.export_tariff_available // Using existing field until schema updated
               ),
               propertyType: survey.property_type || "",
               propertyAge: survey.property_age || "",
@@ -1259,7 +1290,7 @@ const Index = () => {
       general: {
         fields: [
           "surveyDate",
-          "surveyorName",
+          "surveyorInfo",
           "customerName",
           "siteAddress",
           "postcode",
@@ -1283,7 +1314,7 @@ const Index = () => {
           "standingCharge",
           "tariffType",
           "smartMeterPresent",
-          "exportTariffAvailable",
+          "segTariffAvailable",
           "mpanPhoto",
         ],
         total: 12,
