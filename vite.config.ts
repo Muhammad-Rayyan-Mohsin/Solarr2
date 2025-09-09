@@ -11,12 +11,12 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === "development" && componentTagger(),
+    mode === 'development' && componentTagger(),
     {
-      name: "set-cache-control",
+      name: 'set-cache-control',
       configureServer(server: any) {
         server.middlewares.use((req: any, res: any, next: any) => {
-          res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
           next();
         });
       },
@@ -31,16 +31,12 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ["react", "react-dom", "react-router-dom"],
-          ui: [
-            "@radix-ui/react-accordion",
-            "@radix-ui/react-alert-dialog",
-            "@radix-ui/react-dialog",
-          ],
-          supabase: ["@supabase/supabase-js"],
-          forms: ["react-hook-form", "@hookform/resolvers", "zod"],
-        },
-      },
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['@radix-ui/react-accordion', '@radix-ui/react-alert-dialog', '@radix-ui/react-dialog'],
+          supabase: ['@supabase/supabase-js'],
+          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+        }
+      }
     },
     chunkSizeWarningLimit: 1000,
   },
