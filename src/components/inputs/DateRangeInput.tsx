@@ -37,7 +37,7 @@ export function DateRangeInput({
   required = false,
   isFlagged = false,
   flagMessage,
-  enableVoice = true
+  enableVoice = false,
 }: DateRangeInputProps) {
   const [isRecording, setIsRecording] = useState(false);
 
@@ -48,7 +48,7 @@ export function DateRangeInput({
     } else {
       setIsRecording(true);
       console.log("Voice recording started");
-      
+
       setTimeout(() => {
         setIsRecording(false);
         onAwayNotesChange("Customer will be away during this period");
@@ -57,13 +57,13 @@ export function DateRangeInput({
   };
 
   return (
-    <div className={cn("space-y-3", isFlagged && "flag-indicator")}>
+    <div className={cn("space-y-2", isFlagged && "flag-indicator")}>
       <div className="flex items-center justify-between">
-        <Label htmlFor={id} className="text-sm font-medium text-foreground">
+        <Label htmlFor={id} className="text-md font-medium text-foreground">
           {label}
           {required && <span className="text-destructive ml-1">*</span>}
         </Label>
-        
+
         {enableVoice && (
           <Button
             type="button"
@@ -86,12 +86,15 @@ export function DateRangeInput({
           </Button>
         )}
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label htmlFor={`${id}-start`} className="text-xs text-muted-foreground">
+          {/* <Label
+            htmlFor={`${id}-start`}
+            className="text-xs text-muted-foreground"
+          >
             Start Date
-          </Label>
+          </Label> */}
           <div className="relative">
             <Input
               id={`${id}-start`}
@@ -103,14 +106,17 @@ export function DateRangeInput({
                 isFlagged && "border-destructive focus:ring-destructive/50"
               )}
             />
-            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            {/* <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /> */}
           </div>
         </div>
-        
+
         <div className="space-y-2">
-          <Label htmlFor={`${id}-end`} className="text-xs text-muted-foreground">
+          {/* <Label
+            htmlFor={`${id}-end`}
+            className="text-xs text-muted-foreground"
+          >
             End Date
-          </Label>
+          </Label> */}
           <div className="relative">
             <Input
               id={`${id}-end`}
@@ -122,11 +128,11 @@ export function DateRangeInput({
                 isFlagged && "border-destructive focus:ring-destructive/50"
               )}
             />
-            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            {/* <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /> */}
           </div>
         </div>
       </div>
-      
+
       <div className="space-y-2">
         <div className="flex items-center space-x-2">
           <Checkbox
@@ -134,11 +140,14 @@ export function DateRangeInput({
             checked={customerAway}
             onCheckedChange={onCustomerAwayChange}
           />
-          <Label htmlFor={`${id}-away`} className="text-sm font-medium cursor-pointer">
+          <Label
+            htmlFor={`${id}-away`}
+            className="text-sm font-medium cursor-pointer"
+          >
             Customer away during this period
           </Label>
         </div>
-        
+
         {customerAway && (
           <Input
             placeholder="Notes about customer absence..."
@@ -148,7 +157,7 @@ export function DateRangeInput({
           />
         )}
       </div>
-      
+
       {isFlagged && flagMessage && (
         <div className="flex items-center space-x-2 text-sm text-destructive">
           <span>⚠</span>
@@ -161,4 +170,3 @@ export function DateRangeInput({
     </div>
   );
 }
-

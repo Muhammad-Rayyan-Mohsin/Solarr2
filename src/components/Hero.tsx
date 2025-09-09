@@ -1,4 +1,4 @@
-import solarHeroImage from "@/assets/solar-hero.jpg";
+import solarHeroImage from "@/assets/modern-solar-panels.jpg";
 
 export function Hero() {
   return (
@@ -6,7 +6,7 @@ export function Hero() {
       <div className="absolute inset-0">
         <img
           src={solarHeroImage}
-          alt="Professional survey interface"
+          alt="Modern solar panels on residential roof"
           className="w-full h-full object-cover"
           loading="eager"
           decoding="async"
@@ -23,17 +23,20 @@ export function Hero() {
           <p className="text-lg md:text-xl text-white/90 mb-6">
             Professional assessment for your renewable energy journey
           </p>
-                      <div className="flex items-center space-x-4 text-sm">
-              <div className="flex items-center space-x-2">
-                <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="w-2 h-2 bg-white/80 rounded-full animate-pulse"></span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></span>
-              </div>
+          <div className="flex items-center space-x-4 text-sm">
+            <div className="flex items-center space-x-2">
+              <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+              <span>📄 Digital Survey</span>
             </div>
+            <div className="flex items-center space-x-2">
+              <span className="w-2 h-2 bg-white/80 rounded-full animate-pulse"></span>
+              <span>⚙️ Professional Assessment</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></span>
+              <span>⚡ Clean Energy</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>

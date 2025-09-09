@@ -6,13 +6,14 @@ import { RedFlagsSummary } from "@/components/RedFlagsSummary";
 import { TextInput } from "@/components/inputs/TextInput";
 import { NumberInput } from "@/components/inputs/NumberInput";
 import { DropdownSelect } from "@/components/inputs/DropdownSelect";
-import { SegmentedControl } from "@/components/inputs/SegmentedControl";
+import { YesNoNADropdown } from "@/components/inputs/YesNoNADropdown";
+import { TextWithPhotoInput } from "@/components/inputs/TextWithPhotoInput";
+import { SurveyorInfoInput } from "@/components/inputs/SurveyorInfoInput";
+import { LocationInput } from "@/components/inputs/LocationInput";
 import { PhotoUpload } from "@/components/inputs/PhotoUpload";
-import { VoiceNote } from "@/components/inputs/VoiceNote";
 import { GPSInput } from "@/components/inputs/GPSInput";
 import { SignatureInput } from "@/components/inputs/SignatureInput";
 import { RoofSection } from "@/components/RoofSection";
-import { CheckboxInput } from "@/components/inputs/CheckboxInput";
 import { TextareaInput } from "@/components/inputs/TextareaInput";
 import { DateRangeInput } from "@/components/inputs/DateRangeInput";
 import { ToggleInput } from "@/components/inputs/ToggleInput";
@@ -28,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { SupabaseService } from "@/services/supabaseService";
 import { SubmitSurveyButton } from "@/components/SubmitSurveyButton";
 import { syncPhotosForDraft } from "@/services/syncService";
+import { useSearchParams } from "react-router-dom";
 
 interface RoofFace {
   id: string;
@@ -55,11 +57,16 @@ interface RoofFace {
 interface FormData {
   // Section 0 - General & Contact
   surveyDate: string;
-  surveyorName: string;
+  surveyorInfo: {
+    name: string;
+    telephone: string;
+    email: string;
+  };
   customerName: string;
   siteAddress: string;
   postcode: string;
   gridReference: string;
+  what3words: string;
   phone: string;
   email: string;
   secondaryContactName: string;
@@ -67,6 +74,7 @@ interface FormData {
 
   // Section 1 - Electricity Baseline
   annualConsumption: string;
+  annualConsumptionPhoto: string[];
   mpanNumber: string;
   mpanPhoto: string[];
   electricityProvider: string;
@@ -77,7 +85,9 @@ interface FormData {
   standingCharge: string;
   tariffType: string;
   smartMeterPresent: "yes" | "no" | "na" | null;
-  exportTariffAvailable: "yes" | "no" | "na" | null;
+  segTariffAvailable: "yes" | "no" | "na" | null;
+  segTariffExplanation: string;
+  smartTariffAvailable: "yes" | "no" | "na" | null;
 
   // Section 2 - Property Overview
   propertyType: string;
@@ -324,11 +334,16 @@ const budgetRangeOptions = [
 const DEFAULT_FORM_DATA: FormData = {
   // Section 0 - General & Contact
   surveyDate: new Date().toISOString().split("T")[0],
-  surveyorName: "",
+  surveyorInfo: {
+    name: "",
+    telephone: "",
+    email: ""
+  },
   customerName: "",
   siteAddress: "",
   postcode: "",
   gridReference: "",
+  what3words: "",
   phone: "",
   email: "",
   secondaryContactName: "",
@@ -336,6 +351,7 @@ const DEFAULT_FORM_DATA: FormData = {
 
   // Section 1 - Electricity Baseline
   annualConsumption: "",
+  annualConsumptionPhoto: [],
   mpanNumber: "",
   mpanPhoto: [],
   electricityProvider: "",
@@ -346,7 +362,9 @@ const DEFAULT_FORM_DATA: FormData = {
   standingCharge: "",
   tariffType: "",
   smartMeterPresent: null,
-  exportTariffAvailable: null,
+  segTariffAvailable: null,
+  segTariffExplanation: "",
+  smartTariffAvailable: null,
 
   // Section 2 - Property Overview
   propertyType: "",
@@ -461,11 +479,16 @@ const DEFAULT_FORM_DATA: FormData = {
 const TEST_FORM_DATA: FormData = {
   // Section 0 - General & Contact
   surveyDate: new Date().toISOString().split("T")[0],
-  surveyorName: "John Smith",
+  surveyorInfo: {
+    name: "John Smith",
+    telephone: "07123 456789",
+    email: "john.smith@surveyor.com"
+  },
   customerName: "Sarah Johnson",
   siteAddress: "123 Solar Street, Green City, GC1 2AB",
   postcode: "GC1 2AB",
   gridReference: "TQ123456",
+  what3words: "///solar.panel.survey",
   phone: "07123 456789",
   email: "sarah.johnson@email.com",
   secondaryContactName: "Mike Johnson",
@@ -473,6 +496,7 @@ const TEST_FORM_DATA: FormData = {
 
   // Section 1 - Electricity Baseline
   annualConsumption: "4200",
+  annualConsumptionPhoto: [],
   mpanNumber: "1234567890123",
   mpanPhoto: [],
   electricityProvider: "octopus-energy",
@@ -483,7 +507,9 @@ const TEST_FORM_DATA: FormData = {
   standingCharge: "0.45",
   tariffType: "fixed",
   smartMeterPresent: "yes",
-  exportTariffAvailable: "yes",
+  segTariffAvailable: "yes",
+  segTariffExplanation: "Smart Export Guarantee at 5.5p/kWh",
+  smartTariffAvailable: "yes",
 
   // Section 2 - Property Overview
   propertyType: "semi",
@@ -618,7 +644,7 @@ const TEST_FORM_DATA: FormData = {
 };
 
 // Toggle this to switch between test and default data
-const USE_TEST_DATA = true; // Change to false to use empty form
+const USE_TEST_DATA = false; // Change to false to use empty form
 
 // Ensure a stable draftId per session
 function ensureDraftId(): string {
@@ -656,12 +682,14 @@ const Index = () => {
 
   // Submit state
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const surveyId = searchParams.get("survey");
 
   // Validate required DB fields before submit/queue
   function getMissingRequiredFields(): string[] {
     const missing: string[] = [];
     const checks: Array<{ key: keyof FormData; label: string }> = [
-      { key: "surveyorName", label: "Surveyor Name" },
+      { key: "customerName", label: "Customer Name" },
       { key: "customerName", label: "Customer Name" },
       { key: "siteAddress", label: "Site Address" },
       { key: "postcode", label: "Postcode" },
@@ -752,9 +780,13 @@ const Index = () => {
       return;
     }
     setIsSubmitting(true);
+
+    // Check if we're in edit mode
+    const isEditMode = surveyId !== null;
     // Convert form data to match Supabase schema (only core fields that exist)
     const surveyData = {
-      surveyor_name: formData.surveyorName || null,
+      // Section 0 - General & Contact
+      surveyor_name: formData.surveyorInfo.name || null,
       customer_name: formData.customerName || null,
       site_address: formData.siteAddress || null,
       postcode: formData.postcode || null,
@@ -764,26 +796,91 @@ const Index = () => {
       secondary_contact_name: formData.secondaryContactName || null,
       secondary_contact_phone: formData.secondaryContactPhone || null,
       survey_date: formData.surveyDate || null,
-      current_electricity_supplier: formData.electricityProvider || null,
-      current_electricity_tariff: formData.tariffType || null,
+
+      // Section 1 - Electricity Baseline
       current_electricity_usage: parseFloat(formData.annualConsumption) || null,
       mpan_number: formData.mpanNumber || null,
-      main_fuse_rating: formData.mainFuseRating || null,
-      earthing_system: formData.earthingSystemType || null,
-      roof_type: formData.propertyType || null,
+      current_electricity_supplier: formData.electricityProvider || null,
+      network_operator: formData.networkOperator || null,
+      customer_permission_granted: formData.customerPermissionGranted || null,
+      daytime_import_rate: parseFloat(formData.daytimeImportRate) || null,
+      nighttime_import_rate: parseFloat(formData.nighttimeImportRate) || null,
+      standing_charge: parseFloat(formData.standingCharge) || null,
+      current_electricity_tariff: formData.tariffType || null,
+      smart_meter_present: formData.smartMeterPresent || null,
+      seg_tariff_available: formData.segTariffAvailable || null,
+
+      // Section 2 - Property Overview
+      property_type: formData.propertyType || null,
+      property_age: formData.propertyAge || null,
+      listed_building: formData.listedBuilding || null,
+      conservation_area: formData.conservationArea || null,
+      new_build: formData.newBuild || null,
+      shared_roof: formData.sharedRoof || null,
+      scaffold_access: formData.scaffoldAccess || null,
+      storage_area: formData.storageArea || null,
+      restricted_parking: formData.restrictedParking || null,
+
+      // Section 3 - Roof Inspection
+      roof_faces: formData.roofFaces || [],
+
+      // Section 4 - Loft/Attic
+      loft_hatch_width: parseFloat(formData.loftHatchWidth) || null,
+      loft_hatch_height: parseFloat(formData.loftHatchHeight) || null,
+      loft_access_quality: formData.loftAccessQuality || null,
+      loft_headroom: parseFloat(formData.loftHeadroom) || null,
+      roof_timber_condition: formData.roofTimberCondition || null,
+      wall_space_inverter: formData.wallSpaceInverter || null,
+      wall_space_battery: formData.wallSpaceBattery || null,
+      loft_insulation_thickness:
+        parseFloat(formData.loftInsulationThickness) || null,
+      loft_lighting: formData.loftLighting || null,
+      loft_power_socket: formData.loftPowerSocket || null,
+
+      // Section 5 - Electrical Supply
       electrical_supply_type: formData.supplyType || null,
+      main_fuse_rating: formData.mainFuseRating || null,
+      consumer_unit_make: formData.consumerUnitMake || null,
+      consumer_unit_location: formData.consumerUnitLocation || null,
+      spare_fuse_ways: parseFloat(formData.spareFuseWays) || null,
+      existing_surge_protection: formData.existingSurgeProtection || null,
+      earth_bonding_verified: formData.earthBondingVerified || null,
+      earthing_system: formData.earthingSystemType || null,
+      dno_notification_required: formData.dnoNotificationRequired || null,
+      ev_charger_installed: formData.evChargerInstalled || null,
       ev_charger_load: parseFloat(formData.evChargerLoad) || null,
+
+      // Section 6 - Battery & Storage
       battery_required: formData.batteryRequired === "yes",
       install_location: formData.preferredInstallLocation || null,
+      distance_from_cu: parseFloat(formData.distanceFromCU) || null,
       mounting_surface: formData.mountingSurface || null,
-      ip_rating: formData.ipRatingRequired || null,
+      ventilation_adequate: formData.ventilationAdequate || null,
+      fire_egress_compliance: formData.fireEgressCompliance || null,
       temperature_range_min: parseFloat(formData.ambientTempMin) || null,
       temperature_range_max: parseFloat(formData.ambientTempMax) || null,
+      ip_rating: formData.ipRatingRequired || null,
+
+      // Section 7 - Health & Safety
       asbestos_presence: formData.asbestosPresence === "yes",
+      working_at_height_difficulties:
+        formData.workingAtHeightDifficulties || null,
       livestock_pets: formData.livestockPetsOnSite || null,
+      livestock_pets_notes: formData.livestockPetsNotes || null,
+      special_access_instructions: formData.specialAccessInstructions || null,
+
+      // Section 8 - Customer Preferences
       contact_method: formData.preferredContactMethod || null,
+      installation_start_date: formData.installationStartDate || null,
+      installation_end_date: formData.installationEndDate || null,
+      customer_away: formData.customerAway || null,
+      customer_away_notes: formData.customerAwayNotes || null,
       budget_range: formData.budgetRange || null,
+      interested_in_ev_charger: formData.interestedInEvCharger || null,
+      interested_in_energy_monitoring:
+        formData.interestedInEnergyMonitoring || null,
       additional_notes: formData.additionalNotes || null,
+
       status: "completed" as const,
     };
 
@@ -840,15 +937,27 @@ const Index = () => {
       // Submit to Supabase when online
       let result;
       try {
-        result = await SupabaseService.createSurvey(surveyData);
-        if (!result?.id) {
-          throw new Error("Failed to get survey ID from Supabase");
-        }
+        if (isEditMode && surveyId) {
+          result = await SupabaseService.updateSurvey(surveyId, surveyData);
+          if (!result?.id) {
+            throw new Error("Failed to update survey in Supabase");
+          }
 
-        toast({
-          title: "Survey Submitted!",
-          description: `Survey ID: ${result.id}`,
-        });
+          toast({
+            title: "Survey Updated!",
+            description: `Survey ID: ${result.id}`,
+          });
+        } else {
+          result = await SupabaseService.createSurvey(surveyData);
+          if (!result?.id) {
+            throw new Error("Failed to get survey ID from Supabase");
+          }
+
+          toast({
+            title: "Survey Submitted!",
+            description: `Survey ID: ${result.id}`,
+          });
+        }
       } catch (submitError) {
         console.error("Supabase submission error:", submitError);
         throw submitError; // Re-throw to be caught by outer catch block
@@ -934,23 +1043,185 @@ const Index = () => {
     }
   };
 
-  // Load saved data on app start
+  // Function to start a new survey
+  const startNewSurvey = () => {
+    setFormData(USE_TEST_DATA ? TEST_FORM_DATA : DEFAULT_FORM_DATA);
+    // Remove any editing state
+    window.history.pushState({}, "", "/");
+    toast({
+      title: "New Survey Started",
+      description: "Form has been cleared for a new survey",
+    });
+  };
+
+  // Helper function to convert yes/no/na values
+  const convertYesNoNa = (value: any): "yes" | "no" | "na" | null => {
+    if (value === "yes" || value === "no" || value === "na") {
+      return value;
+    }
+    return null;
+  };
+
+  // Load saved data or editing data on app start
   useEffect(() => {
     const loadSavedData = async () => {
       try {
-        // Only load saved data if we're not using test data
-        if (!USE_TEST_DATA) {
-          const savedData = await offlineStorage.loadFormData();
-          if (savedData) {
+        // Check URL path for survey ID
+        const pathParts = window.location.pathname.split("/");
+        const surveyIdIndex = pathParts.indexOf("survey") + 1;
+        const isEditMode =
+          surveyIdIndex > 0 && pathParts[surveyIdIndex + 1] === "edit";
+        const surveyId = isEditMode ? pathParts[surveyIdIndex] : null;
+
+        if (isEditMode && surveyId) {
+          // Load survey data from Supabase
+          try {
+            const survey = await SupabaseService.getSurvey(surveyId);
+            if (!survey) {
+              throw new Error("Survey not found");
+            }
+            const convertedFormData = {
+              ...DEFAULT_FORM_DATA,
+              surveyDate: survey.survey_date || "",
+              surveyorInfo: {
+                name: survey.surveyor_name || "",
+                telephone: "", // Will be added to database schema later
+                email: "" // Will be added to database schema later
+              },
+              customerName: survey.customer_name || "",
+              siteAddress: survey.site_address || "",
+              postcode: survey.postcode || "",
+              gridReference: survey.grid_reference || "",
+              phone: survey.phone || "",
+              email: survey.email || "",
+              secondaryContactName: survey.secondary_contact_name || "",
+              secondaryContactPhone: survey.secondary_contact_phone || "",
+              annualConsumption:
+                survey.current_electricity_usage?.toString() || "",
+              mpanNumber: survey.mpan_number || "",
+              electricityProvider: survey.current_electricity_supplier || "",
+              networkOperator: survey.network_operator || "",
+              customerPermissionGranted:
+                survey.customer_permission_granted || false,
+              daytimeImportRate: survey.daytime_import_rate?.toString() || "",
+              nighttimeImportRate:
+                survey.nighttime_import_rate?.toString() || "",
+              standingCharge: survey.standing_charge?.toString() || "",
+              tariffType: survey.current_electricity_tariff || "",
+              smartMeterPresent: convertYesNoNa(survey.smart_meter_present),
+              segTariffAvailable: convertYesNoNa(
+                survey.export_tariff_available // Using existing field until schema updated
+              ),
+              propertyType: survey.property_type || "",
+              propertyAge: survey.property_age || "",
+              listedBuilding: convertYesNoNa(survey.listed_building),
+              conservationArea: convertYesNoNa(survey.conservation_area),
+              newBuild: convertYesNoNa(survey.new_build),
+              sharedRoof: convertYesNoNa(survey.shared_roof),
+              scaffoldAccess: convertYesNoNa(survey.scaffold_access),
+              storageArea: convertYesNoNa(survey.storage_area),
+              restrictedParking: survey.restricted_parking || "",
+              roofFaces: survey.roof_faces || DEFAULT_FORM_DATA.roofFaces,
+              loftHatchWidth: survey.loft_hatch_width?.toString() || "",
+              loftHatchHeight: survey.loft_hatch_height?.toString() || "",
+              loftAccessQuality: survey.loft_access_quality || "",
+              loftHeadroom: survey.loft_headroom?.toString() || "",
+              roofTimberCondition: survey.roof_timber_condition || "",
+              wallSpaceInverter: convertYesNoNa(survey.wall_space_inverter),
+              wallSpaceBattery: convertYesNoNa(survey.wall_space_battery),
+              loftInsulationThickness:
+                survey.loft_insulation_thickness?.toString() || "",
+              loftLighting: survey.loft_lighting || "",
+              loftPowerSocket: convertYesNoNa(survey.loft_power_socket),
+              supplyType: survey.electrical_supply_type || "",
+              mainFuseRating: survey.main_fuse_rating || "",
+              consumerUnitMake: survey.consumer_unit_make || "",
+              consumerUnitLocation: survey.consumer_unit_location || "",
+              spareFuseWays: survey.spare_fuse_ways?.toString() || "",
+              existingSurgeProtection: convertYesNoNa(
+                survey.existing_surge_protection
+              ),
+              earthBondingVerified: convertYesNoNa(
+                survey.earth_bonding_verified
+              ),
+              earthingSystemType: survey.earthing_system || "",
+              dnoNotificationRequired:
+                survey.dno_notification_required || false,
+              evChargerInstalled: convertYesNoNa(survey.ev_charger_installed),
+              evChargerLoad: survey.ev_charger_load?.toString() || "",
+              batteryRequired: survey.battery_required ? "yes" : "no",
+              preferredInstallLocation: survey.install_location || "",
+              distanceFromCU: survey.distance_from_cu?.toString() || "",
+              mountingSurface: survey.mounting_surface || "",
+              ventilationAdequate: convertYesNoNa(survey.ventilation_adequate),
+              fireEgressCompliance: convertYesNoNa(
+                survey.fire_egress_compliance
+              ),
+              ambientTempMin: survey.temperature_range_min?.toString() || "",
+              ambientTempMax: survey.temperature_range_max?.toString() || "",
+              ipRatingRequired: survey.ip_rating || "",
+              asbestosPresence: survey.asbestos_presence ? "yes" : "no",
+              workingAtHeightDifficulties:
+                survey.working_at_height_difficulties || "",
+              livestockPetsOnSite: convertYesNoNa(survey.livestock_pets),
+              livestockPetsNotes: survey.livestock_pets_notes || "",
+              specialAccessInstructions:
+                survey.special_access_instructions || "",
+              preferredContactMethod: survey.contact_method || "",
+              installationStartDate: survey.installation_start_date || "",
+              installationEndDate: survey.installation_end_date || "",
+              customerAway: survey.customer_away || false,
+              customerAwayNotes: survey.customer_away_notes || "",
+              budgetRange: survey.budget_range || "",
+              interestedInEvCharger: convertYesNoNa(
+                survey.interested_in_ev_charger
+              ),
+              interestedInEnergyMonitoring: convertYesNoNa(
+                survey.interested_in_energy_monitoring
+              ),
+              additionalNotes: survey.additional_notes || "",
+            };
+
+            setFormData(convertedFormData);
+            toast({
+              title: "Survey Loaded for Editing",
+              description: "You can now edit and resubmit the survey",
+            });
+            return;
+          } catch (error) {
+            console.error("Failed to load survey:", error);
+            toast({
+              title: "Error",
+              description: "Failed to load survey for editing",
+              variant: "destructive",
+            });
+            // Redirect back to submissions page on error
+            window.location.href = "/submissions";
+            return;
+          }
+        }
+
+        // If not editing, load saved draft data
+        const savedData = await offlineStorage.loadFormData();
+        if (savedData) {
+          const stored = await offlineStorage.getStoredFormData();
+          if (stored?.isDraft) {
             setFormData(savedData);
             toast({
               title: "Draft Loaded",
               description: "Your previous survey data has been restored",
             });
+          } else {
+            setFormData(USE_TEST_DATA ? TEST_FORM_DATA : DEFAULT_FORM_DATA);
           }
         }
       } catch (error) {
         console.error("Failed to load saved data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load survey data",
+          variant: "destructive",
+        });
       }
     };
 
@@ -1009,46 +1280,212 @@ const Index = () => {
   };
 
   const calculateProgress = () => {
-    const requiredFields = [
-      "surveyDate",
-      "surveyorName",
-      "customerName",
-      "siteAddress",
-      "postcode",
-      "gridReference",
-      "phone",
-      "email",
-      "annualConsumption",
-      "mpanNumber",
-      "electricityProvider",
-      "networkOperator",
-      "customerPermissionGranted",
-      "daytimeImportRate",
-      "standingCharge",
-      "tariffType",
-      "smartMeterPresent",
-      "exportTariffAvailable",
-      "propertyType",
-      "propertyAge",
-      "listedBuilding",
-      "conservationArea",
-      "newBuild",
-      "sharedRoof",
-      "scaffoldAccess",
-      "storageArea",
-    ];
+    interface SectionConfig {
+      fields: string[];
+      total: number;
+      customCheck?: (value: any) => boolean;
+    }
 
-    const completedFields = requiredFields.filter((field) => {
-      const value = formData[field as keyof FormData];
-      return (
-        value !== "" && value !== null && value !== undefined && value !== false
-      );
-    });
+    const sections: Record<string, SectionConfig> = {
+      general: {
+        fields: [
+          "surveyDate",
+          "surveyorInfo",
+          "customerName",
+          "siteAddress",
+          "postcode",
+          "gridReference",
+          "phone",
+          "email",
+          "secondaryContactName",
+          "secondaryContactPhone",
+        ],
+        total: 10,
+      },
+      electricity: {
+        fields: [
+          "annualConsumption",
+          "mpanNumber",
+          "electricityProvider",
+          "networkOperator",
+          "customerPermissionGranted",
+          "daytimeImportRate",
+          "nighttimeImportRate",
+          "standingCharge",
+          "tariffType",
+          "smartMeterPresent",
+          "segTariffAvailable",
+          "mpanPhoto",
+        ],
+        total: 12,
+      },
+      property: {
+        fields: [
+          "propertyType",
+          "propertyAge",
+          "listedBuilding",
+          "conservationArea",
+          "newBuild",
+          "sharedRoof",
+          "scaffoldAccess",
+          "scaffoldAccessPhoto",
+          "storageArea",
+          "storageAreaPhoto",
+          "restrictedParking",
+        ],
+        total: 11,
+      },
+      roof: {
+        fields: ["roofFaces"],
+        total: 18,
+        customCheck: (value: any) =>
+          Array.isArray(value) &&
+          value.length > 0 &&
+          value.some(
+            (face) =>
+              face.width ||
+              face.length ||
+              face.area ||
+              face.covering ||
+              face.photos.length > 0
+          ),
+      },
+      loft: {
+        fields: [
+          "loftHatchWidth",
+          "loftHatchHeight",
+          "loftAccessQuality",
+          "loftHeadroom",
+          "roofTimberCondition",
+          "wallSpaceInverter",
+          "wallSpaceBattery",
+          "loftInsulationThickness",
+          "loftLighting",
+          "loftPowerSocket",
+          "roofTimberPhoto",
+        ],
+        total: 11,
+      },
+      electrical: {
+        fields: [
+          "supplyType",
+          "mainFuseRating",
+          "consumerUnitMake",
+          "consumerUnitLocation",
+          "spareFuseWays",
+          "existingSurgeProtection",
+          "earthBondingVerified",
+          "earthingSystemType",
+          "dnoNotificationRequired",
+          "evChargerInstalled",
+          "evChargerLoad",
+          "mainFusePhoto",
+          "consumerUnitLocationPhoto",
+        ],
+        total: 13,
+      },
+      battery: {
+        fields: [
+          "batteryRequired",
+          "preferredInstallLocation",
+          "distanceFromCU",
+          "mountingSurface",
+          "ventilationAdequate",
+          "fireEgressCompliance",
+          "ambientTempMin",
+          "ambientTempMax",
+          "ipRatingRequired",
+          "ventilationPhoto",
+          "fireEgressPhoto",
+        ],
+        total: 11,
+      },
+      safety: {
+        fields: [
+          "asbestosPresence",
+          "workingAtHeightDifficulties",
+          "fragileRoofAreas",
+          "livestockPetsOnSite",
+          "livestockPetsNotes",
+          "specialAccessInstructions",
+          "asbestosPhoto",
+        ],
+        total: 7,
+      },
+      preferences: {
+        fields: [
+          "preferredContactMethod",
+          "installationStartDate",
+          "installationEndDate",
+          "customerAway",
+          "customerAwayNotes",
+          "budgetRange",
+          "interestedInEvCharger",
+          "interestedInEnergyMonitoring",
+          "additionalNotes",
+        ],
+        total: 9,
+      },
+    };
+
+    const calculateSectionProgress = (section: keyof typeof sections) => {
+      const sectionConfig = sections[section];
+      let completed = 0;
+
+      if (sectionConfig.customCheck) {
+        // For sections with custom validation (like roof faces)
+        const value = formData[sectionConfig.fields[0] as keyof FormData];
+        completed = sectionConfig.customCheck(value) ? 1 : 0;
+      } else {
+        // For regular sections
+        completed = sectionConfig.fields.filter((field) => {
+          const value = formData[field as keyof FormData];
+          if (Array.isArray(value)) {
+            return value.length > 0;
+          }
+          return (
+            value !== "" &&
+            value !== null &&
+            value !== undefined &&
+            value !== false
+          );
+        }).length;
+      }
+
+      return {
+        completed,
+        total: sectionConfig.total,
+      };
+    };
+
+    // Calculate progress for each section
+    const sectionProgress = {
+      general: calculateSectionProgress("general"),
+      electricity: calculateSectionProgress("electricity"),
+      property: calculateSectionProgress("property"),
+      roof: calculateSectionProgress("roof"),
+      loft: calculateSectionProgress("loft"),
+      electrical: calculateSectionProgress("electrical"),
+      battery: calculateSectionProgress("battery"),
+      safety: calculateSectionProgress("safety"),
+      preferences: calculateSectionProgress("preferences"),
+    };
+
+    // Calculate total progress
+    const totalCompleted = Object.values(sectionProgress).reduce(
+      (sum, section) => sum + section.completed,
+      0
+    );
+    const totalFields = Object.values(sectionProgress).reduce(
+      (sum, section) => sum + section.total,
+      0
+    );
 
     return {
-      completed: completedFields.length,
-      total: requiredFields.length,
-      completedSteps: completedFields.length >= 10 ? [1] : [],
+      completed: totalCompleted,
+      total: totalFields,
+      completedSteps: totalCompleted >= totalFields / 2 ? [1] : [],
+      sections: sectionProgress,
     };
   };
 
@@ -1243,22 +1680,27 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background font-system mono-background bg-red-50">
-      <SurveyHeader
-        customerName={formData.customerName}
-        currentStep={1}
-        totalSteps={6}
-        completedSteps={progress.completedSteps}
-        isOnline={isOnline}
-        isDarkMode={isDarkMode}
-        onThemeToggle={() => setIsDarkMode(!isDarkMode)}
-        offlineIndicator={<OfflineStatusIndicator />}
-        autoSaveStatus={saveStatus}
-        isSaving={isSaving}
-      />
+      <div className="relative">
+        <SurveyHeader
+          customerName={formData.customerName}
+          currentStep={1}
+          totalSteps={6}
+          completedSteps={progress.completedSteps}
+          isOnline={isOnline}
+          isDarkMode={isDarkMode}
+          onThemeToggle={() => setIsDarkMode(!isDarkMode)}
+          offlineIndicator={<OfflineStatusIndicator />}
+          autoSaveStatus={saveStatus}
+          isSaving={isSaving}
+          onJumpToSection={(key) => setCurrentSection(key)}
+          overallProgressPercent={Math.round((progress.completed / progress.total) * 100)}
+        />
+      </div>
 
       <Hero />
 
       {/* Main Content */}
+
       <main className="container mx-auto px-6 py-16 pb-40">
         <div className="max-w-7xl mx-auto space-y-12">
           {/* Section 0 - General & Contact */}
@@ -1266,8 +1708,8 @@ const Index = () => {
             title="📄 Section 0 - General & Contact"
             isOpen={currentSection === "general"}
             onToggle={() => toggleSection("general")}
-            completedFields={4}
-            totalFields={10}
+            completedFields={progress.sections.general.completed}
+            totalFields={progress.sections.general.total}
             flaggedFields={0}
           >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1280,12 +1722,11 @@ const Index = () => {
                 required
               />
 
-              <TextInput
-                id="surveyor-name"
-                label="👷 Surveyor Name"
-                value={formData.surveyorName}
-                onChange={(value) => updateFormData("surveyorName", value)}
-                placeholder="Enter surveyor name..."
+              <SurveyorInfoInput
+                id="surveyor-info"
+                label="👷 Surveyor Information"
+                value={formData.surveyorInfo}
+                onChange={(value) => updateFormData("surveyorInfo", value)}
                 required
               />
 
@@ -1373,8 +1814,8 @@ const Index = () => {
             title="⚡ Section 1 - Electricity Baseline"
             isOpen={currentSection === "electricity"}
             onToggle={() => toggleSection("electricity")}
-            completedFields={6}
-            totalFields={12}
+            completedFields={progress.sections.electricity.completed}
+            totalFields={progress.sections.electricity.total}
             flaggedFields={2}
           >
             <div className="space-y-8">
@@ -1475,7 +1916,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="smart-meter-present"
                   label="📱 Smart Meter Present"
                   value={formData.smartMeterPresent}
@@ -1485,12 +1926,12 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
-                  id="export-tariff-available"
-                  label="📤 Export Tariff Available"
-                  value={formData.exportTariffAvailable}
+                <YesNoNADropdown
+                  id="seg-tariff-available"
+                  label="📤 SEG Tariff Available"
+                  value={formData.segTariffAvailable}
                   onChange={(value) =>
-                    updateFormData("exportTariffAvailable", value)
+                    updateFormData("segTariffAvailable", value)
                   }
                   required
                 />
@@ -1526,8 +1967,8 @@ const Index = () => {
             title="🏠 Section 2 - Property Overview"
             isOpen={currentSection === "property"}
             onToggle={() => toggleSection("property")}
-            completedFields={5}
-            totalFields={11}
+            completedFields={progress.sections.property.completed}
+            totalFields={progress.sections.property.total}
             flaggedFields={0}
           >
             <div className="space-y-8">
@@ -1552,7 +1993,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="listed-building"
                   label="🏛️ Listed Building"
                   value={formData.listedBuilding}
@@ -1560,7 +2001,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="conservation-area"
                   label="🌳 Conservation Area"
                   value={formData.conservationArea}
@@ -1570,7 +2011,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="new-build"
                   label="🏗️ New-Build or Under Construction"
                   value={formData.newBuild}
@@ -1578,7 +2019,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="shared-roof"
                   label="🏠 Shared Roof / Party Wall"
                   value={formData.sharedRoof}
@@ -1586,7 +2027,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="scaffold-access"
                   label="🪜 Clear, Safe Access for Scaffold"
                   value={formData.scaffoldAccess}
@@ -1594,7 +2035,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="storage-area"
                   label="📦 Suitable Storage Area for Panels & Battery"
                   value={formData.storageArea}
@@ -1639,8 +2080,8 @@ const Index = () => {
             title="🏠 Section 3 - Roof Inspection"
             isOpen={currentSection === "roof"}
             onToggle={() => toggleSection("roof")}
-            completedFields={3}
-            totalFields={18}
+            completedFields={progress.sections.roof.completed}
+            totalFields={progress.sections.roof.total}
             flaggedFields={1}
           >
             <RoofSection
@@ -1654,8 +2095,8 @@ const Index = () => {
             title="🏠 Section 4 - Loft / Attic"
             isOpen={currentSection === "loft"}
             onToggle={() => toggleSection("loft")}
-            completedFields={2}
-            totalFields={9}
+            completedFields={progress.sections.loft.completed}
+            totalFields={progress.sections.loft.total}
             flaggedFields={0}
           >
             <div className="space-y-8">
@@ -1720,7 +2161,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="wall-space-inverter"
                   label="⚡ Wall Space for Inverter (500×400×200 mm)"
                   value={formData.wallSpaceInverter}
@@ -1730,7 +2171,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="wall-space-battery"
                   label="🔋 Wall Space for Battery"
                   value={formData.wallSpaceBattery}
@@ -1764,7 +2205,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="loft-power-socket"
                   label="🔌 Existing Loft Power Socket"
                   value={formData.loftPowerSocket}
@@ -1808,8 +2249,8 @@ const Index = () => {
             title="⚡ Section 5 - Electrical Supply"
             isOpen={currentSection === "electrical"}
             onToggle={() => toggleSection("electrical")}
-            completedFields={3}
-            totalFields={13}
+            completedFields={progress.sections.electrical.completed}
+            totalFields={progress.sections.electrical.total}
             flaggedFields={0}
           >
             <div className="space-y-8">
@@ -1867,7 +2308,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="existing-surge-protection"
                   label="🛡️ Existing Surge Protection"
                   value={formData.existingSurgeProtection}
@@ -1877,7 +2318,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="earth-bonding-verified"
                   label="🔗 Earth Bonding Verified"
                   value={formData.earthBondingVerified}
@@ -1910,7 +2351,7 @@ const Index = () => {
                   description="Auto-calculated based on inverter size"
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="ev-charger-installed"
                   label="🚗 EV Charger Already Installed"
                   value={formData.evChargerInstalled}
@@ -2020,8 +2461,8 @@ const Index = () => {
             title="🔋 Section 6 - Battery & Storage Preferences"
             isOpen={currentSection === "battery"}
             onToggle={() => toggleSection("battery")}
-            completedFields={2}
-            totalFields={11}
+            completedFields={progress.sections.battery.completed}
+            totalFields={progress.sections.battery.total}
             flaggedFields={0}
           >
             <div className="space-y-8">
@@ -2070,7 +2511,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="ventilation-adequate"
                   label="💨 Ventilation Adequate"
                   value={formData.ventilationAdequate}
@@ -2080,7 +2521,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="fire-egress-compliance"
                   label="🚪 Fire Egress Compliance"
                   value={formData.fireEgressCompliance}
@@ -2142,8 +2583,8 @@ const Index = () => {
             title="⚠️ Section 7 - Health, Safety & Hazards"
             isOpen={currentSection === "safety"}
             onToggle={() => toggleSection("safety")}
-            completedFields={2}
-            totalFields={7}
+            completedFields={progress.sections.safety.completed}
+            totalFields={progress.sections.safety.total}
             flaggedFields={0}
           >
             <div className="space-y-8">
@@ -2160,7 +2601,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="livestock-pets-on-site"
                   label="🐕 Livestock / Pets on Site"
                   value={formData.livestockPetsOnSite}
@@ -2230,8 +2671,8 @@ const Index = () => {
             title="👤 Section 8 - Customer Preferences & Next Steps"
             isOpen={currentSection === "preferences"}
             onToggle={() => toggleSection("preferences")}
-            completedFields={2}
-            totalFields={9}
+            completedFields={progress.sections.preferences.completed}
+            totalFields={progress.sections.preferences.total}
             flaggedFields={0}
           >
             <div className="space-y-8">
@@ -2279,7 +2720,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="interested-in-ev-charger"
                   label="🚗 Interested in EV Charger"
                   value={formData.interestedInEvCharger}
@@ -2289,7 +2730,7 @@ const Index = () => {
                   required
                 />
 
-                <SegmentedControl
+                <YesNoNADropdown
                   id="interested-in-energy-monitoring"
                   label="📊 Interested in Energy Monitoring"
                   value={formData.interestedInEnergyMonitoring}
@@ -2316,8 +2757,8 @@ const Index = () => {
             title="📊 Section 9 - Auto-Generated Summary"
             isOpen={currentSection === "summary"}
             onToggle={() => toggleSection("summary")}
-            completedFields={0}
-            totalFields={5}
+            completedFields={progress.completed}
+            totalFields={progress.total}
             flaggedFields={redFlags.length}
           >
             <div className="space-y-6">
@@ -2357,6 +2798,12 @@ const Index = () => {
             {!isOnline && "Offline: submit to save locally and sync later"}
           </div>
           <div className="flex gap-2">
+            {!!surveyId && (
+              <Button variant="outline" onClick={startNewSurvey}>
+                New Survey
+              </Button>
+            )}
+
             {pendingSync > 0 && (
               <Button
                 variant="outline"

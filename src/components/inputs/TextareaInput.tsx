@@ -28,7 +28,7 @@ export function TextareaInput({
   required = false,
   isFlagged = false,
   flagMessage,
-  enableVoice = true
+  enableVoice = false,
 }: TextareaInputProps) {
   const [isRecording, setIsRecording] = useState(false);
 
@@ -39,7 +39,7 @@ export function TextareaInput({
     } else {
       setIsRecording(true);
       console.log("Voice recording started");
-      
+
       setTimeout(() => {
         setIsRecording(false);
         onChange("Sample voice transcription for long text field");
@@ -54,7 +54,7 @@ export function TextareaInput({
           {label}
           {required && <span className="text-destructive ml-1">*</span>}
         </Label>
-        
+
         {enableVoice && (
           <Button
             type="button"
@@ -77,7 +77,7 @@ export function TextareaInput({
           </Button>
         )}
       </div>
-      
+
       <Textarea
         id={id}
         value={value}
@@ -89,7 +89,7 @@ export function TextareaInput({
           isFlagged && "border-destructive focus:ring-destructive/50"
         )}
       />
-      
+
       {isFlagged && flagMessage && (
         <div className="flex items-center space-x-2 text-sm text-destructive">
           <span>⚠</span>

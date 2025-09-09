@@ -23,3 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 *.env
+environment.env
+coverage/
+.eslintcache
+.cache/
+.turbo/
+.vercel/
+.netlify/
+build/
+coverage/

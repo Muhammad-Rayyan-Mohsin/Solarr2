@@ -1,11 +1,17 @@
-import { supabase, Survey, SurveyPhoto, SurveyAudio, SyncQueueItem } from '@/lib/supabase';
+import {
+  supabase,
+  Survey,
+  SurveyPhoto,
+  SurveyAudio,
+  SyncQueueItem,
+} from "@/lib/supabase";
 
 export class SupabaseService {
   // Survey Operations
   static async createSurvey(surveyData: Partial<Survey>): Promise<Survey> {
     const { data, error } = await supabase
-      .from('surveys')
-      .insert([{ ...surveyData, status: 'draft', sync_status: 'synced' }])
+      .from("surveys")
+      .insert([{ ...surveyData, status: "completed", sync_status: "synced" }])
       .select()
       .single();
 
@@ -13,11 +19,14 @@ export class SupabaseService {
     return data;
   }
 
-  static async updateSurvey(id: string, surveyData: Partial<Survey>): Promise<Survey> {
+  static async updateSurvey(
+    id: string,
+    surveyData: Partial<Survey>
+  ): Promise<Survey> {
     const { data, error } = await supabase
-      .from('surveys')
+      .from("surveys")
       .update({ ...surveyData, updated_at: new Date().toISOString() })
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single();
 
@@ -27,20 +36,20 @@ export class SupabaseService {
 
   static async getSurvey(id: string): Promise<Survey | null> {
     const { data, error } = await supabase
-      .from('surveys')
-      .select('*')
-      .eq('id', id)
+      .from("surveys")
+      .select("*")
+      .eq("id", id)
       .single();
 
-    if (error && error.code !== 'PGRST116') throw error;
+    if (error && error.code !== "PGRST116") throw error;
     return data;
   }
 
   static async listSurveys(): Promise<Survey[]> {
     const { data, error } = await supabase
-      .from('surveys')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .from("surveys")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
     return data || [];
@@ -61,31 +70,32 @@ export class SupabaseService {
 
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('survey-photos')
+      .from("survey-photos")
       .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
+        cacheControl: "3600",
+        upsert: false,
       });
 
     if (uploadError) throw uploadError;
 
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from('survey-photos')
+      .from("survey-photos")
       .getPublicUrl(filePath);
 
     // Create thumbnail
     const thumbnailPath = `surveys/${surveyId}/thumbnails/${filename}`;
     const thumbnailBlob = await this.createThumbnail(file);
-    
+
     const { error: thumbnailError } = await supabase.storage
-      .from('survey-photos')
+      .from("survey-photos")
       .upload(thumbnailPath, thumbnailBlob, {
-        cacheControl: '3600',
-        upsert: false
+        cacheControl: "3600",
+        upsert: false,
       });
 
-    if (thumbnailError) console.warn('Thumbnail upload failed:', thumbnailError);
+    if (thumbnailError)
+      console.warn("Thumbnail upload failed:", thumbnailError);
 
     // Save to database
     const photoData: Partial<SurveyPhoto> = {
@@ -97,11 +107,11 @@ export class SupabaseService {
       thumbnail_path: thumbnailPath,
       file_size: file.size,
       metadata,
-      sync_status: 'synced'
+      sync_status: "synced",
     };
 
     const { data, error } = await supabase
-      .from('survey_photos')
+      .from("survey_photos")
       .insert([photoData])
       .select()
       .single();
@@ -112,10 +122,10 @@ export class SupabaseService {
 
   static async getSurveyPhotos(surveyId: string): Promise<SurveyPhoto[]> {
     const { data, error } = await supabase
-      .from('survey_photos')
-      .select('*')
-      .eq('survey_id', surveyId)
-      .order('created_at', { ascending: true });
+      .from("survey_photos")
+      .select("*")
+      .eq("survey_id", surveyId)
+      .order("created_at", { ascending: true });
 
     if (error) throw error;
     return data || [];
@@ -135,17 +145,17 @@ export class SupabaseService {
 
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('survey-audio')
+      .from("survey-audio")
       .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
+        cacheControl: "3600",
+        upsert: false,
       });
 
     if (uploadError) throw uploadError;
 
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from('survey-audio')
+      .from("survey-audio")
       .getPublicUrl(filePath);
 
     // Save to database
@@ -157,11 +167,11 @@ export class SupabaseService {
       file_path: urlData.publicUrl,
       transcription,
       file_size: file.size,
-      sync_status: 'synced'
+      sync_status: "synced",
     };
 
     const { data, error } = await supabase
-      .from('survey_audio')
+      .from("survey_audio")
       .insert([audioData])
       .select()
       .single();
@@ -171,16 +181,18 @@ export class SupabaseService {
   }
 
   // Sync Queue Operations
-  static async addToSyncQueue(item: Omit<SyncQueueItem, 'id' | 'created_at'>): Promise<SyncQueueItem> {
+  static async addToSyncQueue(
+    item: Omit<SyncQueueItem, "id" | "created_at">
+  ): Promise<SyncQueueItem> {
     const queueItem: Partial<SyncQueueItem> = {
       ...item,
       retry_count: 0,
       max_retries: 3,
-      status: 'pending'
+      status: "pending",
     };
 
     const { data, error } = await supabase
-      .from('sync_queue')
+      .from("sync_queue")
       .insert([queueItem])
       .select()
       .single();
@@ -191,29 +203,29 @@ export class SupabaseService {
 
   static async getSyncQueue(): Promise<SyncQueueItem[]> {
     const { data, error } = await supabase
-      .from('sync_queue')
-      .select('*')
-      .eq('status', 'pending')
-      .order('created_at', { ascending: true });
+      .from("sync_queue")
+      .select("*")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true });
 
     if (error) throw error;
     return data || [];
   }
 
-  static async updateSyncQueueItem(id: string, updates: Partial<SyncQueueItem>): Promise<void> {
+  static async updateSyncQueueItem(
+    id: string,
+    updates: Partial<SyncQueueItem>
+  ): Promise<void> {
     const { error } = await supabase
-      .from('sync_queue')
+      .from("sync_queue")
       .update(updates)
-      .eq('id', id);
+      .eq("id", id);
 
     if (error) throw error;
   }
 
   static async removeFromSyncQueue(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('sync_queue')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from("sync_queue").delete().eq("id", id);
 
     if (error) throw error;
   }
@@ -221,58 +233,68 @@ export class SupabaseService {
   // Utility Methods
   private static async createThumbnail(file: File): Promise<Blob> {
     return new Promise((resolve, reject) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
       const img = new Image();
-      
+
       img.onload = () => {
         const maxSize = 200;
         const ratio = Math.min(maxSize / img.width, maxSize / img.height);
         const width = img.width * ratio;
         const height = img.height * ratio;
-        
+
         canvas.width = width;
         canvas.height = height;
-        
+
         ctx?.drawImage(img, 0, 0, width, height);
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Failed to create thumbnail'));
-        }, 'image/jpeg', 0.7);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error("Failed to create thumbnail"));
+          },
+          "image/jpeg",
+          0.7
+        );
       };
-      
+
       img.onerror = reject;
       img.src = URL.createObjectURL(file);
     });
   }
 
   // Real-time subscriptions
-  static subscribeToSurveyUpdates(surveyId: string, callback: (payload: any) => void) {
+  static subscribeToSurveyUpdates(
+    surveyId: string,
+    callback: (payload: any) => void
+  ) {
     return supabase
       .channel(`survey-${surveyId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'surveys',
-          filter: `id=eq.${surveyId}`
+          event: "*",
+          schema: "public",
+          table: "surveys",
+          filter: `id=eq.${surveyId}`,
         },
         callback
       )
       .subscribe();
   }
 
-  static subscribeToPhotoUpdates(surveyId: string, callback: (payload: any) => void) {
+  static subscribeToPhotoUpdates(
+    surveyId: string,
+    callback: (payload: any) => void
+  ) {
     return supabase
       .channel(`photos-${surveyId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'survey_photos',
-          filter: `survey_id=eq.${surveyId}`
+          event: "*",
+          schema: "public",
+          table: "survey_photos",
+          filter: `survey_id=eq.${surveyId}`,
         },
         callback
       )
