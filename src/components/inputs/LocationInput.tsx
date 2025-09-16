@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { MapPin } from "lucide-react";
+import { MapPin, Satellite } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { SolarImageryViewer } from "@/components/SolarImageryViewer";
 
 interface LocationInputProps {
   id: string;
@@ -16,6 +17,7 @@ interface LocationInputProps {
   flagMessage?: string;
   showGridRef?: boolean;
   showWhat3Words?: boolean;
+  showSolarAnalysis?: boolean;
 }
 
 export function LocationInput({
@@ -29,10 +31,13 @@ export function LocationInput({
   flagMessage,
   showGridRef = true,
   showWhat3Words = true,
+  showSolarAnalysis = true,
 }: LocationInputProps) {
   const [gridRef, setGridRef] = useState("");
   const [what3Words, setWhat3Words] = useState("");
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [showSolarData, setShowSolarData] = useState(false);
 
   const getCurrentLocation = async () => {
     if (!navigator.geolocation) {
@@ -46,6 +51,9 @@ export function LocationInput({
       async (position) => {
         const { latitude, longitude } = position.coords;
         
+        // Store coordinates for solar analysis
+        setCoordinates({ lat: latitude, lng: longitude });
+        
         // Generate grid reference (simplified UK grid reference format)
         const gridReference = `TQ${Math.floor(latitude * 1000).toString().padStart(3, '0')}${Math.floor(longitude * 1000).toString().padStart(3, '0')}`;
         setGridRef(gridReference);
@@ -55,6 +63,9 @@ export function LocationInput({
         const words = ['solar', 'panel', 'survey', 'green', 'energy', 'roof', 'home', 'power'];
         const mockWhat3Words = `///${words[Math.floor(Math.random() * words.length)]}.${words[Math.floor(Math.random() * words.length)]}.${words[Math.floor(Math.random() * words.length)]}`;
         setWhat3Words(mockWhat3Words);
+        
+        // Update the main address field with coordinates for reference
+        onChange(`${value} (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`);
         
         console.log(`Location captured: ${latitude}, ${longitude}`);
         setIsGettingLocation(false);
@@ -99,6 +110,19 @@ export function LocationInput({
             <MapPin className="h-4 w-4 mr-2" />
             {isGettingLocation ? "Getting location..." : "Get Location"}
           </Button>
+
+          {coordinates && showSolarAnalysis && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSolarData(!showSolarData)}
+              className="text-sm h-9 px-3"
+            >
+              <Satellite className="h-4 w-4 mr-2" />
+              {showSolarData ? "Hide" : "Show"} Solar Analysis
+            </Button>
+          )}
         </div>
 
         {showGridRef && gridRef && (
@@ -123,6 +147,16 @@ export function LocationInput({
               onChange={(e) => setWhat3Words(e.target.value)}
               placeholder="///e.g.solar.panel.location"
               className="h-9 text-sm"
+            />
+          </div>
+        )}
+
+        {coordinates && showSolarData && showSolarAnalysis && (
+          <div className="mt-6">
+            <SolarImageryViewer 
+              latitude={coordinates.lat} 
+              longitude={coordinates.lng}
+              address={value}
             />
           </div>
         )}
