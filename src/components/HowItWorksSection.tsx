@@ -1,37 +1,69 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { ListChecks, BarChart3, FileText } from 'lucide-react';
+import { CheckCircle2, BarChart3, FileText } from "lucide-react";
 
 const steps = [
-  { icon: FileText, title: 'Quick questions', desc: 'A short, structured form to gather your baseline details.' },
-  { icon: BarChart3, title: 'Smart review', desc: 'We organize your answers to make next steps easier.' },
-  { icon: ListChecks, title: 'Your results', desc: 'Review your submission anytime in the Submissions page.' },
+  {
+    icon: CheckCircle2,
+    emoji: "📝",
+    title: "Quick Questions",
+    description:
+      "Answer simple questions about your property, energy usage, and preferences.",
+  },
+  {
+    icon: BarChart3,
+    emoji: "🔍",
+    title: "Smart Analysis",
+    description:
+      "Our algorithm analyzes your data using solar irradiance maps and local incentives.",
+  },
+  {
+    icon: FileText,
+    emoji: "📊",
+    title: "Your Results",
+    description:
+      "Receive a personalized report with savings estimates and next steps.",
+  },
 ];
 
 const HowItWorksSection = () => {
   return (
-    <section id="how-it-works" className="py-12 sm:py-20">
-      <div className="container mx-auto px-4 sm:px-6">
-        <div className="text-center mb-8 sm:mb-12">
-          <h2 className="text-2xl sm:text-headline text-foreground">How it works</h2>
+    <section id="how-it-works" className="py-20 bg-background">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-16">
+          <h2 className="text-headline mb-4 text-foreground">How It Works</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Get your solar readiness assessment in three simple steps
+          </p>
         </div>
-        
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
-          {steps.map((s, idx) => (
-            <Card key={idx} className="bg-card/80 border border-border/50 scroll-reveal">
-              <CardContent className="p-4 sm:p-6">
-                {/* Mobile: horizontal layout */}
-                <div className="flex items-start gap-4 sm:block sm:text-center">
-                  <div className="flex-shrink-0 w-12 h-12 sm:mx-auto sm:w-16 sm:h-16 bg-solar-gradient rounded-full flex items-center justify-center shadow-lg sm:mb-4">
-                    <s.icon className="h-5 w-5 sm:h-7 sm:w-7 text-white" />
+
+        <div className="relative">
+          <div className="grid md:grid-cols-3 gap-12 relative z-10">
+            {steps.map((step, index) => (
+              <div
+                key={index}
+                className="text-center scroll-reveal"
+                style={{ animationDelay: `${index * 0.2}s` }}
+              >
+                {/* Step Number */}
+                <div className="relative mb-6">
+                  <div className="mx-auto w-16 h-16 bg-solar-gradient rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-2xl" style={{ color: "black" }}>
+                      {step.emoji}
+                    </span>
                   </div>
-                  <div className="flex-1 sm:flex-none">
-                    <h3 className="text-lg sm:text-xl font-semibold mb-1 sm:mb-2">{s.title}</h3>
-                    <p className="text-sm sm:text-base text-muted-foreground">{s.desc}</p>
+                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground text-sm font-bold w-6 h-6 rounded-full flex items-center justify-center">
+                    {index + 1}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+
+                <h3 className="text-xl font-semibold mb-3 text-foreground">
+                  {step.title}
+                </h3>
+                <p className="text-muted-foreground max-w-xs mx-auto">
+                  {step.description}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
