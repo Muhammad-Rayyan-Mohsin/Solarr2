@@ -1835,7 +1835,7 @@ const Index = () => {
       </div>
 
       {/* Main Content */}
-      <main className="container mx-auto mobile-spacing section-spacing">
+      <main className="container mx-auto mobile-spacing section-spacing pb-32 sm:pb-36">
         <div className="max-w-7xl mx-auto hierarchy-spacing">
           {/* Section 0 - General & Contact */}
           <SurveySection
@@ -3584,7 +3584,9 @@ const Index = () => {
       </main>
 
       {/* Red Flags Summary */}
-      <RedFlagsSummary flags={redFlags} onJumpToField={jumpToField} />
+      <div className="pb-32 sm:pb-36">
+        <RedFlagsSummary flags={redFlags} onJumpToField={jumpToField} />
+      </div>
 
       {/* Sticky Submit Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
