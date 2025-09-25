@@ -92,7 +92,7 @@ export function VoiceNote({
               size="sm"
             >
               <Mic className="h-4 w-4 mr-2" />
-              🎙️ Record
+              Record
             </Button>
           )}
           
@@ -106,13 +106,13 @@ export function VoiceNote({
                 className="recording-pulse"
               >
                 <Square className="h-4 w-4 mr-2" />
-                🔴 Stop
+                Stop
               </Button>
               
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-destructive rounded-full recording-pulse" />
                 <span className="text-sm font-medium text-foreground">
-                  🔴 Recording: {formatTime(recordingTime)}
+                  Recording: {formatTime(recordingTime)}
                 </span>
               </div>
             </>
@@ -166,7 +166,7 @@ export function VoiceNote({
               rows={4}
             />
             <div className="text-xs text-muted-foreground">
-              🕒 Timestamp: {new Date().toLocaleTimeString()}
+              Timestamp: {new Date().toLocaleTimeString()}
             </div>
           </div>
         )}
@@ -174,7 +174,7 @@ export function VoiceNote({
       
       {isFlagged && flagMessage && (
         <div className="flex items-center space-x-2 text-sm text-destructive">
-          <span>⚠</span>
+          <span>!</span>
           <span>{flagMessage}</span>
           <button className="underline hover:no-underline">
             Click to resolve

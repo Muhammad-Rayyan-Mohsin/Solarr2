@@ -20,6 +20,12 @@ interface SummaryDisplayProps {
   flaggedIssues: FlaggedIssue[];
   recommendedActions: string[];
   onJumpToIssue: (issueId: string) => void;
+  completionStatus?: {
+    completed: number;
+    total: number;
+    percentage: number;
+  };
+  incompleteSections?: string[];
 }
 
 export function SummaryDisplay({
@@ -28,7 +34,9 @@ export function SummaryDisplay({
   flaggedIssuesCount,
   flaggedIssues,
   recommendedActions,
-  onJumpToIssue
+  onJumpToIssue,
+  completionStatus,
+  incompleteSections = []
 }: SummaryDisplayProps) {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -45,6 +53,61 @@ export function SummaryDisplay({
 
   return (
     <div className="space-y-6">
+      {/* Completion Status Card */}
+      {completionStatus && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              Survey Completion Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">
+                  Overall Progress
+                </span>
+                <span className="text-lg font-bold text-primary">
+                  {completionStatus.percentage}%
+                </span>
+              </div>
+              
+              <div className="w-full bg-muted rounded-full h-2">
+                <div 
+                  className="bg-primary h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${completionStatus.percentage}%` }}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>{completionStatus.completed} of {completionStatus.total} fields completed</span>
+                <span>
+                  {completionStatus.percentage === 100 ? "Complete" : 
+                   completionStatus.percentage >= 75 ? "Almost done" :
+                   completionStatus.percentage >= 50 ? "Halfway there" : "Getting started"}
+                </span>
+              </div>
+            </div>
+            
+            {incompleteSections.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Incomplete Sections:
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {incompleteSections.map((section) => (
+                    <Badge key={section} variant="outline" className="text-xs">
+                      {section}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

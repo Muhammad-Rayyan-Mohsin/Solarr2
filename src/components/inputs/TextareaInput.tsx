@@ -50,7 +50,7 @@ export function TextareaInput({
   return (
     <div className={cn("space-y-2", isFlagged && "flag-indicator")}>
       <div className="flex items-center justify-between">
-        <Label htmlFor={id} className="text-sm font-medium text-foreground">
+        <Label htmlFor={id} className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">
           {label}
           {required && <span className="text-destructive ml-1">*</span>}
         </Label>
@@ -85,14 +85,14 @@ export function TextareaInput({
         placeholder={placeholder}
         rows={rows}
         className={cn(
-          "survey-input resize-none",
+          "enhanced-input mobile-input resize-none min-h-[100px]",
           isFlagged && "border-destructive focus:ring-destructive/50"
         )}
       />
 
       {isFlagged && flagMessage && (
         <div className="flex items-center space-x-2 text-sm text-destructive">
-          <span>⚠</span>
+          <span>!</span>
           <span>{flagMessage}</span>
           <button className="underline hover:no-underline">
             Click to resolve

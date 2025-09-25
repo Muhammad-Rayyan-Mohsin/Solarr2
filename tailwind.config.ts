@@ -88,9 +88,39 @@ export default {
 				'15': '60px',  /* 3.75rem - 60px */
 			},
 			
-			/* Apple-style font family */
+			/* Professional font mixture system */
 			fontFamily: {
+				// Headings: Modern, bold sans-serif
+				'heading': ['Inter', 'Poppins', 'Montserrat', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+				// Body: Clean, readable sans-serif
+				'body': ['Roboto', 'Open Sans', 'Source Sans Pro', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+				// Highlights/Buttons: Rounded, friendly sans-serif
+				'highlight': ['Nunito', 'Lato', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+				// System fallback
 				'system': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'SF Pro Text', 'system-ui', 'sans-serif'],
+			},
+			
+			/* Typography scale with professional sizing */
+			fontSize: {
+				'xs': ['0.75rem', { lineHeight: '1.5', letterSpacing: '0.025em' }],
+				'sm': ['0.875rem', { lineHeight: '1.5', letterSpacing: '0.01em' }],
+				'base': ['1rem', { lineHeight: '1.5', letterSpacing: '0.005em' }],
+				'lg': ['1.125rem', { lineHeight: '1.5', letterSpacing: '0' }],
+				'xl': ['1.25rem', { lineHeight: '1.4', letterSpacing: '-0.005em' }],
+				'2xl': ['1.5rem', { lineHeight: '1.4', letterSpacing: '-0.01em' }],
+				'3xl': ['1.875rem', { lineHeight: '1.3', letterSpacing: '-0.015em' }],
+				'4xl': ['2.25rem', { lineHeight: '1.2', letterSpacing: '-0.02em' }],
+				'5xl': ['3rem', { lineHeight: '1.1', letterSpacing: '-0.025em' }],
+				'6xl': ['3.75rem', { lineHeight: '1', letterSpacing: '-0.03em' }],
+				// Professional heading sizes
+				'heading-sm': ['1.125rem', { lineHeight: '1.4', letterSpacing: '-0.005em', fontWeight: '600' }],
+				'heading-md': ['1.5rem', { lineHeight: '1.3', letterSpacing: '-0.01em', fontWeight: '700' }],
+				'heading-lg': ['1.875rem', { lineHeight: '1.2', letterSpacing: '-0.015em', fontWeight: '700' }],
+				'heading-xl': ['2.25rem', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '800' }],
+				// Display sizes for hero sections
+				'display-sm': ['2.5rem', { lineHeight: '1.1', letterSpacing: '-0.025em', fontWeight: '800' }],
+				'display-md': ['3rem', { lineHeight: '1', letterSpacing: '-0.03em', fontWeight: '800' }],
+				'display-lg': ['3.75rem', { lineHeight: '0.9', letterSpacing: '-0.035em', fontWeight: '900' }],
 			},
 			
 			borderRadius: {

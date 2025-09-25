@@ -6,6 +6,7 @@ import {
   Cloud, 
   CloudOff, 
   RefreshCw,
+  Upload,
   Signal,
   SignalHigh,
   SignalMedium,
@@ -186,7 +187,7 @@ export function OfflineStatusIndicator() {
                 className="h-8 w-8 p-0"
                 onClick={triggerSync}
               >
-                <RefreshCw className="h-4 w-4" />
+                <Upload className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -266,7 +267,7 @@ export function OfflineStatusIndicator() {
                     </>
                   ) : (
                     <>
-                      <RefreshCw className="h-4 w-4 mr-2" />
+                      <Upload className="h-4 w-4 mr-2" />
                       Sync Now
                     </>
                   )}

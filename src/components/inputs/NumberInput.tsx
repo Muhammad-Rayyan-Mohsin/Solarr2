@@ -75,7 +75,7 @@ export function NumberInput({
 
   return (
     <div className={cn("space-y-2", isFlagged && "flag-indicator")}>
-      <Label htmlFor={id} className="text-sm font-medium text-foreground">
+      <Label htmlFor={id} className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">
         {label}
         {required && <span className="text-destructive ml-1">*</span>}
       </Label>
@@ -91,7 +91,7 @@ export function NumberInput({
           max={max}
           step={step}
           className={cn(
-            "h-11 text-base rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+            "enhanced-input mobile-input [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
             unit && "pr-16",
             enableVoice && "pr-12",
             unit && enableVoice && "pr-20",
@@ -131,7 +131,7 @@ export function NumberInput({
 
       {isFlagged && flagMessage && (
         <div className="flex items-center space-x-2 text-sm text-destructive">
-          <span>⚠</span>
+          <span>!</span>
           <span>{flagMessage}</span>
           <button className="underline hover:no-underline">
             Click to resolve

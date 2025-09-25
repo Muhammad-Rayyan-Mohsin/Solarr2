@@ -41,7 +41,7 @@ export function SurveyorInfoInput({
         {required && <span className="text-destructive ml-1">*</span>}
       </Label>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label htmlFor={`${id}-name`} className="text-sm font-medium text-muted-foreground">
             Name
@@ -53,7 +53,7 @@ export function SurveyorInfoInput({
             onChange={(e) => handleChange('name', e.target.value)}
             placeholder="Surveyor name"
             className={cn(
-              "h-11 text-base rounded-lg",
+              "enhanced-input",
               isFlagged && "border-destructive focus:ring-destructive/50"
             )}
           />
@@ -70,13 +70,13 @@ export function SurveyorInfoInput({
             onChange={(e) => handleChange('telephone', e.target.value)}
             placeholder="07XXX XXXXXX"
             className={cn(
-              "h-11 text-base rounded-lg",
+              "enhanced-input",
               isFlagged && "border-destructive focus:ring-destructive/50"
             )}
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 md:col-span-2 lg:col-span-1">
           <Label htmlFor={`${id}-email`} className="text-sm font-medium text-muted-foreground">
             Email Address
           </Label>
@@ -87,7 +87,7 @@ export function SurveyorInfoInput({
             onChange={(e) => handleChange('email', e.target.value)}
             placeholder="surveyor@company.com"
             className={cn(
-              "h-11 text-base rounded-lg",
+              "enhanced-input",
               isFlagged && "border-destructive focus:ring-destructive/50"
             )}
           />
@@ -96,7 +96,7 @@ export function SurveyorInfoInput({
       
       {isFlagged && flagMessage && (
         <div className="flex items-center space-x-2 text-base text-destructive">
-          <span>⚠</span>
+          <span>!</span>
           <span>{flagMessage}</span>
           <button className="underline hover:no-underline">
             Click to resolve

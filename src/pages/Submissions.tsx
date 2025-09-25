@@ -290,8 +290,8 @@ export default function Submissions() {
         isOnline={true}
         isDarkMode={isDarkMode}
         onThemeToggle={() => setIsDarkMode(!isDarkMode)}
-  backTo="/"
-  backTooltip="Back to Survey"
+        backTo="/"
+        backTooltip="Back to Home"
       />
 
       <div className="container mx-auto px-6 py-8">

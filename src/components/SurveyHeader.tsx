@@ -46,55 +46,55 @@ export function SurveyHeader({
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
       <TooltipProvider>
-        <div className="container flex h-16 items-center justify-between px-4 sm:px-6">
+        <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 lg:px-6">
           {/* Left: Logo + Title */}
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 min-w-0 flex-1">
             {/* Optional Back button */}
             {(backTo || onBackClick) && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   {backTo ? (
-                    <Link to={backTo} aria-label={backTooltip} className="mr-1">
-                      <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-full">
-                        <ChevronLeft className="h-4 w-4" />
+                    <Link to={backTo} aria-label={backTooltip} className="mr-1 flex-shrink-0">
+                      <Button variant="ghost" size="sm" className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full">
+                        <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     </Link>
                   ) : (
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-9 w-9 p-0 rounded-full mr-1"
+                      className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full mr-1 flex-shrink-0"
                       aria-label={backTooltip}
                       onClick={onBackClick}
                     >
-                      <ChevronLeft className="h-4 w-4" />
+                      <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                   )}
                 </TooltipTrigger>
                 <TooltipContent>{backTooltip}</TooltipContent>
               </Tooltip>
             )}
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <Zap className="h-4 w-4 text-primary" />
+            <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base sm:text-lg font-semibold text-foreground">Survey</h1>
-                <span className="hidden sm:inline-flex text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">Field</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <h1 className="text-sm sm:text-base lg:text-lg font-semibold text-foreground truncate">Survey</h1>
+                <span className="hidden sm:inline-flex text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground flex-shrink-0">Field</span>
               </div>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate max-w-[40vw] sm:max-w-none">{customerName}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate max-w-[30vw] sm:max-w-none">{customerName}</p>
             </div>
           </div>
 
           {/* Right: Actions */}
-          <div className="flex items-center gap-1 sm:gap-2">
-            {/* Quick navigation */}
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            {/* Quick navigation - Hidden on very small screens */}
             <DropdownMenu>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-full" aria-label="Sections">
-                      <ChevronDown className="h-4 w-4" />
+                    <Button variant="ghost" size="sm" className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full" aria-label="Sections">
+                      <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                 </TooltipTrigger>
@@ -121,21 +121,21 @@ export function SurveyHeader({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Submissions link */}
+            {/* Submissions link - Hidden on small screens */}
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link to="/submissions">
-                  <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-full" aria-label="Submissions">
-                    <BarChart3 className="h-4 w-4" />
+                <Link to="/submissions" className="hidden sm:block">
+                  <Button variant="ghost" size="sm" className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full" aria-label="Submissions">
+                    <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                 </Link>
               </TooltipTrigger>
               <TooltipContent>View submissions</TooltipContent>
             </Tooltip>
 
-            {/* Auto-save Status */}
+            {/* Auto-save Status - Hidden on small screens */}
             {autoSaveStatus && (
-              <div className="hidden md:flex items-center gap-2 text-xs">
+              <div className="hidden lg:flex items-center gap-2 text-xs">
                 {autoSaveStatus === "saving" && (
                   <>
                     <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
@@ -160,13 +160,13 @@ export function SurveyHeader({
             {/* Offline/online indicator (provided) */}
             {offlineIndicator}
 
-            {/* Refresh */}
+            {/* Refresh - Hidden on small screens */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-9 w-9 p-0 rounded-full"
+                  className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full hidden sm:flex"
                   aria-label="Refresh"
                   onClick={() => {
                     // Try to check for SW updates, then fallback to hard reload
@@ -177,7 +177,7 @@ export function SurveyHeader({
                     }
                   }}
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Refresh</TooltipContent>
@@ -190,24 +190,24 @@ export function SurveyHeader({
                   variant="ghost"
                   size="sm"
                   onClick={onThemeToggle}
-                  className="h-9 w-9 p-0 rounded-full"
+                  className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full"
                   aria-label="Toggle theme"
                 >
                   {isDarkMode ? (
-                    <Sun className="h-4 w-4" />
+                    <Sun className="h-3 w-3 sm:h-4 sm:w-4" />
                   ) : (
-                    <Moon className="h-4 w-4" />
+                    <Moon className="h-3 w-3 sm:h-4 sm:w-4" />
                   )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Toggle theme</TooltipContent>
             </Tooltip>
 
-            {/* Profile/settings placeholder */}
+            {/* Profile/settings placeholder - Hidden on small screens */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-full" aria-label="Account">
-                  <User className="h-4 w-4" />
+                <Button variant="ghost" size="sm" className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full hidden sm:flex" aria-label="Account">
+                  <User className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -221,7 +221,7 @@ export function SurveyHeader({
         </div>
 
         {/* Slim progress bar under navbar */}
-        <div className="container px-4 sm:px-6 pb-2">
+        <div className="container px-3 sm:px-4 lg:px-6 pb-1 sm:pb-2">
           <div className="h-1 rounded-full bg-muted/60 overflow-hidden">
             <div
               className="h-full bg-primary transition-[width] duration-500"

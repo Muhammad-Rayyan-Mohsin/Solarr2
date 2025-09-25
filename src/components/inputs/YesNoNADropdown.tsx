@@ -1,73 +1,66 @@
+import React from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-type YesNoNAValue = "yes" | "no" | "na";
-
 interface YesNoNADropdownProps {
   id: string;
   label: string;
-  value: YesNoNAValue | null;
-  onChange: (value: YesNoNAValue) => void;
+  value: "yes" | "no" | "na" | null;
+  onChange: (value: "yes" | "no" | "na" | null) => void;
+  placeholder?: string;
   required?: boolean;
   isFlagged?: boolean;
   flagMessage?: string;
-  placeholder?: string;
+  description?: string;
 }
-
-const options: { value: YesNoNAValue; label: string }[] = [
-  { value: "yes", label: "Yes" },
-  { value: "no", label: "No" },
-  { value: "na", label: "N/A" }
-];
 
 export function YesNoNADropdown({
   id,
   label,
   value,
   onChange,
+  placeholder = "Select...",
   required = false,
   isFlagged = false,
   flagMessage,
-  placeholder = "Select..."
+  description,
 }: YesNoNADropdownProps) {
+  const handleValueChange = (newValue: string) => {
+    if (newValue === "yes" || newValue === "no" || newValue === "na") {
+      onChange(newValue);
+    } else {
+      onChange(null);
+    }
+  };
+
   return (
-    <div className={cn("space-y-3", isFlagged && "flag-indicator")}>
-      <Label htmlFor={id} className="text-base font-medium text-foreground">
+    <div className={cn("space-y-2", isFlagged && "flag-indicator")}>
+      <Label htmlFor={id} className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">
         {label}
         {required && <span className="text-destructive ml-1">*</span>}
       </Label>
-      
-      <Select value={value || ""} onValueChange={onChange}>
-        <SelectTrigger 
+      {description && (
+        <p className="text-xs text-muted-foreground">{description}</p>
+      )}
+      <Select value={value || ""} onValueChange={handleValueChange}>
+        <SelectTrigger
+          id={id}
           className={cn(
-            "h-11 text-base rounded-lg",
+            "enhanced-select mobile-select",
             isFlagged && "border-destructive focus:ring-destructive/50"
           )}
         >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent className="bg-background border border-border shadow-lg z-50">
-          {options.map((option) => (
-            <SelectItem 
-              key={option.value} 
-              value={option.value}
-              className="hover:bg-muted cursor-pointer"
-            >
-              {option.label}
-            </SelectItem>
-          ))}
+        <SelectContent>
+          <SelectItem value="yes">Yes</SelectItem>
+          <SelectItem value="no">No</SelectItem>
+          <SelectItem value="na">N/A</SelectItem>
         </SelectContent>
       </Select>
-      
       {isFlagged && flagMessage && (
-        <div className="flex items-center space-x-2 text-base text-destructive">
-          <span>⚠</span>
-          <span>{flagMessage}</span>
-          <button className="underline hover:no-underline">
-            Click to resolve
-          </button>
-        </div>
+        <p className="text-sm text-destructive">{flagMessage}</p>
       )}
     </div>
   );

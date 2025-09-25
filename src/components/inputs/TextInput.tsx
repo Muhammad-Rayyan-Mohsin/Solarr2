@@ -76,8 +76,8 @@ export function TextInput({
   };
 
   return (
-    <div className={cn("space-y-2", isFlagged && "flag-indicator")}>
-      <Label htmlFor={id} className="text-sm font-medium text-foreground">
+    <div className={cn("content-group", isFlagged && "flag-indicator")}>
+      <Label htmlFor={id} className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">
         {label}
         {required && <span className="text-destructive ml-1">*</span>}
         {includeLocation && (
@@ -95,7 +95,7 @@ export function TextInput({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           className={cn(
-            "h-11 text-base rounded-lg",
+            "enhanced-input mobile-input h-12 px-4 py-3", // Consistent height and padding
             enableVoice && "pr-12",
             isFlagged && "border-destructive focus:ring-destructive/50"
           )}
@@ -108,7 +108,7 @@ export function TextInput({
             size="sm"
             onClick={handleVoiceToggle}
             className={cn(
-              "absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-muted/50",
+              "absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-muted/50",
               isRecording && "text-destructive recording-pulse"
             )}
           >
@@ -125,13 +125,13 @@ export function TextInput({
       </div>
 
       {includeLocation && (
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-3">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={getCurrentLocation}
-            className="text-xs h-7 px-2"
+            className="text-xs h-8 px-3"
           >
             <MapPin className="h-3 w-3 mr-1" />
             Get Location
@@ -145,8 +145,8 @@ export function TextInput({
       )}
 
       {isFlagged && flagMessage && (
-        <div className="flex items-center space-x-2 text-sm text-destructive">
-          <span>⚠</span>
+        <div className="flex items-center gap-2 text-sm text-destructive">
+          <span>!</span>
           <span>{flagMessage}</span>
           <button className="underline hover:no-underline">
             Click to resolve

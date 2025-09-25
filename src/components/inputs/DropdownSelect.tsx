@@ -28,7 +28,7 @@ export function DropdownSelect({
 }: DropdownSelectProps) {
   return (
     <div className={cn("space-y-3", isFlagged && "flag-indicator")}>
-      <Label htmlFor={id} className="text-base font-medium text-foreground">
+      <Label htmlFor={id} className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">
         {label}
         {required && <span className="text-destructive ml-1">*</span>}
       </Label>
@@ -36,18 +36,17 @@ export function DropdownSelect({
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger 
           className={cn(
-            "survey-input",
+            "enhanced-select mobile-select",
             isFlagged && "border-destructive focus:ring-destructive/50"
           )}
         >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent className="bg-background border border-border shadow-lg">
+        <SelectContent>
           {options.map((option) => (
             <SelectItem 
               key={option.value} 
               value={option.value}
-              className="hover:bg-muted cursor-pointer"
             >
               {option.label}
             </SelectItem>
@@ -56,8 +55,8 @@ export function DropdownSelect({
       </Select>
       
       {isFlagged && flagMessage && (
-        <div className="flex items-center space-x-2 text-base text-destructive">
-          <span>⚠</span>
+        <div className="flex items-center space-x-2 text-sm text-destructive">
+          <span>!</span>
           <span>{flagMessage}</span>
           <button className="underline hover:no-underline">
             Click to resolve

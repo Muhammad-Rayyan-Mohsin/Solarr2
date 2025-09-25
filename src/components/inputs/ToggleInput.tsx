@@ -56,7 +56,7 @@ export function ToggleInput({
       
       {isFlagged && flagMessage && (
         <div className="flex items-center space-x-2 text-sm text-destructive">
-          <span>⚠</span>
+          <span>!</span>
           <span>{flagMessage}</span>
           <button className="underline hover:no-underline">
             Click to resolve

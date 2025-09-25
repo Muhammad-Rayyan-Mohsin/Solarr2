@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DatePickerInput } from "./DatePickerInput";
 import { cn } from "@/lib/utils";
 
 interface DateRangeInputProps {
@@ -88,49 +89,27 @@ export function DateRangeInput({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="space-y-2">
-          {/* <Label
-            htmlFor={`${id}-start`}
-            className="text-xs text-muted-foreground"
-          >
-            Start Date
-          </Label> */}
-          <div className="relative">
-            <Input
-              id={`${id}-start`}
-              type="date"
-              value={startDate}
-              onChange={(e) => onStartDateChange(e.target.value)}
-              className={cn(
-                "survey-input",
-                isFlagged && "border-destructive focus:ring-destructive/50"
-              )}
-            />
-            {/* <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /> */}
-          </div>
-        </div>
+        <DatePickerInput
+          id={`${id}-start`}
+          label="Start Date"
+          value={startDate}
+          onChange={onStartDateChange}
+          placeholder="Select start date..."
+          minDate={new Date()}
+          maxDate={new Date(new Date().getFullYear() + 2, 11, 31)}
+          isFlagged={isFlagged}
+        />
 
-        <div className="space-y-2">
-          {/* <Label
-            htmlFor={`${id}-end`}
-            className="text-xs text-muted-foreground"
-          >
-            End Date
-          </Label> */}
-          <div className="relative">
-            <Input
-              id={`${id}-end`}
-              type="date"
-              value={endDate}
-              onChange={(e) => onEndDateChange(e.target.value)}
-              className={cn(
-                "survey-input",
-                isFlagged && "border-destructive focus:ring-destructive/50"
-              )}
-            />
-            {/* <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /> */}
-          </div>
-        </div>
+        <DatePickerInput
+          id={`${id}-end`}
+          label="End Date"
+          value={endDate}
+          onChange={onEndDateChange}
+          placeholder="Select end date..."
+          minDate={startDate ? new Date(startDate) : new Date()}
+          maxDate={new Date(new Date().getFullYear() + 2, 11, 31)}
+          isFlagged={isFlagged}
+        />
       </div>
 
       <div className="space-y-2">
@@ -160,7 +139,7 @@ export function DateRangeInput({
 
       {isFlagged && flagMessage && (
         <div className="flex items-center space-x-2 text-sm text-destructive">
-          <span>⚠</span>
+          <span>!</span>
           <span>{flagMessage}</span>
           <button className="underline hover:no-underline">
             Click to resolve

@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TextInput } from "@/components/inputs/TextInput";
 import { NumberInput } from "@/components/inputs/NumberInput";
 import { SliderInput } from "@/components/inputs/SliderInput";
+import { EnhancedSliderInput } from "@/components/inputs/EnhancedSliderInput";
 import { DropdownSelect } from "@/components/inputs/DropdownSelect";
 import { PhotoUpload } from "@/components/inputs/PhotoUpload";
 import { TextareaInput } from "@/components/inputs/TextareaInput";
+import { TextWithPhotoInput } from "@/components/inputs/TextWithPhotoInput";
 
 interface RoofFace {
   id: string;
@@ -66,6 +68,15 @@ const membraneTypeOptions = [
   { value: "breathable", label: "Breathable" },
   { value: "bitumen", label: "Bitumen" },
   { value: "none", label: "None" }
+];
+
+const gutterHeightOptions = [
+  { value: "0-2", label: "0-2m" },
+  { value: "2-4", label: "2-4m" },
+  { value: "4-6", label: "4-6m" },
+  { value: "6-8", label: "6-8m" },
+  { value: "8-10", label: "8-10m" },
+  { value: "10+", label: "10m+" }
 ];
 
 export function RoofSection({ roofFaces, onRoofFacesChange }: RoofSectionProps) {
@@ -149,204 +160,303 @@ export function RoofSection({ roofFaces, onRoofFacesChange }: RoofSectionProps) 
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <TextInput
-                id={`${face.id}-label`}
-                label="Roof Face Label"
-                value={face.label}
-                onChange={(value) => updateRoofFace(face.id, 'label', value)}
-                required
-              />
-              
-              <SliderInput
-                id={`${face.id}-orientation`}
-                label="Orientation (° from South)"
-                value={face.orientation}
-                onChange={(value) => updateRoofFace(face.id, 'orientation', value)}
-                min={-180}
-                max={180}
-                step={1}
-                unit="°"
-                required
-              />
-              
-              <SliderInput
-                id={`${face.id}-pitch`}
-                label="Pitch (°)"
-                value={face.pitch}
-                onChange={(value) => updateRoofFace(face.id, 'pitch', value)}
-                min={0}
-                max={60}
-                step={1}
-                unit="°"
-                presetValues={[15, 30, 35, 45]}
-                required
-              />
-              
-              <NumberInput
-                id={`${face.id}-width`}
-                label="Available Width"
-                value={face.width}
-                onChange={(value) => updateRoofFace(face.id, 'width', value)}
-                min={0}
-                max={50}
-                step={0.1}
-                unit="m"
-                required
-              />
-              
-              <NumberInput
-                id={`${face.id}-length`}
-                label="Available Length"
-                value={face.length}
-                onChange={(value) => updateRoofFace(face.id, 'length', value)}
-                min={0}
-                max={50}
-                step={0.1}
-                unit="m"
-                required
-              />
-              
-              <NumberInput
-                id={`${face.id}-area`}
-                label="Gross Roof Area"
-                value={face.area}
-                onChange={(value) => updateRoofFace(face.id, 'area', value)}
-                min={0}
-                max={1000}
-                step={0.01}
-                unit="m²"
-                required
-                enableVoice={false}
-              />
-              
-              <DropdownSelect
-                id={`${face.id}-covering`}
-                label="Roof Covering"
-                value={face.covering}
-                onChange={(value) => updateRoofFace(face.id, 'covering', value)}
-                options={coveringOptions}
-                required
-              />
-              
-              <DropdownSelect
-                id={`${face.id}-covering-condition`}
-                label="Covering Condition"
-                value={face.coveringCondition}
-                onChange={(value) => updateRoofFace(face.id, 'coveringCondition', value)}
-                options={conditionOptions}
-                required
-              />
-              
-              <NumberInput
-                id={`${face.id}-gutter-height`}
-                label="Gutter Height Above Ground"
-                value={face.gutterHeight}
-                onChange={(value) => updateRoofFace(face.id, 'gutterHeight', value)}
-                min={0}
-                max={20}
-                step={0.1}
-                unit="m"
-                required
-              />
-              
-              <DropdownSelect
-                id={`${face.id}-rafter-spacing`}
-                label="Rafter Spacing"
-                value={face.rafterSpacing}
-                onChange={(value) => updateRoofFace(face.id, 'rafterSpacing', value)}
-                options={rafterSpacingOptions}
-                required
-              />
-              
-              <NumberInput
-                id={`${face.id}-rafter-depth`}
-                label="Rafter Depth"
-                value={face.rafterDepth}
-                onChange={(value) => updateRoofFace(face.id, 'rafterDepth', value)}
-                min={0}
-                max={500}
-                step={1}
-                unit="mm"
-                required
-              />
-              
-              <NumberInput
-                id={`${face.id}-batten-depth`}
-                label="Batten Depth"
-                value={face.battenDepth}
-                onChange={(value) => updateRoofFace(face.id, 'battenDepth', value)}
-                min={0}
-                max={100}
-                step={1}
-                unit="mm"
-                required
-              />
-              
-              <DropdownSelect
-                id={`${face.id}-membrane-type`}
-                label="Membrane Type"
-                value={face.membraneType}
-                onChange={(value) => updateRoofFace(face.id, 'membraneType', value)}
-                options={membraneTypeOptions}
-                required
-              />
-              
-              <DropdownSelect
-                id={`${face.id}-membrane-condition`}
-                label="Membrane Condition"
-                value={face.membraneCondition}
-                onChange={(value) => updateRoofFace(face.id, 'membraneCondition', value)}
-                options={conditionOptions}
-                required
-              />
-              
-              <NumberInput
-                id={`${face.id}-planned-panel-count`}
-                label="Planned Panel Count"
-                value={face.plannedPanelCount}
-                onChange={(value) => updateRoofFace(face.id, 'plannedPanelCount', value)}
-                min={1}
-                max={50}
-                step={1}
-                required
-                enableVoice={false}
-              />
+            <div className="space-y-6">
+              {/* Basic Roof Information */}
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-foreground border-b border-border pb-2">
+                  Basic Roof Information
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <TextInput
+                    id={`${face.id}-label`}
+                    label="Roof Face Label"
+                    value={face.label}
+                    onChange={(value) => updateRoofFace(face.id, 'label', value)}
+                    required
+                  />
+                  
+                  <EnhancedSliderInput
+                    id={`${face.id}-orientation`}
+                    label="Orientation (° from South)"
+                    value={face.orientation}
+                    onChange={(value) => updateRoofFace(face.id, 'orientation', value)}
+                    min={-180}
+                    max={180}
+                    step={1}
+                    unit="°"
+                    required
+                    showLabels={true}
+                    showInput={true}
+                    showButtons={true}
+                    presetValues={[-180, -90, 0, 90, 180]}
+                    description="0° = South, 90° = West, -90° = East, 180° = North"
+                  />
+                  
+                  <EnhancedSliderInput
+                    id={`${face.id}-pitch`}
+                    label="Pitch (°)"
+                    value={face.pitch}
+                    onChange={(value) => updateRoofFace(face.id, 'pitch', value)}
+                    min={0}
+                    max={60}
+                    step={1}
+                    unit="°"
+                    required
+                    showLabels={true}
+                    showInput={true}
+                    showButtons={true}
+                    presetValues={[15, 30, 35, 45]}
+                    description="Roof angle from horizontal. 30-35° is optimal for solar panels"
+                  />
+                </div>
+              </div>
+
+              {/* Roof Dimensions */}
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-foreground border-b border-border pb-2">
+                  Roof Dimensions
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <NumberInput
+                    id={`${face.id}-width`}
+                    label="Available Width"
+                    value={face.width}
+                    onChange={(value) => updateRoofFace(face.id, 'width', value)}
+                    min={0}
+                    max={50}
+                    step={0.1}
+                    unit="m"
+                    required
+                  />
+                  
+                  <NumberInput
+                    id={`${face.id}-length`}
+                    label="Available Length"
+                    value={face.length}
+                    onChange={(value) => updateRoofFace(face.id, 'length', value)}
+                    min={0}
+                    max={50}
+                    step={0.1}
+                    unit="m"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Roof Covering & Condition */}
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-foreground border-b border-border pb-2">
+                  Roof Covering & Condition
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <DropdownSelect
+                    id={`${face.id}-covering`}
+                    label="Roof Covering"
+                    value={face.covering}
+                    onChange={(value) => updateRoofFace(face.id, 'covering', value)}
+                    options={coveringOptions}
+                    required
+                  />
+                  
+                  <DropdownSelect
+                    id={`${face.id}-covering-condition`}
+                    label="Covering Condition"
+                    value={face.coveringCondition}
+                    onChange={(value) => updateRoofFace(face.id, 'coveringCondition', value)}
+                    options={conditionOptions}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Structural Details */}
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-foreground border-b border-border pb-2">
+                  Structural Details
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <DropdownSelect
+                    id={`${face.id}-gutter-height`}
+                    label="Gutter Height Above Ground"
+                    value={face.gutterHeight}
+                    onChange={(value) => updateRoofFace(face.id, 'gutterHeight', value)}
+                    options={gutterHeightOptions}
+                    required
+                  />
+                  
+                  <DropdownSelect
+                    id={`${face.id}-rafter-spacing`}
+                    label="Rafter Spacing"
+                    value={face.rafterSpacing}
+                    onChange={(value) => updateRoofFace(face.id, 'rafterSpacing', value)}
+                    options={rafterSpacingOptions}
+                    required
+                  />
+                  
+                  <NumberInput
+                    id={`${face.id}-rafter-depth`}
+                    label="Rafter Depth"
+                    value={face.rafterDepth}
+                    onChange={(value) => updateRoofFace(face.id, 'rafterDepth', value)}
+                    min={0}
+                    max={50}
+                    step={0.1}
+                    unit="cm"
+                    required
+                  />
+                  
+                  <NumberInput
+                    id={`${face.id}-batten-depth`}
+                    label="Batten Depth"
+                    value={face.battenDepth}
+                    onChange={(value) => updateRoofFace(face.id, 'battenDepth', value)}
+                    min={0}
+                    max={10}
+                    step={0.1}
+                    unit="cm"
+                    required
+                  />
+                  
+                  <DropdownSelect
+                    id={`${face.id}-membrane-type`}
+                    label="Membrane Type"
+                    value={face.membraneType}
+                    onChange={(value) => updateRoofFace(face.id, 'membraneType', value)}
+                    options={membraneTypeOptions}
+                    required
+                  />
+                  
+                  <DropdownSelect
+                    id={`${face.id}-membrane-condition`}
+                    label="Membrane Condition"
+                    value={face.membraneCondition}
+                    onChange={(value) => updateRoofFace(face.id, 'membraneCondition', value)}
+                    options={conditionOptions}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Planning */}
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-foreground border-b border-border pb-2">
+                  Planning
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <NumberInput
+                    id={`${face.id}-planned-panel-count`}
+                    label="Planned Panel Count"
+                    value={face.plannedPanelCount}
+                    onChange={(value) => updateRoofFace(face.id, 'plannedPanelCount', value)}
+                    min={1}
+                    max={50}
+                    step={1}
+                    required
+                    enableVoice={false}
+                  />
+                </div>
+              </div>
             </div>
             
-            <div className="space-y-4">
-              <PhotoUpload
-                id={`${face.id}-obstructions`}
-                label="Obstructions on Roof (chimneys, aerials, velux, vents)"
-                photos={face.obstructions}
-                onChange={(photos) => updateRoofFace(face.id, 'obstructions', photos)}
-                maxPhotos={5}
-              />
-              
-              <PhotoUpload
-                id={`${face.id}-shading`}
-                label="Shading Objects (trees, buildings, pylons)"
-                photos={face.shading}
-                onChange={(photos) => updateRoofFace(face.id, 'shading', photos)}
-                maxPhotos={5}
-              />
-              
-              <PhotoUpload
-                id={`${face.id}-photos`}
-                label="General Roof Photos"
-                photos={face.photos}
-                onChange={(photos) => updateRoofFace(face.id, 'photos', photos)}
-                maxPhotos={10}
-              />
-              
-              <TextareaInput
-                id={`${face.id}-structural-defects`}
-                label="Structural Defects"
-                value={face.structuralDefects}
-                onChange={(value) => updateRoofFace(face.id, 'structuralDefects', value)}
-                placeholder="Describe any structural defects or concerns..."
-                rows={3}
-              />
+            <div className="space-y-6">
+              {/* Obstructions - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-foreground border-b border-border pb-2">
+                  Roof Obstructions
+                </h4>
+                <TextWithPhotoInput
+                  id={`${face.id}-obstructions`}
+                  label="Obstructions on Roof"
+                  textValue=""
+                  onTextChange={() => {}}
+                  photos={face.obstructions}
+                  onPhotosChange={(photos) => updateRoofFace(face.id, 'obstructions', photos)}
+                  placeholder="Describe obstructions (chimneys, aerials, velux, vents)..."
+                  multiline
+                  maxPhotos={5}
+                  photoGuidelines={[
+                    {
+                      title: "Chimneys",
+                      description: "Document chimney locations and heights",
+                      icon: "•"
+                    },
+                    {
+                      title: "Aerials & Vents",
+                      description: "Show aerials, vents, and other roof fixtures",
+                      icon: "•"
+                    },
+                    {
+                      title: "Velux Windows",
+                      description: "Document skylight positions and sizes",
+                      icon: "•"
+                    }
+                  ]}
+                />
+              </div>
+
+              {/* Shading - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-foreground border-b border-border pb-2">
+                  Shading Objects
+                </h4>
+                <TextWithPhotoInput
+                  id={`${face.id}-shading`}
+                  label="Shading Objects"
+                  textValue=""
+                  onTextChange={() => {}}
+                  photos={face.shading}
+                  onPhotosChange={(photos) => updateRoofFace(face.id, 'shading', photos)}
+                  placeholder="Describe shading objects (trees, buildings, pylons)..."
+                  multiline
+                  maxPhotos={5}
+                  photoGuidelines={[
+                    {
+                      title: "Trees",
+                      description: "Document tree positions and heights",
+                      icon: "•"
+                    },
+                    {
+                      title: "Buildings",
+                      description: "Show nearby buildings that may cause shading",
+                      icon: "•"
+                    },
+                    {
+                      title: "Pylons & Poles",
+                      description: "Document utility poles and pylons",
+                      icon: "•"
+                    }
+                  ]}
+                />
+              </div>
+
+              {/* General Roof Photos */}
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-foreground border-b border-border pb-2">
+                  General Roof Photos
+                </h4>
+                <PhotoUpload
+                  id={`${face.id}-photos`}
+                  label="General Roof Photos"
+                  photos={face.photos}
+                  onChange={(photos) => updateRoofFace(face.id, 'photos', photos)}
+                  maxPhotos={10}
+                />
+              </div>
+
+              {/* Structural Defects */}
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-foreground border-b border-border pb-2">
+                  Structural Assessment
+                </h4>
+                <TextareaInput
+                  id={`${face.id}-structural-defects`}
+                  label="Structural Defects"
+                  value={face.structuralDefects}
+                  onChange={(value) => updateRoofFace(face.id, 'structuralDefects', value)}
+                  placeholder="Describe any structural defects or concerns..."
+                  rows={3}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>

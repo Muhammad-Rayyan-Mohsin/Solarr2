@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { SurveyHeader } from "@/components/SurveyHeader";
-import { Hero } from "@/components/Hero";
+import { ModernSurveyHeader } from "@/components/ModernSurveyHeader";
+import ModernHeroSection from "@/components/ModernHeroSection";
 import { SurveySection } from "@/components/SurveySection";
 import { RedFlagsSummary } from "@/components/RedFlagsSummary";
 import { TextInput } from "@/components/inputs/TextInput";
@@ -20,6 +20,13 @@ import { ToggleInput } from "@/components/inputs/ToggleInput";
 import { TemperatureRangeInput } from "@/components/inputs/TemperatureRangeInput";
 import { SummaryDisplay } from "@/components/inputs/SummaryDisplay";
 import { ExportButtons } from "@/components/ExportButtons";
+import { DatePickerInput } from "@/components/inputs/DatePickerInput";
+import { PhoneInputComponent } from "@/components/inputs/PhoneInput";
+import { EnhancedSliderInput } from "@/components/inputs/EnhancedSliderInput";
+import { EnhancedPhotoUpload } from "@/components/inputs/EnhancedPhotoUpload";
+import { AbstractProgressIndicator } from "@/components/AbstractProgressIndicator";
+import { UserFeedbackModal } from "@/components/UserFeedbackModal";
+import { BudgetRangeSlider } from "@/components/inputs/BudgetRangeSlider";
 import { Button } from "@/components/ui/button";
 import { OfflineStatusIndicator } from "@/components/OfflineStatusIndicator";
 import { useAutoSave } from "@/hooks/use-auto-save";
@@ -88,6 +95,7 @@ interface FormData {
   segTariffAvailable: "yes" | "no" | "na" | null;
   segTariffExplanation: string;
   smartTariffAvailable: "yes" | "no" | "na" | null;
+  customerSignature: string;
 
   // Section 2 - Property Overview
   propertyType: string;
@@ -108,14 +116,18 @@ interface FormData {
   // Section 4 - Loft / Attic
   loftHatchWidth: string;
   loftHatchHeight: string;
-  loftAccessQuality: string;
+  loftAccessType: string; // quantity/restriction/none
   loftHeadroom: string;
+  loftBoardsInPlace: "yes" | "no" | "na" | null;
   roofTimberCondition: string;
   roofTimberPhoto: string[];
+  roofTimberNotes: string;
   wallSpaceInverter: "yes" | "no" | "na" | null;
   wallSpaceInverterPhoto: string[];
+  wallSpaceInverterNotes: string;
   wallSpaceBattery: "yes" | "no" | "na" | null;
   wallSpaceBatteryPhoto: string[];
+  wallSpaceBatteryNotes: string;
   loftInsulationThickness: string;
   loftLighting: string;
   loftPowerSocket: "yes" | "no" | "na" | null;
@@ -235,14 +247,14 @@ const propertyAgeOptions = [
   { value: "2010-2023", label: "2010-2023" },
 ];
 
-const loftAccessQualityOptions = [
-  { value: "easy", label: "Easy" },
-  { value: "restricted", label: "Restricted" },
-  { value: "none", label: "None" },
+const loftAccessTypeOptions = [
+  { value: "easy", label: "Easy Access" },
+  { value: "restricted", label: "Restricted Access" },
+  { value: "none", label: "No Access" },
 ];
 
 const roofTimberConditionOptions = [
-  { value: "sound", label: "Sound" },
+  { value: "good", label: "Good" },
   { value: "minor-rot", label: "Minor Rot" },
   { value: "major-rot", label: "Major Rot" },
   { value: "unknown", label: "Unknown" },
@@ -333,7 +345,7 @@ const budgetRangeOptions = [
 // Default form data (empty form)
 const DEFAULT_FORM_DATA: FormData = {
   // Section 0 - General & Contact
-  surveyDate: new Date().toISOString().split("T")[0],
+  surveyDate: new Date().toISOString(),
   surveyorInfo: {
     name: "",
     telephone: "",
@@ -365,6 +377,7 @@ const DEFAULT_FORM_DATA: FormData = {
   segTariffAvailable: null,
   segTariffExplanation: "",
   smartTariffAvailable: null,
+  customerSignature: "",
 
   // Section 2 - Property Overview
   propertyType: "",
@@ -408,14 +421,18 @@ const DEFAULT_FORM_DATA: FormData = {
   // Section 4 - Loft / Attic
   loftHatchWidth: "",
   loftHatchHeight: "",
-  loftAccessQuality: "",
+  loftAccessType: "",
   loftHeadroom: "",
+  loftBoardsInPlace: null,
   roofTimberCondition: "",
   roofTimberPhoto: [],
+  roofTimberNotes: "",
   wallSpaceInverter: null,
   wallSpaceInverterPhoto: [],
+  wallSpaceInverterNotes: "",
   wallSpaceBattery: null,
   wallSpaceBatteryPhoto: [],
+  wallSpaceBatteryNotes: "",
   loftInsulationThickness: "",
   loftLighting: "",
   loftPowerSocket: null,
@@ -478,7 +495,7 @@ const DEFAULT_FORM_DATA: FormData = {
 // Test form data (pre-filled for testing)
 const TEST_FORM_DATA: FormData = {
   // Section 0 - General & Contact
-  surveyDate: new Date().toISOString().split("T")[0],
+  surveyDate: new Date().toISOString(),
   surveyorInfo: {
     name: "John Smith",
     telephone: "07123 456789",
@@ -510,6 +527,7 @@ const TEST_FORM_DATA: FormData = {
   segTariffAvailable: "yes",
   segTariffExplanation: "Smart Export Guarantee at 5.5p/kWh",
   smartTariffAvailable: "yes",
+  customerSignature: "",
 
   // Section 2 - Property Overview
   propertyType: "semi",
@@ -575,14 +593,18 @@ const TEST_FORM_DATA: FormData = {
   // Section 4 - Loft / Attic
   loftHatchWidth: "60",
   loftHatchHeight: "60",
-  loftAccessQuality: "easy",
+  loftAccessType: "easy",
   loftHeadroom: "2.4",
-  roofTimberCondition: "sound",
+  loftBoardsInPlace: "yes",
+  roofTimberCondition: "good",
   roofTimberPhoto: [],
+  roofTimberNotes: "Timber in good condition, no signs of rot",
   wallSpaceInverter: "yes",
   wallSpaceInverterPhoto: [],
+  wallSpaceInverterNotes: "Plenty of wall space available",
   wallSpaceBattery: "yes",
   wallSpaceBatteryPhoto: [],
+  wallSpaceBatteryNotes: "Good space for battery installation",
   loftInsulationThickness: "270",
   loftLighting: "single-bulb",
   loftPowerSocket: "no",
@@ -666,6 +688,7 @@ const Index = () => {
   const [currentSection, setCurrentSection] = useState<string | null>(
     "general"
   );
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const { toast } = useToast();
 
   // Offline functionality
@@ -1295,29 +1318,33 @@ const Index = () => {
           "siteAddress",
           "postcode",
           "gridReference",
+          "what3words",
           "phone",
           "email",
           "secondaryContactName",
           "secondaryContactPhone",
         ],
-        total: 10,
+        total: 11,
       },
       electricity: {
         fields: [
           "annualConsumption",
+          "annualConsumptionPhoto",
           "mpanNumber",
+          "mpanPhoto",
           "electricityProvider",
           "networkOperator",
-          "customerPermissionGranted",
           "daytimeImportRate",
           "nighttimeImportRate",
           "standingCharge",
           "tariffType",
           "smartMeterPresent",
           "segTariffAvailable",
-          "mpanPhoto",
+          "segTariffExplanation",
+          "smartTariffAvailable",
+          "customerSignature",
         ],
-        total: 12,
+        total: 15,
       },
       property: {
         fields: [
@@ -1354,35 +1381,47 @@ const Index = () => {
         fields: [
           "loftHatchWidth",
           "loftHatchHeight",
-          "loftAccessQuality",
+          "loftAccessType",
           "loftHeadroom",
+          "loftBoardsInPlace",
           "roofTimberCondition",
+          "roofTimberNotes",
+          "roofTimberPhoto",
           "wallSpaceInverter",
           "wallSpaceBattery",
+          "wallSpaceInverterNotes",
+          "wallSpaceInverterPhoto",
+          "wallSpaceBatteryNotes",
+          "wallSpaceBatteryPhoto",
           "loftInsulationThickness",
           "loftLighting",
           "loftPowerSocket",
-          "roofTimberPhoto",
         ],
-        total: 11,
+        total: 17,
       },
       electrical: {
         fields: [
           "supplyType",
           "mainFuseRating",
+          "mainFusePhoto",
           "consumerUnitMake",
           "consumerUnitLocation",
+          "consumerUnitLocationPhoto",
           "spareFuseWays",
+          "spareFuseWaysPhoto",
           "existingSurgeProtection",
+          "existingSurgeProtectionPhoto",
           "earthBondingVerified",
+          "earthBondingPhoto",
           "earthingSystemType",
+          "earthingSystemPhoto",
           "dnoNotificationRequired",
           "evChargerInstalled",
           "evChargerLoad",
-          "mainFusePhoto",
-          "consumerUnitLocationPhoto",
+          "cableRouteToRoof",
+          "cableRouteToBattery",
         ],
-        total: 13,
+        total: 19,
       },
       battery: {
         fields: [
@@ -1390,11 +1429,11 @@ const Index = () => {
           "preferredInstallLocation",
           "distanceFromCU",
           "mountingSurface",
+          "ipRatingRequired",
           "ventilationAdequate",
           "fireEgressCompliance",
           "ambientTempMin",
           "ambientTempMax",
-          "ipRatingRequired",
           "ventilationPhoto",
           "fireEgressPhoto",
         ],
@@ -1403,12 +1442,12 @@ const Index = () => {
       safety: {
         fields: [
           "asbestosPresence",
+          "asbestosPhoto",
           "workingAtHeightDifficulties",
           "fragileRoofAreas",
           "livestockPetsOnSite",
           "livestockPetsNotes",
           "specialAccessInstructions",
-          "asbestosPhoto",
         ],
         total: 7,
       },
@@ -1421,10 +1460,9 @@ const Index = () => {
           "customerAwayNotes",
           "budgetRange",
           "interestedInEvCharger",
-          "interestedInEnergyMonitoring",
           "additionalNotes",
         ],
-        total: 9,
+        total: 8,
       },
     };
 
@@ -1681,137 +1719,268 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background font-system mono-background bg-red-50">
       <div className="relative">
-        <SurveyHeader
+        <ModernSurveyHeader
           customerName={formData.customerName}
-          currentStep={1}
-          totalSteps={6}
-          completedSteps={progress.completedSteps}
-          isOnline={isOnline}
           isDarkMode={isDarkMode}
           onThemeToggle={() => setIsDarkMode(!isDarkMode)}
-          offlineIndicator={<OfflineStatusIndicator />}
+          backTo="/"
+          backTooltip="Back to Home"
+          onJumpToSection={(key) => setCurrentSection(key)}
           autoSaveStatus={saveStatus}
           isSaving={isSaving}
-          onJumpToSection={(key) => setCurrentSection(key)}
-          overallProgressPercent={Math.round((progress.completed / progress.total) * 100)}
+          offlineIndicator={<OfflineStatusIndicator />}
         />
       </div>
 
-      <Hero />
+      <ModernHeroSection 
+        overallProgress={progress.overall}
+        completedSections={Object.values(progress.sections).filter(s => s.completed === s.total).length}
+        totalSections={Object.keys(progress.sections).length}
+        showProgress={progress.overall > 0}
+        showStartButton={false}
+      />
+
+
+      {/* Abstract Progress Indicator - Desktop Only */}
+      <div className="container mx-auto mobile-spacing-sm hidden md:block">
+        <div className="max-w-7xl mx-auto">
+          <AbstractProgressIndicator
+            sections={[
+              {
+                id: "general",
+                title: "General & Contact",
+                completed: progress.sections.general.completed,
+                total: progress.sections.general.total,
+                status: currentSection === "general" ? "in-progress" : 
+                       progress.sections.general.completed === progress.sections.general.total ? "completed" : "pending",
+                estimatedTime: "5 min"
+              },
+              {
+                id: "electricity",
+                title: "Electricity Baseline",
+                completed: progress.sections.electricity.completed,
+                total: progress.sections.electricity.total,
+                status: currentSection === "electricity" ? "in-progress" : 
+                       progress.sections.electricity.completed === progress.sections.electricity.total ? "completed" : "pending",
+                estimatedTime: "8 min"
+              },
+              {
+                id: "property",
+                title: "Property Overview",
+                completed: progress.sections.property.completed,
+                total: progress.sections.property.total,
+                status: currentSection === "property" ? "in-progress" : 
+                       progress.sections.property.completed === progress.sections.property.total ? "completed" : "pending",
+                estimatedTime: "6 min"
+              },
+              {
+                id: "roof",
+                title: "Roof Inspection",
+                completed: progress.sections.roof.completed,
+                total: progress.sections.roof.total,
+                status: currentSection === "roof" ? "in-progress" : 
+                       progress.sections.roof.completed === progress.sections.roof.total ? "completed" : "pending",
+                estimatedTime: "12 min"
+              },
+              {
+                id: "loft",
+                title: "Loft / Attic",
+                completed: progress.sections.loft.completed,
+                total: progress.sections.loft.total,
+                status: currentSection === "loft" ? "in-progress" : 
+                       progress.sections.loft.completed === progress.sections.loft.total ? "completed" : "pending",
+                estimatedTime: "7 min"
+              },
+              {
+                id: "electrical",
+                title: "Electrical Supply",
+                completed: progress.sections.electrical.completed,
+                total: progress.sections.electrical.total,
+                status: currentSection === "electrical" ? "in-progress" : 
+                       progress.sections.electrical.completed === progress.sections.electrical.total ? "completed" : "pending",
+                estimatedTime: "10 min"
+              },
+              {
+                id: "battery",
+                title: "Battery & Storage",
+                completed: progress.sections.battery.completed,
+                total: progress.sections.battery.total,
+                status: currentSection === "battery" ? "in-progress" : 
+                       progress.sections.battery.completed === progress.sections.battery.total ? "completed" : "pending",
+                estimatedTime: "8 min"
+              },
+              {
+                id: "safety",
+                title: "Health & Safety",
+                completed: progress.sections.safety.completed,
+                total: progress.sections.safety.total,
+                status: currentSection === "safety" ? "in-progress" : 
+                       progress.sections.safety.completed === progress.sections.safety.total ? "completed" : "pending",
+                estimatedTime: "6 min"
+              },
+              {
+                id: "preferences",
+                title: "Preferences & Next Steps",
+                completed: progress.sections.preferences.completed,
+                total: progress.sections.preferences.total,
+                status: currentSection === "preferences" ? "in-progress" : 
+                       progress.sections.preferences.completed === progress.sections.preferences.total ? "completed" : "pending",
+                estimatedTime: "5 min"
+              }
+            ]}
+            currentSection={currentSection || undefined}
+            overallProgress={Math.round((progress.completed / progress.total) * 100)}
+          />
+        </div>
+      </div>
 
       {/* Main Content */}
-
-      <main className="container mx-auto px-6 py-16 pb-40">
-        <div className="max-w-7xl mx-auto space-y-12">
+      <main className="container mx-auto mobile-spacing section-spacing">
+        <div className="max-w-7xl mx-auto hierarchy-spacing">
           {/* Section 0 - General & Contact */}
           <SurveySection
-            title="📄 Section 0 - General & Contact"
+            title="Section 0 - General & Contact"
             isOpen={currentSection === "general"}
             onToggle={() => toggleSection("general")}
             completedFields={progress.sections.general.completed}
             totalFields={progress.sections.general.total}
             flaggedFields={0}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <TextInput
-                id="survey-date"
-                label="📅 Survey Date"
-                type="date"
-                value={formData.surveyDate}
-                onChange={(value) => updateFormData("surveyDate", value)}
-                required
-              />
-
+            <div className="space-y-8">
+              {/* Surveyor Information - Grouped together */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Surveyor Information
+                </h3>
+                <div className="space-y-6">
               <SurveyorInfoInput
                 id="surveyor-info"
-                label="👷 Surveyor Information"
+                    label="Surveyor Details"
                 value={formData.surveyorInfo}
                 onChange={(value) => updateFormData("surveyorInfo", value)}
                 required
               />
+                  <DatePickerInput
+                    id="survey-date"
+                    label="Survey Date"
+                    value={formData.surveyDate}
+                    onChange={(value) => updateFormData("surveyDate", value)}
+                    required
+                    minDate={new Date(2020, 0, 1)}
+                    maxDate={new Date(2030, 11, 31)}
+                  />
+                </div>
+              </div>
 
+              {/* Customer Information - Grouped together */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Customer Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <TextInput
                 id="customer-name"
-                label="👤 Customer Full Name"
+                    label="Customer Full Name"
                 value={formData.customerName}
                 onChange={(value) => updateFormData("customerName", value)}
                 placeholder="Enter customer's full name..."
                 required
                 includeLocation
               />
+                </div>
+              </div>
 
+              {/* Location Information - Grouped together */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Location Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <TextInput
                 id="site-address"
-                label="🏠 Site Address"
+                    label="Site Address"
                 value={formData.siteAddress}
                 onChange={(value) => updateFormData("siteAddress", value)}
                 placeholder="Enter full site address..."
                 required
               />
-
               <TextInput
                 id="postcode"
-                label="📮 Postcode"
+                    label="Postcode"
                 value={formData.postcode}
                 onChange={(value) => updateFormData("postcode", value)}
                 placeholder="Enter postcode..."
                 required
               />
-
               <GPSInput
                 id="grid-reference"
-                label="📍 Grid Reference"
+                    label="Grid Reference"
                 value={formData.gridReference}
                 onChange={(value) => updateFormData("gridReference", value)}
                 required
               />
-
               <TextInput
+                    id="what3words"
+                    label="What3Words"
+                    value={formData.what3words}
+                    onChange={(value) => updateFormData("what3words", value)}
+                    placeholder="Enter what3words location..."
+                    description="For 1m accuracy location reference"
+                  />
+                </div>
+              </div>
+
+              {/* Contact Information - Grouped together */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Contact Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <PhoneInputComponent
                 id="phone"
-                label="📞 Phone"
-                type="tel"
+                    label="Primary Phone"
                 value={formData.phone}
                 onChange={(value) => updateFormData("phone", value)}
                 placeholder="Enter phone number..."
                 required
+                    defaultCountry="GB"
               />
-
               <TextInput
                 id="email"
-                label="📧 Email"
+                    label="Email"
                 type="email"
                 value={formData.email}
                 onChange={(value) => updateFormData("email", value)}
                 placeholder="Enter email address..."
                 required
               />
-
               <TextInput
                 id="secondary-contact-name"
-                label="👤 Secondary Contact Name"
+                    label="Secondary Contact Name"
                 value={formData.secondaryContactName}
                 onChange={(value) =>
                   updateFormData("secondaryContactName", value)
                 }
                 placeholder="Enter secondary contact name..."
               />
-
-              <TextInput
+                  <PhoneInputComponent
                 id="secondary-contact-phone"
-                label="📞 Secondary Contact Phone"
-                type="tel"
+                    label="Secondary Contact Phone"
                 value={formData.secondaryContactPhone}
                 onChange={(value) =>
                   updateFormData("secondaryContactPhone", value)
                 }
                 placeholder="Enter secondary contact phone..."
+                    defaultCountry="GB"
               />
+                </div>
+              </div>
             </div>
           </SurveySection>
 
           {/* Section 1 - Electricity Baseline */}
           <SurveySection
-            title="⚡ Section 1 - Electricity Baseline"
+            title="Section 1 - Electricity Baseline"
             isOpen={currentSection === "electricity"}
             onToggle={() => toggleSection("electricity")}
             completedFields={progress.sections.electricity.completed}
@@ -1819,35 +1988,85 @@ const Index = () => {
             flaggedFields={2}
           >
             <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <NumberInput
+              {/* Electricity Usage - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Electricity Usage
+                </h3>
+                <TextWithPhotoInput
                   id="annual-consumption"
-                  label="📊 Annual Consumption (kWh)"
-                  value={formData.annualConsumption}
-                  onChange={(value) =>
-                    updateFormData("annualConsumption", value)
-                  }
-                  min={500}
-                  max={20000}
-                  step={100}
-                  unit="kWh"
+                  label="Annual Consumption"
+                  textValue={formData.annualConsumption}
+                  onTextChange={(value) => updateFormData("annualConsumption", value)}
+                  photos={formData.annualConsumptionPhoto}
+                  onPhotosChange={(photos) => updateFormData("annualConsumptionPhoto", photos)}
+                  placeholder="Enter annual consumption in kWh..."
                   required
+                  maxPhotos={2}
+                  photoGuidelines={[
+                    {
+                      title: "Bill or Statement",
+                      description: "Photo of recent electricity bill or annual statement",
+                      icon: "•"
+                    },
+                    {
+                      title: "Clear Text",
+                      description: "Ensure all text and numbers are clearly readable",
+                      icon: "•"
+                    },
+                    {
+                      title: "Annual Usage",
+                      description: "Highlight the annual consumption figure",
+                      icon: "•"
+                    }
+                  ]}
                 />
+              </div>
 
-                <TextInput
+              {/* MPAN Details - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  MPAN / Supply Details
+                </h3>
+                <TextWithPhotoInput
                   id="mpan-number"
-                  label="🔢 MPAN / Supply Number"
-                  value={formData.mpanNumber}
-                  onChange={(value) => updateFormData("mpanNumber", value)}
+                  label="MPAN / Supply Number"
+                  textValue={formData.mpanNumber}
+                  onTextChange={(value) => updateFormData("mpanNumber", value)}
+                  photos={formData.mpanPhoto}
+                  onPhotosChange={(photos) => updateFormData("mpanPhoto", photos)}
                   placeholder="S1234567890123"
                   required
-                  isFlagged
-                  flagMessage="Photo required for verification"
+                  maxPhotos={2}
+                  photoGuidelines={[
+                    {
+                      title: "Clear MPAN Number",
+                      description: "Ensure the MPAN number is clearly visible and readable",
+                      icon: "•"
+                    },
+                    {
+                      title: "Good Lighting",
+                      description: "Take photo in good lighting conditions",
+                      icon: "•"
+                    },
+                    {
+                      title: "Full Meter Display",
+                      description: "Include the entire meter display in the photo",
+                      icon: "•"
+                    }
+                  ]}
                 />
+              </div>
 
+              {/* Provider & Network Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Provider & Network Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DropdownSelect
                   id="electricity-provider"
-                  label="🏢 Current Electricity Provider"
+                    label="Current Electricity Provider"
                   value={formData.electricityProvider}
                   onChange={(value) =>
                     updateFormData("electricityProvider", value)
@@ -1859,17 +2078,35 @@ const Index = () => {
 
                 <DropdownSelect
                   id="network-operator"
-                  label="⚡ Network Operator"
+                    label="Network Operator (DNO)"
                   value={formData.networkOperator}
                   onChange={(value) => updateFormData("networkOperator", value)}
                   options={networkOperatorOptions}
                   placeholder="Select DNO..."
                   required
                 />
+                </div>
+              </div>
+
+              {/* Tariff & Rates Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Tariff & Rates Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <DropdownSelect
+                    id="tariff-type"
+                    label="Current Tariff Type"
+                    value={formData.tariffType}
+                    onChange={(value) => updateFormData("tariffType", value)}
+                    options={tariffTypeOptions}
+                    placeholder="Select tariff type..."
+                  required
+                />
 
                 <NumberInput
                   id="daytime-import-rate"
-                  label="☀️ Day-time Import Rate"
+                    label="Day-time Import Rate"
                   value={formData.daytimeImportRate}
                   onChange={(value) =>
                     updateFormData("daytimeImportRate", value)
@@ -1883,7 +2120,7 @@ const Index = () => {
 
                 <NumberInput
                   id="nighttime-import-rate"
-                  label="🌙 Night-time Import Rate"
+                    label="Night-time Import Rate"
                   value={formData.nighttimeImportRate}
                   onChange={(value) =>
                     updateFormData("nighttimeImportRate", value)
@@ -1896,7 +2133,7 @@ const Index = () => {
 
                 <NumberInput
                   id="standing-charge"
-                  label="💰 Standing Charge"
+                    label="Standing Charge"
                   value={formData.standingCharge}
                   onChange={(value) => updateFormData("standingCharge", value)}
                   min={0}
@@ -1905,66 +2142,80 @@ const Index = () => {
                   unit="£/day"
                   required
                 />
+                </div>
+              </div>
 
-                <DropdownSelect
-                  id="tariff-type"
-                  label="📋 Current Tariff Type"
-                  value={formData.tariffType}
-                  onChange={(value) => updateFormData("tariffType", value)}
-                  options={tariffTypeOptions}
-                  placeholder="Select tariff type..."
-                  required
-                />
-
+              {/* Smart Meter & Export Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Smart Meter & Export Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <YesNoNADropdown
                   id="smart-meter-present"
-                  label="📱 Smart Meter Present"
+                    label="Smart Meter Present"
                   value={formData.smartMeterPresent}
                   onChange={(value) =>
                     updateFormData("smartMeterPresent", value)
                   }
                   required
+                    description="Is a smart meter currently installed?"
                 />
 
                 <YesNoNADropdown
                   id="seg-tariff-available"
-                  label="📤 SEG Tariff Available"
+                    label="SEG Tariff Available"
                   value={formData.segTariffAvailable}
                   onChange={(value) =>
                     updateFormData("segTariffAvailable", value)
                   }
                   required
+                    description="Smart Export Guarantee tariff available"
+                  />
+
+                  <YesNoNADropdown
+                    id="smart-tariff-available"
+                    label="Smart Tariff Available"
+                    value={formData.smartTariffAvailable}
+                    onChange={(value) =>
+                      updateFormData("smartTariffAvailable", value)
+                    }
+                    description="Depends on smart meter and solar presence"
                 />
               </div>
 
-              <PhotoUpload
-                id="mpan-photo"
-                label="📸 MPAN Number Photo"
-                photos={formData.mpanPhoto}
-                onChange={(photos) => updateFormData("mpanPhoto", photos)}
-                maxPhotos={2}
-              />
+                {formData.segTariffAvailable === "yes" && (
+                  <TextInput
+                    id="seg-tariff-explanation"
+                    label="SEG Tariff Details"
+                    value={formData.segTariffExplanation}
+                    onChange={(value) => updateFormData("segTariffExplanation", value)}
+                    placeholder="e.g., Smart Export Guarantee at 5.5p/kWh"
+                    description="Provide details about the SEG tariff rate and terms"
+                  />
+                )}
+              </div>
 
+              {/* Customer Permission */}
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Customer Permission
+                </h3>
               <SignatureInput
                 id="customer-permission"
-                customerName={formData.customerName}
-                onCustomerNameChange={(name) =>
-                  updateFormData("customerName", name)
-                }
-                onPermissionGranted={(granted) =>
-                  updateFormData("customerPermissionGranted", granted)
-                }
-                permissionGranted={formData.customerPermissionGranted}
+                  label="Customer Permission & Signature"
+                  value={formData.customerSignature}
+                  onChange={(value) => updateFormData("customerSignature", value)}
                 required
-                isFlagged
-                flagMessage="Customer permission required"
+                  description="Customer signature granting permission for solar installation"
               />
+              </div>
             </div>
           </SurveySection>
 
           {/* Section 2 - Property Overview */}
           <SurveySection
-            title="🏠 Section 2 - Property Overview"
+            title="Section 2 - Property Overview"
             isOpen={currentSection === "property"}
             onToggle={() => toggleSection("property")}
             completedFields={progress.sections.property.completed}
@@ -1972,10 +2223,15 @@ const Index = () => {
             flaggedFields={0}
           >
             <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Property Details */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Property Details
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DropdownSelect
                   id="property-type"
-                  label="🏠 Property Type"
+                    label="Property Type"
                   value={formData.propertyType}
                   onChange={(value) => updateFormData("propertyType", value)}
                   options={propertyTypeOptions}
@@ -1985,99 +2241,163 @@ const Index = () => {
 
                 <DropdownSelect
                   id="property-age"
-                  label="📅 Property Age"
+                    label="Property Age"
                   value={formData.propertyAge}
                   onChange={(value) => updateFormData("propertyAge", value)}
                   options={propertyAgeOptions}
                   placeholder="Select age range..."
                   required
                 />
+                </div>
+              </div>
 
+              {/* Property Status & Restrictions */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Property Status & Restrictions
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <YesNoNADropdown
                   id="listed-building"
-                  label="🏛️ Listed Building"
+                    label="Listed Building"
                   value={formData.listedBuilding}
                   onChange={(value) => updateFormData("listedBuilding", value)}
                   required
+                    description="Is the property a listed building?"
                 />
 
                 <YesNoNADropdown
                   id="conservation-area"
-                  label="🌳 Conservation Area"
+                    label="Conservation Area"
                   value={formData.conservationArea}
                   onChange={(value) =>
                     updateFormData("conservationArea", value)
                   }
                   required
+                    description="Is the property in a conservation area?"
                 />
 
                 <YesNoNADropdown
                   id="new-build"
-                  label="🏗️ New-Build or Under Construction"
+                    label="New-Build or Under Construction"
                   value={formData.newBuild}
                   onChange={(value) => updateFormData("newBuild", value)}
                   required
+                    description="Is this a new build or under construction?"
                 />
 
                 <YesNoNADropdown
                   id="shared-roof"
-                  label="🏠 Shared Roof / Party Wall"
+                    label="Shared Roof / Party Wall"
                   value={formData.sharedRoof}
                   onChange={(value) => updateFormData("sharedRoof", value)}
                   required
-                />
+                    description="Does the property share a roof or party wall?"
+                  />
+                </div>
+              </div>
 
+              {/* Access & Storage */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Access & Storage
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <YesNoNADropdown
                   id="scaffold-access"
-                  label="🪜 Clear, Safe Access for Scaffold"
+                    label="Clear, Safe Access for Scaffold"
                   value={formData.scaffoldAccess}
                   onChange={(value) => updateFormData("scaffoldAccess", value)}
                   required
+                    description="Is there clear and safe access for scaffolding?"
                 />
 
                 <YesNoNADropdown
                   id="storage-area"
-                  label="📦 Suitable Storage Area for Panels & Battery"
+                    label="Suitable Storage Area for Panels & Battery"
                   value={formData.storageArea}
                   onChange={(value) => updateFormData("storageArea", value)}
                   required
+                    description="Is there suitable storage area for panels and battery?"
+                />
+                </div>
+              </div>
+
+              {/* Storage Area - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Storage Area Details
+                </h3>
+                <TextWithPhotoInput
+                  id="storage-area"
+                  label="Storage Area Information"
+                  textValue={formData.restrictedParking}
+                  onTextChange={(value) => updateFormData("restrictedParking", value)}
+                  photos={formData.storageAreaPhoto}
+                  onPhotosChange={(photos) => updateFormData("storageAreaPhoto", photos)}
+                  placeholder="Describe storage area, parking restrictions, or access issues..."
+                  multiline
+                maxPhotos={3}
+                  photoGuidelines={[
+                    {
+                      title: "Storage Space",
+                      description: "Show available storage space for panels and equipment",
+                      icon: "•"
+                    },
+                    {
+                      title: "Access Routes",
+                      description: "Document access routes and any restrictions",
+                      icon: "•"
+                    },
+                    {
+                      title: "Parking Areas",
+                      description: "Show parking areas and any limitations",
+                      icon: "•"
+                    }
+                  ]}
                 />
               </div>
 
-              <PhotoUpload
-                id="scaffold-access-photo"
-                label="📸 Scaffold Access Photos"
-                photos={formData.scaffoldAccessPhoto}
-                onChange={(photos) =>
-                  updateFormData("scaffoldAccessPhoto", photos)
-                }
+              {/* Scaffold Access - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Scaffold Access Details
+                </h3>
+                <TextWithPhotoInput
+                  id="scaffold-access"
+                  label="Scaffold Access Information"
+                  textValue=""
+                  onTextChange={() => {}}
+                  photos={formData.scaffoldAccessPhoto}
+                  onPhotosChange={(photos) => updateFormData("scaffoldAccessPhoto", photos)}
+                  placeholder="Describe scaffold access requirements or restrictions..."
+                  multiline
                 maxPhotos={3}
-              />
-
-              <PhotoUpload
-                id="storage-area-photo"
-                label="📸 Storage Area Photos"
-                photos={formData.storageAreaPhoto}
-                onChange={(photos) =>
-                  updateFormData("storageAreaPhoto", photos)
-                }
-                maxPhotos={3}
-              />
-
-              <TextareaInput
-                id="restricted-parking"
-                label="🚗 Restricted Parking / Narrow Lane"
-                value={formData.restrictedParking}
-                onChange={(value) => updateFormData("restrictedParking", value)}
-                placeholder="Describe any parking or access restrictions..."
-                rows={3}
-              />
+                  photoGuidelines={[
+                    {
+                      title: "Access Routes",
+                      description: "Show clear access routes for scaffolding",
+                      icon: "•"
+                    },
+                    {
+                      title: "Obstructions",
+                      description: "Document any obstructions or restrictions",
+                      icon: "•"
+                    },
+                    {
+                      title: "Ground Conditions",
+                      description: "Show ground conditions and stability",
+                      icon: "•"
+                    }
+                  ]}
+                />
+              </div>
             </div>
           </SurveySection>
 
           {/* Section 3 - Roof Inspection */}
           <SurveySection
-            title="🏠 Section 3 - Roof Inspection"
+            title="Section 3 - Roof Inspection"
             isOpen={currentSection === "roof"}
             onToggle={() => toggleSection("roof")}
             completedFields={progress.sections.roof.completed}
@@ -2092,7 +2412,7 @@ const Index = () => {
 
           {/* Section 4 - Loft / Attic */}
           <SurveySection
-            title="🏠 Section 4 - Loft / Attic"
+            title="Section 4 - Loft / Attic"
             isOpen={currentSection === "loft"}
             onToggle={() => toggleSection("loft")}
             completedFields={progress.sections.loft.completed}
@@ -2100,10 +2420,15 @@ const Index = () => {
             flaggedFields={0}
           >
             <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Loft Access & Dimensions */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Loft Access & Dimensions
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <NumberInput
                   id="loft-hatch-width"
-                  label="📏 Loft Access Hatch Width"
+                    label="Loft Hatch Width"
                   value={formData.loftHatchWidth}
                   onChange={(value) => updateFormData("loftHatchWidth", value)}
                   min={0}
@@ -2115,7 +2440,7 @@ const Index = () => {
 
                 <NumberInput
                   id="loft-hatch-height"
-                  label="📏 Loft Access Hatch Height"
+                    label="Loft Hatch Height"
                   value={formData.loftHatchHeight}
                   onChange={(value) => updateFormData("loftHatchHeight", value)}
                   min={0}
@@ -2126,20 +2451,20 @@ const Index = () => {
                 />
 
                 <DropdownSelect
-                  id="loft-access-quality"
-                  label="🚪 Loft Access Quality"
-                  value={formData.loftAccessQuality}
+                    id="loft-access-type"
+                    label="Loft Access Type"
+                    value={formData.loftAccessType}
                   onChange={(value) =>
-                    updateFormData("loftAccessQuality", value)
+                      updateFormData("loftAccessType", value)
                   }
-                  options={loftAccessQualityOptions}
-                  placeholder="Select access quality..."
+                    options={loftAccessTypeOptions}
+                    placeholder="Select access type..."
                   required
                 />
 
                 <NumberInput
                   id="loft-headroom"
-                  label="📏 Loft Headroom"
+                    label="Loft Headroom"
                   value={formData.loftHeadroom}
                   onChange={(value) => updateFormData("loftHeadroom", value)}
                   min={0}
@@ -2149,9 +2474,26 @@ const Index = () => {
                   required
                 />
 
+                  <YesNoNADropdown
+                    id="loft-boards-in-place"
+                    label="Loft Boards in Place"
+                    value={formData.loftBoardsInPlace}
+                    onChange={(value) => updateFormData("loftBoardsInPlace", value)}
+                    required
+                    description="Are loft boards already installed?"
+                  />
+                </div>
+              </div>
+
+              {/* Roof Timber Condition - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Roof Timber Condition
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <DropdownSelect
                   id="roof-timber-condition"
-                  label="🪵 Roof Timber Condition"
+                    label="Timber Condition"
                   value={formData.roofTimberCondition}
                   onChange={(value) =>
                     updateFormData("roofTimberCondition", value)
@@ -2160,30 +2502,136 @@ const Index = () => {
                   placeholder="Select timber condition..."
                   required
                 />
+                </div>
+                <TextWithPhotoInput
+                  id="roof-timber"
+                  label="Roof Timber Assessment"
+                  textValue={formData.roofTimberNotes}
+                  onTextChange={(value) => updateFormData("roofTimberNotes", value)}
+                  photos={formData.roofTimberPhoto}
+                  onPhotosChange={(photos) => updateFormData("roofTimberPhoto", photos)}
+                  placeholder="Describe timber condition, any issues, or additional notes..."
+                  multiline
+                  maxPhotos={3}
+                  photoGuidelines={[
+                    {
+                      title: "Timber Structure",
+                      description: "Document overall timber structure and condition",
+                      icon: "•"
+                    },
+                    {
+                      title: "Damage Areas",
+                      description: "Show any areas of damage or concern",
+                      icon: "•"
+                    },
+                    {
+                      title: "Access Points",
+                      description: "Document access points and clearances",
+                      icon: "•"
+                    }
+                  ]}
+                />
+              </div>
 
+              {/* Wall Space for Equipment */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Wall Space for Equipment
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <YesNoNADropdown
                   id="wall-space-inverter"
-                  label="⚡ Wall Space for Inverter (500×400×200 mm)"
+                    label="Wall Space for Inverter"
                   value={formData.wallSpaceInverter}
                   onChange={(value) =>
                     updateFormData("wallSpaceInverter", value)
                   }
                   required
+                    description="Space for inverter (500×400×200 mm)"
                 />
 
                 <YesNoNADropdown
                   id="wall-space-battery"
-                  label="🔋 Wall Space for Battery"
+                    label="Wall Space for Battery"
                   value={formData.wallSpaceBattery}
                   onChange={(value) =>
                     updateFormData("wallSpaceBattery", value)
                   }
                   required
-                />
+                    description="Space for battery installation"
+                  />
+                </div>
+              </div>
 
+              {/* Inverter Space - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  Inverter Space Assessment
+                </h3>
+                <TextWithPhotoInput
+                  id="wall-space-inverter"
+                  label="Inverter Space Details"
+                  textValue={formData.wallSpaceInverterNotes}
+                  onTextChange={(value) => updateFormData("wallSpaceInverterNotes", value)}
+                  photos={formData.wallSpaceInverterPhoto}
+                  onPhotosChange={(photos) => updateFormData("wallSpaceInverterPhoto", photos)}
+                  placeholder="Describe available space, mounting options, or any restrictions..."
+                  multiline
+                  maxPhotos={2}
+                  photoGuidelines={[
+                    {
+                      title: "Wall Space",
+                      description: "Show available wall space for inverter mounting",
+                      icon: "🧱"
+                    },
+                    {
+                      title: "Access Routes",
+                      description: "Document cable access routes",
+                      icon: "🔌"
+                    }
+                  ]}
+                />
+              </div>
+
+              {/* Battery Space - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  🔋 Battery Space Assessment
+                </h3>
+                <TextWithPhotoInput
+                  id="wall-space-battery"
+                  label="Battery Space Details"
+                  textValue={formData.wallSpaceBatteryNotes}
+                  onTextChange={(value) => updateFormData("wallSpaceBatteryNotes", value)}
+                  photos={formData.wallSpaceBatteryPhoto}
+                  onPhotosChange={(photos) => updateFormData("wallSpaceBatteryPhoto", photos)}
+                  placeholder="Describe available space, mounting options, or any restrictions..."
+                  multiline
+                  maxPhotos={2}
+                  photoGuidelines={[
+                    {
+                      title: "Wall Space",
+                      description: "Show available wall space for battery mounting",
+                      icon: "🧱"
+                    },
+                    {
+                      title: "Access Routes",
+                      description: "Document cable access routes",
+                      icon: "🔌"
+                    }
+                  ]}
+                />
+              </div>
+
+              {/* Loft Infrastructure */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  🏠 Loft Infrastructure
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <NumberInput
                   id="loft-insulation-thickness"
-                  label="🧱 Loft Insulation Thickness"
+                    label="Loft Insulation Thickness"
                   value={formData.loftInsulationThickness}
                   onChange={(value) =>
                     updateFormData("loftInsulationThickness", value)
@@ -2197,7 +2645,7 @@ const Index = () => {
 
                 <DropdownSelect
                   id="loft-lighting"
-                  label="💡 Existing Loft Lighting"
+                    label="Existing Loft Lighting"
                   value={formData.loftLighting}
                   onChange={(value) => updateFormData("loftLighting", value)}
                   options={loftLightingOptions}
@@ -2207,46 +2655,20 @@ const Index = () => {
 
                 <YesNoNADropdown
                   id="loft-power-socket"
-                  label="🔌 Existing Loft Power Socket"
+                    label="Existing Loft Power Socket"
                   value={formData.loftPowerSocket}
                   onChange={(value) => updateFormData("loftPowerSocket", value)}
                   required
+                    description="Is there an existing power socket in the loft?"
                 />
               </div>
-
-              <PhotoUpload
-                id="roof-timber-photo"
-                label="📸 Roof Timber Condition Photos"
-                photos={formData.roofTimberPhoto}
-                onChange={(photos) => updateFormData("roofTimberPhoto", photos)}
-                maxPhotos={3}
-              />
-
-              <PhotoUpload
-                id="wall-space-inverter-photo"
-                label="📸 Wall Space for Inverter Photos"
-                photos={formData.wallSpaceInverterPhoto}
-                onChange={(photos) =>
-                  updateFormData("wallSpaceInverterPhoto", photos)
-                }
-                maxPhotos={2}
-              />
-
-              <PhotoUpload
-                id="wall-space-battery-photo"
-                label="📸 Wall Space for Battery Photos"
-                photos={formData.wallSpaceBatteryPhoto}
-                onChange={(photos) =>
-                  updateFormData("wallSpaceBatteryPhoto", photos)
-                }
-                maxPhotos={2}
-              />
+              </div>
             </div>
           </SurveySection>
 
           {/* Section 5 - Electrical Supply */}
           <SurveySection
-            title="⚡ Section 5 - Electrical Supply"
+            title="Section 5 - Electrical Supply"
             isOpen={currentSection === "electrical"}
             onToggle={() => toggleSection("electrical")}
             completedFields={progress.sections.electrical.completed}
@@ -2254,10 +2676,15 @@ const Index = () => {
             flaggedFields={0}
           >
             <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Supply & Main Fuse - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  ⚡ Supply & Main Fuse
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DropdownSelect
                   id="supply-type"
-                  label="⚡ Supply Type"
+                    label="Supply Type"
                   value={formData.supplyType}
                   onChange={(value) => updateFormData("supplyType", value)}
                   options={supplyTypeOptions}
@@ -2267,17 +2694,48 @@ const Index = () => {
 
                 <DropdownSelect
                   id="main-fuse-rating"
-                  label="🔌 Main Fuse Rating (A)"
+                    label="Main Fuse Rating"
                   value={formData.mainFuseRating}
                   onChange={(value) => updateFormData("mainFuseRating", value)}
                   options={mainFuseRatingOptions}
                   placeholder="Select fuse rating..."
                   required
                 />
+                </div>
+                <TextWithPhotoInput
+                  id="main-fuse"
+                  label="Main Fuse Assessment"
+                  textValue=""
+                  onTextChange={() => {}}
+                  photos={formData.mainFusePhoto}
+                  onPhotosChange={(photos) => updateFormData("mainFusePhoto", photos)}
+                  placeholder="Describe main fuse condition, any issues, or additional notes..."
+                  multiline
+                  maxPhotos={2}
+                  photoGuidelines={[
+                    {
+                      title: "Fuse Rating",
+                      description: "Show the main fuse rating clearly visible",
+                      icon: "🔌"
+                    },
+                    {
+                      title: "Fuse Condition",
+                      description: "Document overall condition of the fuse",
+                      icon: "•"
+                    }
+                  ]}
+                />
+              </div>
 
+              {/* Consumer Unit Details - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  🏠 Consumer Unit Details
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TextInput
                   id="consumer-unit-make"
-                  label="🏭 Consumer Unit Make & Model"
+                    label="Consumer Unit Make & Model"
                   value={formData.consumerUnitMake}
                   onChange={(value) =>
                     updateFormData("consumerUnitMake", value)
@@ -2288,7 +2746,7 @@ const Index = () => {
 
                 <TextInput
                   id="consumer-unit-location"
-                  label="📍 Consumer Unit Location"
+                    label="Consumer Unit Location"
                   value={formData.consumerUnitLocation}
                   onChange={(value) =>
                     updateFormData("consumerUnitLocation", value)
@@ -2296,10 +2754,46 @@ const Index = () => {
                   placeholder="e.g., Garage, Utility room, etc."
                   required
                 />
+                </div>
+                <TextWithPhotoInput
+                  id="consumer-unit-location"
+                  label="Consumer Unit Assessment"
+                  textValue=""
+                  onTextChange={() => {}}
+                  photos={formData.consumerUnitLocationPhoto}
+                  onPhotosChange={(photos) => updateFormData("consumerUnitLocationPhoto", photos)}
+                  placeholder="Describe consumer unit condition, any issues, or additional notes..."
+                  multiline
+                  maxPhotos={3}
+                  photoGuidelines={[
+                    {
+                      title: "Full Unit View",
+                      description: "Show the complete consumer unit with all circuits visible",
+                      icon: "🏠"
+                    },
+                    {
+                      title: "Circuit Labels",
+                      description: "Ensure circuit labels are clearly readable",
+                      icon: "🏷️"
+                    },
+                    {
+                      title: "Spare Ways",
+                      description: "Document available spare ways for new circuits",
+                      icon: "🔧"
+                    }
+                  ]}
+                />
+              </div>
 
+              {/* Fuse Ways & Protection */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  🔧 Fuse Ways & Protection
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <NumberInput
                   id="spare-fuse-ways"
-                  label="🔧 Spare Fuse-ways Available"
+                    label="Spare Fuse-ways Available"
                   value={formData.spareFuseWays}
                   onChange={(value) => updateFormData("spareFuseWays", value)}
                   min={0}
@@ -2310,39 +2804,163 @@ const Index = () => {
 
                 <YesNoNADropdown
                   id="existing-surge-protection"
-                  label="🛡️ Existing Surge Protection"
+                    label="Existing Surge Protection"
                   value={formData.existingSurgeProtection}
                   onChange={(value) =>
                     updateFormData("existingSurgeProtection", value)
                   }
                   required
-                />
+                    description="Is surge protection already installed?"
+                  />
 
+                  <DropdownSelect
+                    id="earthing-system-type"
+                    label="Earthing System Type"
+                    value={formData.earthingSystemType}
+                    onChange={(value) =>
+                      updateFormData("earthingSystemType", value)
+                    }
+                    options={earthingSystemOptions}
+                    placeholder="Select earthing system..."
+                    required
+                  />
+                </div>
+                <TextWithPhotoInput
+                  id="spare-fuse-ways"
+                  label="Spare Fuse-ways Assessment"
+                  textValue=""
+                  onTextChange={() => {}}
+                  photos={formData.spareFuseWaysPhoto}
+                  onPhotosChange={(photos) => updateFormData("spareFuseWaysPhoto", photos)}
+                  placeholder="Describe available spare ways, any issues, or additional notes..."
+                  multiline
+                  maxPhotos={2}
+                  photoGuidelines={[
+                    {
+                      title: "Spare Ways",
+                      description: "Show available spare ways clearly",
+                      icon: "🔧"
+                    },
+                    {
+                      title: "Circuit Layout",
+                      description: "Document overall circuit layout",
+                      icon: "📋"
+                    }
+                  ]}
+                />
+              </div>
+
+              {/* Surge Protection - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  🛡️ Surge Protection Assessment
+                </h3>
+                <TextWithPhotoInput
+                  id="existing-surge-protection"
+                  label="Surge Protection Details"
+                  textValue=""
+                  onTextChange={() => {}}
+                  photos={formData.existingSurgeProtectionPhoto}
+                  onPhotosChange={(photos) => updateFormData("existingSurgeProtectionPhoto", photos)}
+                  placeholder="Describe existing surge protection, any issues, or additional notes..."
+                  multiline
+                  maxPhotos={2}
+                  photoGuidelines={[
+                    {
+                      title: "Surge Protection Device",
+                      description: "Show the surge protection device if present",
+                      icon: "🛡️"
+                    },
+                    {
+                      title: "Installation Quality",
+                      description: "Document installation quality and condition",
+                      icon: "•"
+                    }
+                  ]}
+                />
+              </div>
+
+              {/* Earth Bonding - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  🔗 Earth Bonding Assessment
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <YesNoNADropdown
                   id="earth-bonding-verified"
-                  label="🔗 Earth Bonding Verified"
+                    label="Earth Bonding Verified"
                   value={formData.earthBondingVerified}
                   onChange={(value) =>
                     updateFormData("earthBondingVerified", value)
                   }
                   required
+                    description="Is proper earth bonding verified and in place?"
+                  />
+                </div>
+                <TextWithPhotoInput
+                  id="earth-bonding"
+                  label="Earth Bonding Details"
+                  textValue=""
+                  onTextChange={() => {}}
+                  photos={formData.earthBondingPhoto}
+                  onPhotosChange={(photos) => updateFormData("earthBondingPhoto", photos)}
+                  placeholder="Describe earth bonding condition, any issues, or additional notes..."
+                  multiline
+                  maxPhotos={2}
+                  photoGuidelines={[
+                    {
+                      title: "Bonding Points",
+                      description: "Show main earth bonding connections",
+                      icon: "🔗"
+                    },
+                    {
+                      title: "Bonding Condition",
+                      description: "Document condition of bonding conductors",
+                      icon: "•"
+                    }
+                  ]}
                 />
+              </div>
 
-                <DropdownSelect
-                  id="earthing-system-type"
-                  label="⚡ Earthing System Type"
-                  value={formData.earthingSystemType}
-                  onChange={(value) =>
-                    updateFormData("earthingSystemType", value)
-                  }
-                  options={earthingSystemOptions}
-                  placeholder="Select earthing system..."
-                  required
+              {/* Earthing System - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  ⚡ Earthing System Assessment
+                </h3>
+                <TextWithPhotoInput
+                  id="earthing-system"
+                  label="Earthing System Details"
+                  textValue=""
+                  onTextChange={() => {}}
+                  photos={formData.earthingSystemPhoto}
+                  onPhotosChange={(photos) => updateFormData("earthingSystemPhoto", photos)}
+                  placeholder="Describe earthing system condition, any issues, or additional notes..."
+                  multiline
+                  maxPhotos={2}
+                  photoGuidelines={[
+                    {
+                      title: "Earthing Arrangement",
+                      description: "Show the earthing arrangement and connections",
+                      icon: "⚡"
+                    },
+                    {
+                      title: "Earthing Condition",
+                      description: "Document condition of earthing conductors",
+                      icon: "•"
+                    }
+                  ]}
                 />
+              </div>
 
+              {/* DNO Notification & EV Charger */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  📋 DNO Notification & EV Charger
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ToggleInput
                   id="dno-notification-required"
-                  label="📋 DNO Notification Required"
+                    label="DNO Notification Required"
                   value={formData.dnoNotificationRequired}
                   onChange={(value) =>
                     updateFormData("dnoNotificationRequired", value)
@@ -2353,18 +2971,20 @@ const Index = () => {
 
                 <YesNoNADropdown
                   id="ev-charger-installed"
-                  label="🚗 EV Charger Already Installed"
+                    label="EV Charger Already Installed"
                   value={formData.evChargerInstalled}
                   onChange={(value) =>
                     updateFormData("evChargerInstalled", value)
                   }
                   required
+                    description="Is an EV charger already installed?"
                 />
+                </div>
 
                 {formData.evChargerInstalled === "yes" && (
                   <NumberInput
                     id="ev-charger-load"
-                    label="⚡ EV Charger Load (kW)"
+                    label="EV Charger Load"
                     value={formData.evChargerLoad}
                     onChange={(value) => updateFormData("evChargerLoad", value)}
                     min={0}
@@ -2376,89 +2996,75 @@ const Index = () => {
                 )}
               </div>
 
-              <PhotoUpload
-                id="main-fuse-photo"
-                label="📸 Main Fuse Rating Photo"
-                photos={formData.mainFusePhoto}
-                onChange={(photos) => updateFormData("mainFusePhoto", photos)}
-                maxPhotos={2}
-              />
-
-              <PhotoUpload
-                id="consumer-unit-location-photo"
-                label="📸 Consumer Unit Location Photo"
-                photos={formData.consumerUnitLocationPhoto}
-                onChange={(photos) =>
-                  updateFormData("consumerUnitLocationPhoto", photos)
-                }
-                maxPhotos={3}
-              />
-
-              <PhotoUpload
-                id="spare-fuse-ways-photo"
-                label="📸 Spare Fuse-ways Photo"
-                photos={formData.spareFuseWaysPhoto}
-                onChange={(photos) =>
-                  updateFormData("spareFuseWaysPhoto", photos)
-                }
-                maxPhotos={2}
-              />
-
-              <PhotoUpload
-                id="existing-surge-protection-photo"
-                label="📸 Existing Surge Protection Photo"
-                photos={formData.existingSurgeProtectionPhoto}
-                onChange={(photos) =>
-                  updateFormData("existingSurgeProtectionPhoto", photos)
-                }
-                maxPhotos={2}
-              />
-
-              <PhotoUpload
-                id="earth-bonding-photo"
-                label="📸 Earth Bonding Photo"
-                photos={formData.earthBondingPhoto}
-                onChange={(photos) =>
-                  updateFormData("earthBondingPhoto", photos)
-                }
-                maxPhotos={2}
-              />
-
-              <PhotoUpload
-                id="earthing-system-photo"
-                label="📸 Earthing System Photo"
-                photos={formData.earthingSystemPhoto}
-                onChange={(photos) =>
-                  updateFormData("earthingSystemPhoto", photos)
-                }
-                maxPhotos={2}
-              />
-
-              <PhotoUpload
+              {/* Cable Routes - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  🔌 Cable Routes
+                </h3>
+                <TextWithPhotoInput
                 id="cable-route-to-roof"
-                label="📸 Cable Route from CU to Roof (with arrows)"
+                  label="Cable Route from CU to Roof"
+                  textValue=""
+                  onTextChange={() => {}}
                 photos={formData.cableRouteToRoof}
-                onChange={(photos) =>
-                  updateFormData("cableRouteToRoof", photos)
-                }
+                  onPhotosChange={(photos) => updateFormData("cableRouteToRoof", photos)}
+                  placeholder="Describe cable route from consumer unit to roof, any issues, or additional notes..."
+                  multiline
                 maxPhotos={5}
-              />
+                  photoGuidelines={[
+                    {
+                      title: "Route Planning",
+                      description: "Show planned cable route with arrows",
+                      icon: "•"
+                    },
+                    {
+                      title: "Obstructions",
+                      description: "Document any obstructions or restrictions",
+                      icon: "•"
+                    },
+                    {
+                      title: "Access Points",
+                      description: "Show access points and penetrations",
+                      icon: "•"
+                    }
+                  ]}
+                />
 
-              <PhotoUpload
+                <TextWithPhotoInput
                 id="cable-route-to-battery"
-                label="📸 Cable Route from CU to Battery (with arrows)"
+                  label="Cable Route from CU to Battery"
+                  textValue=""
+                  onTextChange={() => {}}
                 photos={formData.cableRouteToBattery}
-                onChange={(photos) =>
-                  updateFormData("cableRouteToBattery", photos)
-                }
+                  onPhotosChange={(photos) => updateFormData("cableRouteToBattery", photos)}
+                  placeholder="Describe cable route from consumer unit to battery, any issues, or additional notes..."
+                  multiline
                 maxPhotos={5}
-              />
+                  photoGuidelines={[
+                    {
+                      title: "Route Planning",
+                      description: "Show planned cable route with arrows",
+                      icon: "•"
+                    },
+                    {
+                      title: "Obstructions",
+                      description: "Document any obstructions or restrictions",
+                      icon: "•"
+                    },
+                    {
+                      title: "Access Points",
+                      description: "Show access points and penetrations",
+                      icon: "•"
+                    }
+                  ]}
+                />
+              </div>
             </div>
           </SurveySection>
 
           {/* Section 6 - Battery & Storage Preferences */}
           <SurveySection
-            title="🔋 Section 6 - Battery & Storage Preferences"
+            title="Section 6 - Battery & Storage Preferences"
             isOpen={currentSection === "battery"}
             onToggle={() => toggleSection("battery")}
             completedFields={progress.sections.battery.completed}
@@ -2466,10 +3072,15 @@ const Index = () => {
             flaggedFields={0}
           >
             <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Battery Requirements */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  🔋 Battery Requirements
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DropdownSelect
                   id="battery-required"
-                  label="🔋 Battery Required"
+                    label="Battery Required"
                   value={formData.batteryRequired}
                   onChange={(value) => updateFormData("batteryRequired", value)}
                   options={batteryRequiredOptions}
@@ -2479,7 +3090,7 @@ const Index = () => {
 
                 <DropdownSelect
                   id="preferred-install-location"
-                  label="📍 Preferred Install Location"
+                    label="Preferred Install Location"
                   value={formData.preferredInstallLocation}
                   onChange={(value) =>
                     updateFormData("preferredInstallLocation", value)
@@ -2488,10 +3099,18 @@ const Index = () => {
                   placeholder="Select location..."
                   required
                 />
+                </div>
+              </div>
 
+              {/* Installation Details */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  🏗️ Installation Details
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <NumberInput
                   id="distance-from-cu"
-                  label="📏 Distance from CU to Battery"
+                    label="Distance from CU to Battery"
                   value={formData.distanceFromCU}
                   onChange={(value) => updateFormData("distanceFromCU", value)}
                   min={0}
@@ -2499,11 +3118,12 @@ const Index = () => {
                   step={0.1}
                   unit="m"
                   required
+                    description="Distance from Consumer Unit (CU)"
                 />
 
                 <DropdownSelect
                   id="mounting-surface"
-                  label="🏗️ Mounting Surface"
+                    label="Mounting Surface"
                   value={formData.mountingSurface}
                   onChange={(value) => updateFormData("mountingSurface", value)}
                   options={mountingSurfaceOptions}
@@ -2511,29 +3131,52 @@ const Index = () => {
                   required
                 />
 
+                  <DropdownSelect
+                    id="ip-rating-required"
+                    label="IP Rating Required"
+                    value={formData.ipRatingRequired}
+                    onChange={(value) =>
+                      updateFormData("ipRatingRequired", value)
+                    }
+                    options={ipRatingOptions}
+                    placeholder="Select IP rating..."
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Environmental Conditions */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  🌡️ Environmental Conditions
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <YesNoNADropdown
                   id="ventilation-adequate"
-                  label="💨 Ventilation Adequate"
+                    label="Ventilation Adequate"
                   value={formData.ventilationAdequate}
                   onChange={(value) =>
                     updateFormData("ventilationAdequate", value)
                   }
                   required
+                    description="Is adequate ventilation available for battery cooling?"
                 />
 
                 <YesNoNADropdown
                   id="fire-egress-compliance"
-                  label="🚪 Fire Egress Compliance"
+                    label="Fire Egress Compliance"
                   value={formData.fireEgressCompliance}
                   onChange={(value) =>
                     updateFormData("fireEgressCompliance", value)
                   }
                   required
+                    description="Does the installation comply with fire egress requirements?"
                 />
+                </div>
 
                 <TemperatureRangeInput
                   id="ambient-temperature"
-                  label="🌡️ Ambient Temperature Range"
+                  label="Ambient Temperature Range"
                   minTemp={formData.ambientTempMin}
                   maxTemp={formData.ambientTempMax}
                   onMinTempChange={(value) =>
@@ -2544,43 +3187,83 @@ const Index = () => {
                   }
                   required
                 />
+              </div>
 
-                <DropdownSelect
-                  id="ip-rating-required"
-                  label="🛡️ IP Rating Required"
-                  value={formData.ipRatingRequired}
-                  onChange={(value) =>
-                    updateFormData("ipRatingRequired", value)
-                  }
-                  options={ipRatingOptions}
-                  placeholder="Select IP rating..."
-                  required
+              {/* Ventilation Assessment - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  💨 Ventilation Assessment
+                </h3>
+                <TextWithPhotoInput
+                  id="ventilation"
+                  label="Ventilation Details"
+                  textValue=""
+                  onTextChange={() => {}}
+                photos={formData.ventilationPhoto}
+                  onPhotosChange={(photos) => updateFormData("ventilationPhoto", photos)}
+                  placeholder="Describe ventilation conditions, any issues, or additional notes..."
+                  multiline
+                maxPhotos={3}
+                  photoGuidelines={[
+                    {
+                      title: "Ventilation Openings",
+                      description: "Show existing ventilation openings and airflow",
+                      icon: "💨"
+                    },
+                    {
+                      title: "Air Flow",
+                      description: "Document air flow patterns and circulation",
+                      icon: "🌪️"
+                    },
+                    {
+                      title: "Ventilation Requirements",
+                      description: "Show any additional ventilation requirements",
+                      icon: "📋"
+                    }
+                  ]}
                 />
               </div>
 
-              <PhotoUpload
-                id="ventilation-photo"
-                label="📸 Ventilation Photos"
-                photos={formData.ventilationPhoto}
-                onChange={(photos) =>
-                  updateFormData("ventilationPhoto", photos)
-                }
-                maxPhotos={3}
-              />
-
-              <PhotoUpload
-                id="fire-egress-photo"
-                label="📸 Fire Egress Compliance Photos"
+              {/* Fire Egress Assessment - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  🚪 Fire Egress Assessment
+                </h3>
+                <TextWithPhotoInput
+                  id="fire-egress"
+                  label="Fire Egress Details"
+                  textValue=""
+                  onTextChange={() => {}}
                 photos={formData.fireEgressPhoto}
-                onChange={(photos) => updateFormData("fireEgressPhoto", photos)}
+                  onPhotosChange={(photos) => updateFormData("fireEgressPhoto", photos)}
+                  placeholder="Describe fire egress compliance, any issues, or additional notes..."
+                  multiline
                 maxPhotos={3}
-              />
+                  photoGuidelines={[
+                    {
+                      title: "Egress Routes",
+                      description: "Show clear egress routes and exits",
+                      icon: "•"
+                    },
+                    {
+                      title: "Fire Safety",
+                      description: "Document fire safety measures and compliance",
+                      icon: "🔥"
+                    },
+                    {
+                      title: "Access Points",
+                      description: "Show access points and emergency exits",
+                      icon: "🚨"
+                    }
+                  ]}
+                />
+              </div>
             </div>
           </SurveySection>
 
           {/* Section 7 - Health, Safety & Hazards */}
           <SurveySection
-            title="⚠️ Section 7 - Health, Safety & Hazards"
+            title="Section 7 - Health, Safety & Hazards"
             isOpen={currentSection === "safety"}
             onToggle={() => toggleSection("safety")}
             completedFields={progress.sections.safety.completed}
@@ -2588,10 +3271,15 @@ const Index = () => {
             flaggedFields={0}
           >
             <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Asbestos Assessment - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  ⚠️ Asbestos Assessment
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <DropdownSelect
                   id="asbestos-presence"
-                  label="⚠️ Asbestos Presence"
+                    label="Asbestos Presence"
                   value={formData.asbestosPresence}
                   onChange={(value) =>
                     updateFormData("asbestosPresence", value)
@@ -2600,21 +3288,45 @@ const Index = () => {
                   placeholder="Select asbestos status..."
                   required
                 />
-
-                <YesNoNADropdown
-                  id="livestock-pets-on-site"
-                  label="🐕 Livestock / Pets on Site"
-                  value={formData.livestockPetsOnSite}
-                  onChange={(value) =>
-                    updateFormData("livestockPetsOnSite", value)
-                  }
-                  required
+                </div>
+                <TextWithPhotoInput
+                  id="asbestos"
+                  label="Asbestos Assessment Details"
+                  textValue=""
+                  onTextChange={() => {}}
+                  photos={formData.asbestosPhoto}
+                  onPhotosChange={(photos) => updateFormData("asbestosPhoto", photos)}
+                  placeholder="Describe asbestos assessment findings, any issues, or additional notes..."
+                  multiline
+                  maxPhotos={3}
+                  photoGuidelines={[
+                    {
+                      title: "Asbestos Materials",
+                      description: "Document any suspected asbestos materials",
+                      icon: "•"
+                    },
+                    {
+                      title: "Material Condition",
+                      description: "Show condition of materials and any damage",
+                      icon: "•"
+                    },
+                    {
+                      title: "Access Points",
+                      description: "Document access points and restrictions",
+                      icon: "•"
+                    }
+                  ]}
                 />
               </div>
 
+              {/* Working at Height Assessment */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  🪜 Working at Height Assessment
+                </h3>
               <TextareaInput
                 id="working-at-height-difficulties"
-                label="🪜 Working at Height Difficulties"
+                  label="Working at Height Difficulties"
                 value={formData.workingAtHeightDifficulties}
                 onChange={(value) =>
                   updateFormData("workingAtHeightDifficulties", value)
@@ -2622,53 +3334,98 @@ const Index = () => {
                 placeholder="Describe any difficulties or special considerations..."
                 rows={3}
               />
+              </div>
 
-              <PhotoUpload
+              {/* Fragile Roof Areas - Text + Photo grouped */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  🏠 Fragile Roof Areas
+                </h3>
+                <TextWithPhotoInput
                 id="fragile-roof-areas"
-                label="📸 Fragile Roof Areas (with annotations)"
+                  label="Fragile Roof Areas Assessment"
+                  textValue=""
+                  onTextChange={() => {}}
                 photos={formData.fragileRoofAreas}
-                onChange={(photos) =>
-                  updateFormData("fragileRoofAreas", photos)
-                }
+                  onPhotosChange={(photos) => updateFormData("fragileRoofAreas", photos)}
+                  placeholder="Describe fragile roof areas, any issues, or additional notes..."
+                  multiline
                 maxPhotos={5}
-              />
+                  photoGuidelines={[
+                    {
+                      title: "Fragile Areas",
+                      description: "Document fragile roof areas with annotations",
+                      icon: "•"
+                    },
+                    {
+                      title: "Roof Condition",
+                      description: "Show overall roof condition and any concerns",
+                      icon: "•"
+                    },
+                    {
+                      title: "Safety Measures",
+                      description: "Document required safety measures",
+                      icon: "🛡️"
+                    }
+                  ]}
+                />
+              </div>
+
+              {/* Livestock & Pets Assessment */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  🐕 Livestock & Pets Assessment
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <YesNoNADropdown
+                    id="livestock-pets-on-site"
+                    label="Livestock / Pets on Site"
+                    value={formData.livestockPetsOnSite}
+                    onChange={(value) =>
+                      updateFormData("livestockPetsOnSite", value)
+                    }
+                    required
+                    description="Are there livestock or pets on site that need consideration?"
+                  />
+                </div>
 
               {formData.livestockPetsOnSite === "yes" && (
                 <TextInput
                   id="livestock-pets-notes"
-                  label="📝 Livestock / Pets Notes"
+                    label="Livestock / Pets Notes"
                   value={formData.livestockPetsNotes}
                   onChange={(value) =>
                     updateFormData("livestockPetsNotes", value)
                   }
                   placeholder="Describe pets/livestock and any special considerations..."
+                    description="Include details about securing pets during installation"
                 />
               )}
+              </div>
 
+              {/* Special Access Instructions */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  🚪 Special Access Instructions
+                </h3>
               <TextareaInput
                 id="special-access-instructions"
-                label="🚪 Special Access Instructions"
+                  label="Special Access Instructions"
                 value={formData.specialAccessInstructions}
                 onChange={(value) =>
                   updateFormData("specialAccessInstructions", value)
                 }
                 placeholder="Any special access requirements or instructions..."
                 rows={3}
-              />
-
-              <PhotoUpload
-                id="asbestos-photo"
-                label="📸 Asbestos Assessment Photos"
-                photos={formData.asbestosPhoto}
-                onChange={(photos) => updateFormData("asbestosPhoto", photos)}
-                maxPhotos={3}
-              />
+                  description="Include any special access requirements, gate codes, or restrictions"
+                />
+              </div>
             </div>
           </SurveySection>
 
           {/* Section 8 - Customer Preferences & Next Steps */}
           <SurveySection
-            title="👤 Section 8 - Customer Preferences & Next Steps"
+            title="Section 8 - Customer Preferences & Next Steps"
             isOpen={currentSection === "preferences"}
             onToggle={() => toggleSection("preferences")}
             completedFields={progress.sections.preferences.completed}
@@ -2676,10 +3433,15 @@ const Index = () => {
             flaggedFields={0}
           >
             <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Contact Preferences */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  📞 Contact Preferences
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DropdownSelect
                   id="preferred-contact-method"
-                  label="📞 Preferred Contact Method"
+                    label="Preferred Contact Method"
                   value={formData.preferredContactMethod}
                   onChange={(value) =>
                     updateFormData("preferredContactMethod", value)
@@ -2688,10 +3450,17 @@ const Index = () => {
                   placeholder="Select contact method..."
                   required
                 />
+                </div>
+              </div>
 
+              {/* Installation Timeline */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  📅 Installation Timeline
+                </h3>
                 <DateRangeInput
                   id="installation-month"
-                  label="📅 Preferred Installation Month"
+                  label="Preferred Installation Month"
                   startDate={formData.installationStartDate}
                   endDate={formData.installationEndDate}
                   onStartDateChange={(value) =>
@@ -2709,52 +3478,56 @@ const Index = () => {
                     updateFormData("customerAwayNotes", value)
                   }
                 />
+              </div>
 
-                <DropdownSelect
+              {/* Budget & Additional Services */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  💰 Budget & Additional Services
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <BudgetRangeSlider
                   id="budget-range"
-                  label="💰 Budget Range"
+                    label="Budget Range"
                   value={formData.budgetRange}
                   onChange={(value) => updateFormData("budgetRange", value)}
-                  options={budgetRangeOptions}
-                  placeholder="Select budget range..."
                   required
                 />
 
                 <YesNoNADropdown
                   id="interested-in-ev-charger"
-                  label="🚗 Interested in EV Charger"
+                    label="Interested in EV Charger"
                   value={formData.interestedInEvCharger}
                   onChange={(value) =>
                     updateFormData("interestedInEvCharger", value)
                   }
                   required
-                />
-
-                <YesNoNADropdown
-                  id="interested-in-energy-monitoring"
-                  label="📊 Interested in Energy Monitoring"
-                  value={formData.interestedInEnergyMonitoring}
-                  onChange={(value) =>
-                    updateFormData("interestedInEnergyMonitoring", value)
-                  }
-                  required
-                />
+                    description="Would you like to include an EV charger in the installation?"
+                  />
+                </div>
               </div>
 
+              {/* Additional Notes */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+                  📝 Additional Notes & Requirements
+                </h3>
               <TextareaInput
                 id="additional-notes"
-                label="📝 Additional Notes"
+                  label="Additional Notes"
                 value={formData.additionalNotes}
                 onChange={(value) => updateFormData("additionalNotes", value)}
                 placeholder="Any additional notes, preferences, or special requirements..."
                 rows={4}
+                  description="Include any special requirements, preferences, or additional information"
               />
+              </div>
             </div>
           </SurveySection>
 
           {/* Section 9 - Auto-Generated Summary */}
           <SurveySection
-            title="📊 Section 9 - Auto-Generated Summary"
+            title="Section 9 - Auto-Generated Summary"
             isOpen={currentSection === "summary"}
             onToggle={() => toggleSection("summary")}
             completedFields={progress.completed}
@@ -2769,6 +3542,28 @@ const Index = () => {
                 flaggedIssues={redFlags}
                 recommendedActions={generateRecommendedActions()}
                 onJumpToIssue={jumpToField}
+                completionStatus={{
+                  completed: progress.completed,
+                  total: progress.total,
+                  percentage: Math.round((progress.completed / progress.total) * 100)
+                }}
+                incompleteSections={Object.entries(progress.sections)
+                  .filter(([_, section]) => section.completed < section.total)
+                  .map(([key, _]) => {
+                    const sectionNames: { [key: string]: string } = {
+                      general: "General & Contact",
+                      electricity: "Electricity Baseline",
+                      property: "Property Overview",
+                      roof: "Roof Inspection",
+                      loft: "Loft / Attic",
+                      electrical: "Electrical Supply",
+                      battery: "Battery & Storage",
+                      safety: "Health & Safety",
+                      preferences: "Preferences & Next Steps"
+                    };
+                    return sectionNames[key] || key;
+                  })
+                }
               />
 
               <div className="flex justify-center pt-6 border-t">
@@ -2793,13 +3588,22 @@ const Index = () => {
 
       {/* Sticky Submit Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-6 py-3 flex items-center justify-between gap-4">
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between gap-6">
           <div className="text-sm text-muted-foreground truncate">
             {!isOnline && "Offline: submit to save locally and sync later"}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              size="default"
+              onClick={() => setShowFeedbackModal(true)}
+              className="hidden sm:flex h-10 sm:h-11 text-sm"
+            >
+              Feedback
+            </Button>
+            
             {!!surveyId && (
-              <Button variant="outline" onClick={startNewSurvey}>
+              <Button variant="outline" size="default" onClick={startNewSurvey} className="h-10 sm:h-11 text-sm">
                 New Survey
               </Button>
             )}
@@ -2807,7 +3611,8 @@ const Index = () => {
             {pendingSync > 0 && (
               <Button
                 variant="outline"
-                size="sm"
+                size="default"
+                className="h-10 sm:h-11 text-sm"
                 onClick={async () => {
                   const confirmed = window.confirm(
                     `Clear ${pendingSync} pending sync items? This will permanently delete queued data.`
@@ -2843,6 +3648,21 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* User Feedback Modal */}
+      <UserFeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        onSubmit={async (feedback) => {
+          // Here you would typically send the feedback to your backend
+          console.log("User feedback:", feedback);
+          toast({
+            title: "Feedback Submitted",
+            description: "Thank you for your feedback! We'll use it to improve the survey experience.",
+          });
+        }}
+      />
+
     </div>
   );
 };

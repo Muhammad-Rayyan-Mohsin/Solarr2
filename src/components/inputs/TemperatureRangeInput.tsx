@@ -130,7 +130,7 @@ export function TemperatureRangeInput({
               max={100}
               step={0.1}
               className={cn(
-                "survey-input pr-12 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                "enhanced-input pr-12 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
                 isFlagged && "border-destructive focus:ring-destructive/50"
               )}
             />
@@ -158,7 +158,7 @@ export function TemperatureRangeInput({
               max={100}
               step={0.1}
               className={cn(
-                "survey-input pr-12 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                "enhanced-input pr-12 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
                 isFlagged && "border-destructive focus:ring-destructive/50"
               )}
             />
@@ -171,7 +171,7 @@ export function TemperatureRangeInput({
 
       {isFlagged && flagMessage && (
         <div className="flex items-center space-x-2 text-sm text-destructive">
-          <span>⚠</span>
+          <span>!</span>
           <span>{flagMessage}</span>
           <button className="underline hover:no-underline">
             Click to resolve
