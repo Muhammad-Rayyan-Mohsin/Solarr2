@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GoogleSolarApiService } from "@/services/googleSolarApi";
 import { Loader2, MapPin, Zap, TreePine, Home, Sun } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { API_CONFIG } from "@/lib/config";
 
 interface SolarImageryViewerProps {
   latitude: number;
@@ -23,15 +24,22 @@ export function SolarImageryViewer({ latitude, longitude, address }: SolarImager
   const [solarData, setSolarData] = useState<SolarData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState("");
+  const [apiKey, setApiKey] = useState(API_CONFIG.GOOGLE_MAPS_API_KEY);
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
+
+  // Auto-fetch solar data when component loads if API key is available
+  useEffect(() => {
+    if (apiKey.trim() && latitude && longitude) {
+      fetchSolarData();
+    }
+  }, [latitude, longitude, apiKey]);
 
   const fetchSolarData = async () => {
     if (!apiKey.trim()) {
       toast({
         title: "API Key Required",
-        description: "Please enter your Google Solar API key",
+        description: "Please configure your Google Solar API key",
         variant: "destructive",
       });
       return;

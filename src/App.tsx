@@ -7,7 +7,8 @@ import { useEffect, Suspense } from "react";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
-import Submissions from "./pages/Submissions";
+import SubmissionsNew from "./pages/SubmissionsNew";
+import SolarApiTest from "./pages/SolarApiTest";
 
 const queryClient = new QueryClient();
 
@@ -65,7 +66,8 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/survey" element={<Index />} />
-              <Route path="/submissions" element={<Submissions />} />
+              <Route path="/submissions" element={<SubmissionsNew />} />
+              <Route path="/solar-api-test" element={<SolarApiTest />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

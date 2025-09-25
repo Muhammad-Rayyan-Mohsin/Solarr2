@@ -63,7 +63,8 @@ export function PhoneInputComponent({
           placeholder={placeholder}
           defaultCountry={defaultCountry as any}
           international
-          countryCallingCodeEditable={false}
+          countryCallingCodeEditable={true}
+          addInternationalOption={true}
           className={cn(
             "phone-input-container",
             isFlagged && "phone-input-flagged"
@@ -71,6 +72,8 @@ export function PhoneInputComponent({
           inputComponent={({ className, ...props }) => (
             <input
               {...props}
+              disabled={false}
+              readOnly={false}
               className={cn(
                 "enhanced-input",
                 isFlagged && "border-destructive focus:ring-destructive/50",

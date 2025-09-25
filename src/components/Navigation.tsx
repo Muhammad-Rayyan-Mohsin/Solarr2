@@ -22,6 +22,7 @@ const Navigation = () => {
     { name: "Survey", url: "/survey", icon: FileText },
     { name: "About", url: "#how-it-works", icon: Users },
     { name: "FAQ", url: "#faq", icon: HelpCircle },
+    { name: "API Test", url: "/solar-api-test", icon: Zap },
   ];
 
   const scrollToSection = (sectionId: string) => {

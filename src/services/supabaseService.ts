@@ -8,30 +8,22 @@ import {
 
 export class SupabaseService {
   // Survey Operations
-  static async createSurvey(surveyData: Partial<Survey>): Promise<Survey> {
-    const { data, error } = await supabase
-      .from("surveys")
-      .insert([{ ...surveyData, status: "completed", sync_status: "synced" }])
-      .select()
-      .single();
+  static async createSurvey(surveyData: any): Promise<{ id: string }> {
+    // Use our new RPC function that handles the normalized schema
+    const { data: surveyId, error } = await supabase
+      .rpc('create_full_survey', { payload: surveyData });
 
     if (error) throw error;
-    return data;
+    return { id: surveyId };
   }
 
   static async updateSurvey(
     id: string,
-    surveyData: Partial<Survey>
-  ): Promise<Survey> {
-    const { data, error } = await supabase
-      .from("surveys")
-      .update({ ...surveyData, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    surveyData: any
+  ): Promise<{ id: string }> {
+    // TODO: Implement update for normalized schema
+    // For now, throw an error as updates aren't supported yet
+    throw new Error('Survey updates not yet implemented for new schema. Please create a new survey instead.');
   }
 
   static async getSurvey(id: string): Promise<Survey | null> {
@@ -45,9 +37,9 @@ export class SupabaseService {
     return data;
   }
 
-  static async listSurveys(): Promise<Survey[]> {
+  static async listSurveys(): Promise<any[]> {
     const { data, error } = await supabase
-      .from("surveys")
+      .from("surveys_list")
       .select("*")
       .order("created_at", { ascending: false });
 
@@ -55,76 +47,69 @@ export class SupabaseService {
     return data || [];
   }
 
-  // Photo Operations
+  // Fetch a complete survey with all related sections and assets
+  static async getFullSurvey(surveyId: string): Promise<any> {
+    const { data, error } = await supabase.rpc('get_full_survey', { p_survey_id: surveyId });
+    if (error) throw error;
+    return data;
+  }
+
+  // Photo Operations - Updated for new schema
   static async uploadPhoto(
     surveyId: string,
     file: File,
     section: string,
     field: string,
-    metadata?: any
-  ): Promise<SurveyPhoto> {
+    metadata?: any,
+    roofFaceId?: string
+  ): Promise<string> {
     // Generate unique filename
-    const timestamp = Date.now();
-    const filename = `${surveyId}_${section}_${field}_${timestamp}.jpg`;
-    const filePath = `surveys/${surveyId}/photos/${filename}`;
+    const fileExt = file.name.split('.').pop() || 'jpg';
+    const filename = `${crypto.randomUUID()}.${fileExt}`;
+    
+    // Get user ID for storage path (or use anonymous fallback)
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id || 'anonymous';
+    const filePath = `surveys/${userId}/${surveyId}/assets/${section}/${field}/${filename}`;
 
     // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("survey-photos")
+    const { error: uploadError } = await supabase.storage
+      .from("surveys")
       .upload(filePath, file, {
+        contentType: file.type,
         cacheControl: "3600",
         upsert: false,
       });
 
     if (uploadError) throw uploadError;
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from("survey-photos")
-      .getPublicUrl(filePath);
-
-    // Create thumbnail
-    const thumbnailPath = `surveys/${surveyId}/thumbnails/${filename}`;
-    const thumbnailBlob = await this.createThumbnail(file);
-
-    const { error: thumbnailError } = await supabase.storage
-      .from("survey-photos")
-      .upload(thumbnailPath, thumbnailBlob, {
-        cacheControl: "3600",
-        upsert: false,
-      });
-
-    if (thumbnailError)
-      console.warn("Thumbnail upload failed:", thumbnailError);
-
-    // Save to database
-    const photoData: Partial<SurveyPhoto> = {
-      survey_id: surveyId,
-      section,
-      field,
-      filename,
-      file_path: urlData.publicUrl,
-      thumbnail_path: thumbnailPath,
-      file_size: file.size,
-      metadata,
-      sync_status: "synced",
-    };
-
-    const { data, error } = await supabase
-      .from("survey_photos")
-      .insert([photoData])
+    // Create asset record in the new assets table
+    const { data: asset, error: assetError } = await supabase
+      .from("assets")
+      .insert({
+        survey_id: surveyId,
+        roof_face_id: roofFaceId,
+        section,
+        field,
+        kind: 'photo',
+        storage_object_path: filePath,
+        mime_type: file.type,
+        byte_size: file.size,
+        metadata: metadata || {}
+      })
       .select()
       .single();
 
-    if (error) throw error;
-    return data;
+    if (assetError) throw assetError;
+    return asset.id;
   }
 
-  static async getSurveyPhotos(surveyId: string): Promise<SurveyPhoto[]> {
+  static async getSurveyPhotos(surveyId: string): Promise<any[]> {
     const { data, error } = await supabase
-      .from("survey_photos")
+      .from("assets")
       .select("*")
       .eq("survey_id", surveyId)
+      .eq("kind", "photo")
       .order("created_at", { ascending: true });
 
     if (error) throw error;

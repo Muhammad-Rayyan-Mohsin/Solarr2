@@ -91,13 +91,15 @@ interface DataLayersResponse {
   hourlyShadeUrls: string[];
 }
 
+import { API_CONFIG } from '@/lib/config';
+
 export class GoogleSolarApiService {
-  private static readonly BASE_URL = 'https://solar.googleapis.com/v1';
+  private static readonly BASE_URL = API_CONFIG.GOOGLE_SOLAR_API_BASE;
   
   static async getBuildingInsights(
     latitude: number, 
     longitude: number,
-    apiKey: string
+    apiKey: string = API_CONFIG.GOOGLE_MAPS_API_KEY
   ): Promise<BuildingInsights> {
     const url = `${this.BASE_URL}/buildingInsights:findClosest?location.latitude=${latitude}&location.longitude=${longitude}&key=${apiKey}`;
     
@@ -116,7 +118,7 @@ export class GoogleSolarApiService {
     view: 'FULL_LAYERS' | 'DSM_LAYER' | 'IMAGERY_LAYER' | 'IMAGERY_AND_ANNUAL_FLUX_LAYERS' | 'IMAGERY_AND_ALL_FLUX_LAYERS' = 'IMAGERY_AND_ALL_FLUX_LAYERS',
     requiredQuality: 'HIGH' | 'MEDIUM' | 'LOW' = 'HIGH',
     pixelSizeMeters: number = 0.1,
-    apiKey: string
+    apiKey: string = API_CONFIG.GOOGLE_MAPS_API_KEY
   ): Promise<DataLayersResponse> {
     const url = `${this.BASE_URL}/dataLayers:get?location.latitude=${latitude}&location.longitude=${longitude}&radiusMeters=${radiusMeters}&view=${view}&requiredQuality=${requiredQuality}&pixelSizeMeters=${pixelSizeMeters}&key=${apiKey}`;
     

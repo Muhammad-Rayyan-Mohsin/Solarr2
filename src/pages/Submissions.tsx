@@ -16,12 +16,12 @@ import { jsPDF } from "jspdf";
 import { useNavigate } from "react-router-dom";
 
 export default function Submissions() {
-  const [surveys, setSurveys] = useState<Survey[]>([]);
+  const [surveys, setSurveys] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleEdit = (survey: Survey) => {
+  const handleEdit = (survey: any) => {
     if (!survey.id) {
       toast({
         title: "Error",
@@ -56,7 +56,7 @@ export default function Submissions() {
 
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  const generateCSV = (survey: Survey) => {
+  const generateCSV = (survey: any) => {
     try {
       const fields = [
         ["Survey Date", survey.survey_date],

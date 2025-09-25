@@ -4,7 +4,10 @@ import ModernHeroSection from "@/components/ModernHeroSection";
 import { SurveySection } from "@/components/SurveySection";
 import { RedFlagsSummary } from "@/components/RedFlagsSummary";
 import { TextInput } from "@/components/inputs/TextInput";
+import { What3WordsInput } from "@/components/inputs/What3WordsInput";
 import { NumberInput } from "@/components/inputs/NumberInput";
+import { SolarTestInputs } from "@/components/SolarTestInputs";
+import { SolarApiTestButton } from "@/components/SolarApiTestButton";
 import { DropdownSelect } from "@/components/inputs/DropdownSelect";
 import { YesNoNADropdown } from "@/components/inputs/YesNoNADropdown";
 import { TextWithPhotoInput } from "@/components/inputs/TextWithPhotoInput";
@@ -22,6 +25,7 @@ import { SummaryDisplay } from "@/components/inputs/SummaryDisplay";
 import { ExportButtons } from "@/components/ExportButtons";
 import { DatePickerInput } from "@/components/inputs/DatePickerInput";
 import { PhoneInputComponent } from "@/components/inputs/PhoneInput";
+import { SimplePhoneInput } from "@/components/inputs/SimplePhoneInput";
 import { EnhancedSliderInput } from "@/components/inputs/EnhancedSliderInput";
 import { EnhancedPhotoUpload } from "@/components/inputs/EnhancedPhotoUpload";
 import { AbstractProgressIndicator } from "@/components/AbstractProgressIndicator";
@@ -702,6 +706,9 @@ const Index = () => {
   const [formData, setFormData] = useState<FormData>(
     USE_TEST_DATA ? TEST_FORM_DATA : DEFAULT_FORM_DATA
   );
+  
+  // Solar API data state
+  const [solarData, setSolarData] = useState<any>(null);
 
   // Submit state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -806,104 +813,11 @@ const Index = () => {
 
     // Check if we're in edit mode
     const isEditMode = surveyId !== null;
-    // Convert form data to match Supabase schema (only core fields that exist)
+    
+    // Use the original FormData structure for the RPC function
+    // The RPC function expects the original form structure, not the flat schema
     const surveyData = {
-      // Section 0 - General & Contact
-      surveyor_name: formData.surveyorInfo.name || null,
-      customer_name: formData.customerName || null,
-      site_address: formData.siteAddress || null,
-      postcode: formData.postcode || null,
-      grid_reference: formData.gridReference || null,
-      phone: formData.phone || null,
-      email: formData.email || null,
-      secondary_contact_name: formData.secondaryContactName || null,
-      secondary_contact_phone: formData.secondaryContactPhone || null,
-      survey_date: formData.surveyDate || null,
-
-      // Section 1 - Electricity Baseline
-      current_electricity_usage: parseFloat(formData.annualConsumption) || null,
-      mpan_number: formData.mpanNumber || null,
-      current_electricity_supplier: formData.electricityProvider || null,
-      network_operator: formData.networkOperator || null,
-      customer_permission_granted: formData.customerPermissionGranted || null,
-      daytime_import_rate: parseFloat(formData.daytimeImportRate) || null,
-      nighttime_import_rate: parseFloat(formData.nighttimeImportRate) || null,
-      standing_charge: parseFloat(formData.standingCharge) || null,
-      current_electricity_tariff: formData.tariffType || null,
-      smart_meter_present: formData.smartMeterPresent || null,
-      seg_tariff_available: formData.segTariffAvailable || null,
-
-      // Section 2 - Property Overview
-      property_type: formData.propertyType || null,
-      property_age: formData.propertyAge || null,
-      listed_building: formData.listedBuilding || null,
-      conservation_area: formData.conservationArea || null,
-      new_build: formData.newBuild || null,
-      shared_roof: formData.sharedRoof || null,
-      scaffold_access: formData.scaffoldAccess || null,
-      storage_area: formData.storageArea || null,
-      restricted_parking: formData.restrictedParking || null,
-
-      // Section 3 - Roof Inspection
-      roof_faces: formData.roofFaces || [],
-
-      // Section 4 - Loft/Attic
-      loft_hatch_width: parseFloat(formData.loftHatchWidth) || null,
-      loft_hatch_height: parseFloat(formData.loftHatchHeight) || null,
-      loft_access_quality: formData.loftAccessQuality || null,
-      loft_headroom: parseFloat(formData.loftHeadroom) || null,
-      roof_timber_condition: formData.roofTimberCondition || null,
-      wall_space_inverter: formData.wallSpaceInverter || null,
-      wall_space_battery: formData.wallSpaceBattery || null,
-      loft_insulation_thickness:
-        parseFloat(formData.loftInsulationThickness) || null,
-      loft_lighting: formData.loftLighting || null,
-      loft_power_socket: formData.loftPowerSocket || null,
-
-      // Section 5 - Electrical Supply
-      electrical_supply_type: formData.supplyType || null,
-      main_fuse_rating: formData.mainFuseRating || null,
-      consumer_unit_make: formData.consumerUnitMake || null,
-      consumer_unit_location: formData.consumerUnitLocation || null,
-      spare_fuse_ways: parseFloat(formData.spareFuseWays) || null,
-      existing_surge_protection: formData.existingSurgeProtection || null,
-      earth_bonding_verified: formData.earthBondingVerified || null,
-      earthing_system: formData.earthingSystemType || null,
-      dno_notification_required: formData.dnoNotificationRequired || null,
-      ev_charger_installed: formData.evChargerInstalled || null,
-      ev_charger_load: parseFloat(formData.evChargerLoad) || null,
-
-      // Section 6 - Battery & Storage
-      battery_required: formData.batteryRequired === "yes",
-      install_location: formData.preferredInstallLocation || null,
-      distance_from_cu: parseFloat(formData.distanceFromCU) || null,
-      mounting_surface: formData.mountingSurface || null,
-      ventilation_adequate: formData.ventilationAdequate || null,
-      fire_egress_compliance: formData.fireEgressCompliance || null,
-      temperature_range_min: parseFloat(formData.ambientTempMin) || null,
-      temperature_range_max: parseFloat(formData.ambientTempMax) || null,
-      ip_rating: formData.ipRatingRequired || null,
-
-      // Section 7 - Health & Safety
-      asbestos_presence: formData.asbestosPresence === "yes",
-      working_at_height_difficulties:
-        formData.workingAtHeightDifficulties || null,
-      livestock_pets: formData.livestockPetsOnSite || null,
-      livestock_pets_notes: formData.livestockPetsNotes || null,
-      special_access_instructions: formData.specialAccessInstructions || null,
-
-      // Section 8 - Customer Preferences
-      contact_method: formData.preferredContactMethod || null,
-      installation_start_date: formData.installationStartDate || null,
-      installation_end_date: formData.installationEndDate || null,
-      customer_away: formData.customerAway || null,
-      customer_away_notes: formData.customerAwayNotes || null,
-      budget_range: formData.budgetRange || null,
-      interested_in_ev_charger: formData.interestedInEvCharger || null,
-      interested_in_energy_monitoring:
-        formData.interestedInEnergyMonitoring || null,
-      additional_notes: formData.additionalNotes || null,
-
+      ...formData,
       status: "completed" as const,
     };
 
@@ -1296,6 +1210,59 @@ const Index = () => {
     value: FormData[keyof FormData]
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleTestDataFill = (testData: any) => {
+    setFormData(prev => ({
+      ...prev,
+      customerName: testData.customerName,
+      siteAddress: testData.siteAddress,
+      postcode: testData.postcode,
+      gridReference: testData.gridReference,
+      phone: testData.phone,
+      email: testData.email
+    }));
+  };
+
+  // Handle solar data from LocationInput
+  const handleSolarDataReceived = (solarApiData: any) => {
+    setSolarData(solarApiData);
+    
+    // Auto-populate roof faces based on solar API data
+    if (solarApiData.roofSegments && solarApiData.roofSegments.length > 0) {
+      const autoRoofFaces = solarApiData.roofSegments.map((segment: any) => ({
+        id: segment.id,
+        label: `${segment.id} (Auto-detected ${segment.orientation})`,
+        orientation: segment.azimuth,
+        pitch: segment.pitch,
+        width: "", // Manual input still required
+        length: "", // Manual input still required  
+        area: segment.area.toString(),
+        covering: "", // Manual input required
+        coveringCondition: "", // Manual input required
+        obstructions: [], // Based on Solar API analysis
+        shading: [], // Based on Solar API shadow analysis
+        gutterHeight: "", // Manual input required
+        rafterSpacing: "", // Manual input required
+        rafterDepth: "", // Manual input required
+        battenDepth: "", // Manual input required
+        membraneType: "", // Manual input required
+        membraneCondition: "", // Manual input required
+        structuralDefects: "", // Manual input required
+        plannedPanelCount: segment.suggestedPanels.toString(),
+        photos: []
+      }));
+      
+      setFormData(prev => ({
+        ...prev,
+        roofFaces: autoRoofFaces
+      }));
+      
+      toast({
+        title: "Roof Analysis Complete",
+        description: `Auto-populated ${solarApiData.roofSegments.length} roof faces with ${solarApiData.maxPanels} potential panels`,
+      });
+    }
   };
 
   const toggleSection = (section: string) => {
@@ -1740,6 +1707,10 @@ const Index = () => {
         showStartButton={false}
       />
 
+      {/* Solar API Test Component - Development Only */}
+      <div className="container mx-auto px-6 mb-8">
+        <SolarTestInputs onFillForm={handleTestDataFill} />
+      </div>
 
       {/* Abstract Progress Indicator - Desktop Only */}
       <div className="container mx-auto mobile-spacing-sm hidden md:block">
@@ -1917,18 +1888,130 @@ const Index = () => {
                     label="Grid Reference"
                 value={formData.gridReference}
                 onChange={(value) => updateFormData("gridReference", value)}
+                onSolarDataReceived={handleSolarDataReceived}
                 required
               />
-              <TextInput
+              <div className="flex justify-center mt-4">
+                <SolarApiTestButton />
+              </div>
+              <What3WordsInput
                     id="what3words"
                     label="What3Words"
                     value={formData.what3words}
                     onChange={(value) => updateFormData("what3words", value)}
-                    placeholder="Enter what3words location..."
-                    description="For 1m accuracy location reference"
+                    placeholder="///word.word.word"
                   />
                 </div>
               </div>
+
+              {/* Solar API Insights Display */}
+              {solarData && (
+                <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-foreground mb-4 border-b border-border pb-2">
+          🌞 Solar Potential Analysis (Google Solar API)
+        </h3>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Max Panels</p>
+                        <p className="text-2xl font-bold text-green-600">{solarData.maxPanels}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Usable Roof Area</p>
+                        <p className="text-2xl font-bold text-green-600">{solarData.usableRoofArea}m²</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Est. Annual Energy</p>
+                        <p className="text-2xl font-bold text-green-600">{Math.round(solarData.estimatedYearlyEnergy).toLocaleString()}kWh</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Roof Suitability</p>
+                        <p className="text-2xl font-bold text-green-600">{solarData.obstructions.usablePercentage}%</p>
+                      </div>
+                    </div>
+                    
+                    <div className="text-sm text-green-700">
+                      <p><strong>Shading Analysis:</strong> {solarData.obstructions.shadingPercentage}% of roof affected by shadows/obstructions</p>
+                      <p><strong>Response Time:</strong> {solarData.apiResponseTime}ms | <strong>Data Quality:</strong> {solarData.dataQuality}</p>
+                      <p><strong>Detected Roof Faces:</strong> {solarData.roofSegments.length} segments automatically identified</p>
+                    </div>
+                    
+                    {/* Debug data for development */}
+          {/* Solar Imagery Display */}
+          {solarData.rawDataLayers && (
+            <div className="mt-4 space-y-4">
+              <h4 className="font-medium text-sm text-green-700">📸 Solar Analysis Images</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {solarData.rawDataLayers.rgbUrl && (
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-medium text-green-600">🏠 Aerial View</h5>
+                    <img 
+                      src={solarData.rawDataLayers.rgbUrl} 
+                      alt="High-resolution aerial view of property"
+                      className="w-full h-auto rounded border max-h-48 object-contain bg-gray-50"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+                
+                {solarData.rawDataLayers.dsmUrl && (
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-medium text-green-600">🗺️ 3D Elevation Map</h5>
+                    <img 
+                      src={solarData.rawDataLayers.dsmUrl} 
+                      alt="Digital surface model showing roof height"
+                      className="w-full h-auto rounded border max-h-48 object-contain bg-gray-50"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+                
+                {solarData.rawDataLayers.annualFluxUrl && (
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-medium text-green-600">☀️ Solar Flux Map</h5>
+                    <img 
+                      src={solarData.rawDataLayers.annualFluxUrl} 
+                      alt="Annual solar flux showing sun exposure"
+                      className="w-full h-auto rounded border max-h-48 object-contain bg-gray-50"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+                
+                {solarData.rawDataLayers.maskUrl && (
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-medium text-green-600">🎯 Available Roof Area</h5>
+                    <img 
+                      src={solarData.rawDataLayers.maskUrl} 
+                      alt="Roof mask showing usable area for solar panels"
+                      className="w-full h-auto rounded border max-h-48 object-contain bg-gray-50"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <details className="mt-4">
+            <summary className="text-xs cursor-pointer text-green-600 hover:text-green-800">
+              📊 View Raw Solar API Data (Developer)
+            </summary>
+            <pre className="text-xs mt-2 bg-white p-2 rounded border overflow-auto max-h-40">
+              {JSON.stringify(solarData, null, 2)}
+            </pre>
+          </details>
+                  </div>
+                </div>
+              )}
 
               {/* Contact Information - Grouped together */}
               <div className="space-y-4">
@@ -1936,14 +2019,13 @@ const Index = () => {
                   Contact Information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <PhoneInputComponent
+                  <SimplePhoneInput
                 id="phone"
                     label="Primary Phone"
                 value={formData.phone}
                 onChange={(value) => updateFormData("phone", value)}
                 placeholder="Enter phone number..."
                 required
-                    defaultCountry="GB"
               />
               <TextInput
                 id="email"
@@ -1963,7 +2045,7 @@ const Index = () => {
                 }
                 placeholder="Enter secondary contact name..."
               />
-                  <PhoneInputComponent
+                  <SimplePhoneInput
                 id="secondary-contact-phone"
                     label="Secondary Contact Phone"
                 value={formData.secondaryContactPhone}
@@ -1971,7 +2053,6 @@ const Index = () => {
                   updateFormData("secondaryContactPhone", value)
                 }
                 placeholder="Enter secondary contact phone..."
-                    defaultCountry="GB"
               />
                 </div>
               </div>
@@ -3596,10 +3677,10 @@ const Index = () => {
           </div>
           <div className="flex gap-3">
             <Button
-              variant="outline"
+              variant="default"
               size="default"
               onClick={() => setShowFeedbackModal(true)}
-              className="hidden sm:flex h-10 sm:h-11 text-sm"
+              className="hidden sm:flex min-w-[140px] h-9 sm:h-10 text-sm"
             >
               Feedback
             </Button>
@@ -3643,7 +3724,9 @@ const Index = () => {
             <Button
               onClick={handleSubmitSurvey}
               disabled={isSubmitting}
-              className="min-w-[160px]"
+              variant="default"
+              size="default"
+              className="min-w-[160px] h-10 sm:h-11 text-sm"
             >
               {isSubmitting ? "Submitting..." : "Submit Survey"}
             </Button>

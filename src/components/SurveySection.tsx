@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useAccordionScroll } from "@/hooks/use-accordion-scroll";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface SurveySectionProps {
   title: string;
@@ -28,20 +29,7 @@ export function SurveySection({
 
   const completionPercentage =
     totalFields > 0 ? (completedFields / totalFields) * 100 : 0;
-  const contentRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
-  const [contentHeight, setContentHeight] = useState<number>(0);
-
-  useEffect(() => {
-    if (contentRef.current) {
-      if (isOpen) {
-        const height = contentRef.current.scrollHeight;
-        setContentHeight(height);
-      } else {
-        setContentHeight(0);
-      }
-    }
-  }, [isOpen, children]);
 
   const scrollToSection = () => {
     if (sectionRef.current) {
@@ -63,9 +51,10 @@ export function SurveySection({
       // If section is being opened (not closed), scroll to it
       if (!wasOpen) {
         // Use setTimeout to ensure the section has expanded before scrolling
+        // Increased delay to account for framer-motion animation
         setTimeout(() => {
           scrollToSection();
-        }, 100);
+        }, 200);
       }
     });
   };
@@ -83,11 +72,12 @@ export function SurveySection({
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            {isOpen ? (
-              <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-            ) : (
+            <motion.div
+              animate={{ rotate: isOpen ? 90 : 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
               <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-            )}
+            </motion.div>
             <h2
               className={cn(
                 "text-lg font-semibold",
@@ -119,14 +109,42 @@ export function SurveySection({
         </div>
       </button>
 
-      <div
-        className={cn(
-          "accordion-content transition-all duration-300 ease-out",
-          isOpen ? "max-h-none opacity-100" : "max-h-0 opacity-0 overflow-hidden"
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ 
+              height: "auto", 
+              opacity: 1,
+              transition: {
+                height: { duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] },
+                opacity: { duration: 0.3, delay: 0.1 }
+              }
+            }}
+            exit={{ 
+              height: 0, 
+              opacity: 0,
+              transition: {
+                height: { duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] },
+                opacity: { duration: 0.2 }
+              }
+            }}
+            className="accordion-content overflow-hidden"
+          >
+            <motion.div 
+              initial={{ y: -10 }}
+              animate={{ 
+                y: 0,
+                transition: { duration: 0.3, delay: 0.15, ease: "easeOut" }
+              }}
+              exit={{ y: -10, transition: { duration: 0.2 } }}
+              className="px-6 py-6 sm:px-8 sm:py-8 component-spacing text-sm sm:text-base"
+            >
+              {children}
+            </motion.div>
+          </motion.div>
         )}
-      >
-        <div className="px-6 py-6 sm:px-8 sm:py-8 component-spacing text-sm sm:text-base">{children}</div>
-      </div>
+      </AnimatePresence>
     </div>
   );
 }
