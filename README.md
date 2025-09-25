@@ -1,4 +1,4 @@
-# Sun Survey Spark - Comprehensive Solar Survey Application
+# Solar Survey - Comprehensive Solar Survey Application
 
 A modern, comprehensive solar survey application built with React, TypeScript, and Tailwind CSS. This application provides a complete field inventory system for solar installation surveys with advanced input types, GPS integration, and photo documentation.
 
@@ -138,8 +138,8 @@ A modern, comprehensive solar survey application built with React, TypeScript, a
 ### Quick Start
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd sun-survey-spark
+git clone https://github.com/Muhammad-Rayyan-Mohsin/Solar_Survey.git
+cd Solar_Survey
 
 # Install dependencies
 npm install
@@ -159,6 +159,8 @@ cp .env.example .env
 # Configure API keys (for production)
 VITE_WHAT_THREE_WORDS_API_KEY=your_api_key
 VITE_GPS_ACCURACY=high
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 ## 📱 Usage
