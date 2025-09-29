@@ -13,6 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Eye, Edit, Download, FileText, ArrowLeft } from "lucide-react";
+import { PDFService } from "@/services/pdfService";
 
 export default function SubmissionsNew() {
   const [surveys, setSurveys] = useState<any[]>([]);
@@ -201,6 +202,23 @@ export default function SubmissionsNew() {
     }
   };
 
+  const generatePDF = async (survey: any) => {
+    try {
+      await PDFService.generateComprehensivePDF(survey.id);
+      toast({
+        title: "PDF Downloaded",
+        description: "Comprehensive survey report with images has been generated",
+      });
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF report",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SurveyHeader 
@@ -335,6 +353,15 @@ export default function SubmissionsNew() {
                         >
                           <FileText className="h-4 w-4" />
                           Full CSV
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => generatePDF(survey)}
+                          className="flex items-center gap-1"
+                        >
+                          <FileText className="h-4 w-4" />
+                          PDF Report
                         </Button>
                       </div>
                     </TableCell>
