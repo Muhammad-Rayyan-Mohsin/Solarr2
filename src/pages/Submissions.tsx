@@ -34,6 +34,44 @@ export default function Submissions() {
     navigate(`/?survey=${survey.id}`);
   };
 
+  const handleDelete = async (survey: any) => {
+    if (!survey.id) {
+      toast({
+        title: "Error",
+        description: "Survey ID not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Confirm deletion
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete the survey for ${survey.customer_name}? This action cannot be undone and will remove all data including images.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      // Call the delete service
+      await SupabaseService.deleteSurvey(survey.id);
+      
+      // Refresh the surveys list
+      await loadSurveys();
+      
+      toast({
+        title: "Survey Deleted",
+        description: "Survey and all associated data have been permanently deleted.",
+      });
+    } catch (error) {
+      console.error("Failed to delete survey:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete survey. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     loadSurveys();
   }, []);
@@ -350,6 +388,14 @@ export default function Submissions() {
                           className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md hover:shadow-lg transition-all duration-200"
                         >
                           Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(survey)}
+                          className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200"
+                        >
+                          Delete
                         </Button>
                       </div>
                     </TableCell>

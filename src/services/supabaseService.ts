@@ -92,6 +92,50 @@ export class SupabaseService {
     return data;
   }
 
+  // Delete a complete survey with all related data and assets
+  static async deleteSurvey(surveyId: string): Promise<void> {
+    try {
+      // First, get all assets for this survey to delete from storage
+      const { data: assets, error: assetsError } = await supabase
+        .from('assets')
+        .select('storage_object_path')
+        .eq('survey_id', surveyId);
+
+      if (assetsError) {
+        console.error('Error fetching assets for deletion:', assetsError);
+        // Continue with deletion even if assets fetch fails
+      }
+
+      // Delete all files from storage
+      if (assets && assets.length > 0) {
+        const filePaths = assets.map(asset => asset.storage_object_path);
+        const { error: storageError } = await supabase.storage
+          .from('surveys')
+          .remove(filePaths);
+
+        if (storageError) {
+          console.error('Error deleting files from storage:', storageError);
+          // Continue with deletion even if storage deletion fails
+        }
+      }
+
+      // Delete all database records (cascade will handle related tables)
+      const { error: deleteError } = await supabase
+        .from('surveys')
+        .delete()
+        .eq('id', surveyId);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      console.log(`Survey ${surveyId} and all related data deleted successfully`);
+    } catch (error) {
+      console.error('Error deleting survey:', error);
+      throw error;
+    }
+  }
+
   // Photo Operations - Updated for new schema
   static async uploadPhoto(
     surveyId: string,
