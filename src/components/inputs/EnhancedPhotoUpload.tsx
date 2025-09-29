@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { HelpTooltip } from "./HelpTooltip";
+import { offlineStorage } from "@/services/offlineStorage";
 
 interface PhotoGuideline {
   title: string;
@@ -61,8 +62,16 @@ export function EnhancedPhotoUpload({
 
     try {
       const newPhotos: string[] = [];
+      const remainingSlots = Math.max(0, maxPhotos - photos.length);
+      const draftId = (() => {
+        try {
+          return localStorage.getItem('draftId') || undefined;
+        } catch {
+          return undefined;
+        }
+      })();
       
-      for (let i = 0; i < files.length; i++) {
+      for (let i = 0; i < files.length && newPhotos.length < remainingSlots; i++) {
         const file = files[i];
         
         // Validate file type
@@ -77,19 +86,26 @@ export function EnhancedPhotoUpload({
           continue;
         }
         
-        // Convert to base64 for storage
+        // Convert to base64 for storage/display
         const base64 = await fileToBase64(file);
         newPhotos.push(base64);
+
+        // Persist offline for later sync
+        try {
+          const photoId = `${id}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+          await offlineStorage.savePhoto(photoId, file, 'survey', id, undefined, draftId);
+        } catch (e) {
+          console.error('Failed saving photo offline:', e);
+        }
       }
       
-      // Check if adding new photos would exceed max
-      if (photos.length + newPhotos.length > maxPhotos) {
-        setError(`Maximum ${maxPhotos} photos allowed. Please remove some photos first.`);
-        setUploading(false);
-        return;
+      if (files.length > remainingSlots) {
+        setError(`Maximum ${maxPhotos} photos allowed. Some files were not added.`);
       }
       
-      onPhotosChange([...photos, ...newPhotos]);
+      if (newPhotos.length > 0) {
+        onPhotosChange([...photos, ...newPhotos]);
+      }
     } catch (err) {
       setError("Failed to process photos. Please try again.");
     } finally {
