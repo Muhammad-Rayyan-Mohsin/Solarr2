@@ -1,10 +1,48 @@
-import {
-  supabase,
-  Survey,
-  SurveyPhoto,
-  SurveyAudio,
-  SyncQueueItem,
-} from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type Survey = Database['public']['Tables']['surveys']['Row'];
+type SurveyInsert = Database['public']['Tables']['surveys']['Insert'];
+
+export interface SurveyPhoto {
+  id?: string;
+  survey_id: string;
+  section: string;
+  field: string;
+  filename: string;
+  file_path: string;
+  thumbnail_path?: string;
+  file_size: number;
+  metadata?: any;
+  created_at?: string;
+  sync_status?: "pending" | "synced" | "failed";
+}
+
+export interface SurveyAudio {
+  id?: string;
+  survey_id: string;
+  section: string;
+  field: string;
+  filename: string;
+  file_path: string;
+  transcription?: string;
+  duration?: number;
+  file_size: number;
+  created_at?: string;
+  sync_status?: "pending" | "synced" | "failed";
+}
+
+export interface SyncQueueItem {
+  id?: string;
+  survey_id: string;
+  table_name: "surveys" | "survey_photos" | "survey_audio";
+  operation: "INSERT" | "UPDATE" | "DELETE";
+  data: any;
+  created_at?: string;
+  retry_count?: number;
+  max_retries?: number;
+  status?: "pending" | "processing" | "completed" | "failed";
+}
 
 export class SupabaseService {
   // Survey Operations
@@ -31,9 +69,9 @@ export class SupabaseService {
       .from("surveys")
       .select("*")
       .eq("id", id)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== "PGRST116") throw error;
+    if (error) throw error;
     return data;
   }
 
@@ -116,103 +154,76 @@ export class SupabaseService {
     return data || [];
   }
 
-  // Audio Operations
+  // Audio Operations - Updated for new schema
   static async uploadAudio(
     surveyId: string,
     file: Blob,
     section: string,
     field: string,
     transcription?: string
-  ): Promise<SurveyAudio> {
-    const timestamp = Date.now();
-    const filename = `${surveyId}_${section}_${field}_${timestamp}.webm`;
-    const filePath = `surveys/${surveyId}/audio/${filename}`;
+  ): Promise<string> {
+    // Generate unique filename
+    const fileExt = 'webm';
+    const filename = `${crypto.randomUUID()}.${fileExt}`;
+    
+    // Get user ID for storage path (or use anonymous fallback)
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id || 'anonymous';
+    const filePath = `surveys/${userId}/${surveyId}/assets/${section}/${field}/${filename}`;
 
     // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("survey-audio")
+    const { error: uploadError } = await supabase.storage
+      .from("surveys")
       .upload(filePath, file, {
+        contentType: 'audio/webm',
         cacheControl: "3600",
         upsert: false,
       });
 
     if (uploadError) throw uploadError;
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from("survey-audio")
-      .getPublicUrl(filePath);
-
-    // Save to database
-    const audioData: Partial<SurveyAudio> = {
-      survey_id: surveyId,
-      section,
-      field,
-      filename,
-      file_path: urlData.publicUrl,
-      transcription,
-      file_size: file.size,
-      sync_status: "synced",
-    };
-
-    const { data, error } = await supabase
-      .from("survey_audio")
-      .insert([audioData])
+    // Create asset record in the new assets table
+    const { data: asset, error: assetError } = await supabase
+      .from("assets")
+      .insert({
+        survey_id: surveyId,
+        section,
+        field,
+        kind: 'voice',
+        storage_object_path: filePath,
+        mime_type: 'audio/webm',
+        byte_size: file.size,
+        metadata: { transcription: transcription || '' }
+      })
       .select()
       .single();
 
-    if (error) throw error;
-    return data;
+    if (assetError) throw assetError;
+    return asset.id;
   }
 
-  // Sync Queue Operations
+  // Sync Queue Operations - These would need to be implemented in a proper sync queue table
   static async addToSyncQueue(
     item: Omit<SyncQueueItem, "id" | "created_at">
   ): Promise<SyncQueueItem> {
-    const queueItem: Partial<SyncQueueItem> = {
-      ...item,
-      retry_count: 0,
-      max_retries: 3,
-      status: "pending",
-    };
-
-    const { data, error } = await supabase
-      .from("sync_queue")
-      .insert([queueItem])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    // For now, just return the item - this would need a proper sync_queue table
+    return { ...item, id: crypto.randomUUID(), created_at: new Date().toISOString() };
   }
 
   static async getSyncQueue(): Promise<SyncQueueItem[]> {
-    const { data, error } = await supabase
-      .from("sync_queue")
-      .select("*")
-      .eq("status", "pending")
-      .order("created_at", { ascending: true });
-
-    if (error) throw error;
-    return data || [];
+    // For now, return empty array - this would need a proper sync_queue table
+    return [];
   }
 
   static async updateSyncQueueItem(
     id: string,
     updates: Partial<SyncQueueItem>
   ): Promise<void> {
-    const { error } = await supabase
-      .from("sync_queue")
-      .update(updates)
-      .eq("id", id);
-
-    if (error) throw error;
+    // For now, do nothing - this would need a proper sync_queue table
   }
 
   static async removeFromSyncQueue(id: string): Promise<void> {
-    const { error } = await supabase.from("sync_queue").delete().eq("id", id);
-
-    if (error) throw error;
+    // For now, do nothing - this would need a proper sync_queue table
   }
 
   // Utility Methods
@@ -267,18 +278,18 @@ export class SupabaseService {
       .subscribe();
   }
 
-  static subscribeToPhotoUpdates(
+  static subscribeToAssetUpdates(
     surveyId: string,
     callback: (payload: any) => void
   ) {
     return supabase
-      .channel(`photos-${surveyId}`)
+      .channel(`assets-${surveyId}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
-          table: "survey_photos",
+          table: "assets",
           filter: `survey_id=eq.${surveyId}`,
         },
         callback

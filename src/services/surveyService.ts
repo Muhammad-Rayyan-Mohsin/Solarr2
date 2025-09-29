@@ -1,9 +1,5 @@
 // Survey Service - Integration with Supabase Backend
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://jmjvcvahzmmugonhyiuo.supabase.co'
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptanZjdmFoem1tdWdvbmh5aXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MjgxNjQsImV4cCI6MjA3NDQwNDE2NH0.dmmFhiAImi4ZtpOVRiTaeaHUHsQIm9z7kqU8YbOqdVE'
-const supabase = createClient(supabaseUrl, supabaseKey)
+import { supabase } from "@/integrations/supabase/client";
 
 export interface SurveyFormData {
   // Section 0 - General & Contact
@@ -169,7 +165,7 @@ export class SurveyService {
    */
   static async saveSurvey(formData: SurveyFormData): Promise<string> {
     const { data: surveyId, error } = await supabase
-      .rpc('create_full_survey', { payload: formData })
+      .rpc('create_full_survey', { payload: formData as any })
     
     if (error) {
       throw new Error(`Failed to save survey: ${error.message}`)
@@ -261,7 +257,7 @@ export class SurveyService {
     }
     
     const response = await fetch(
-      `${supabaseUrl}/functions/v1/generate-survey-pdf?survey_id=${surveyId}`,
+      `https://jmjvcvahzmmugonhyiuo.supabase.co/functions/v1/generate-survey-pdf?survey_id=${surveyId}`,
       {
         headers: {
           'Authorization': `Bearer ${session.access_token}`
