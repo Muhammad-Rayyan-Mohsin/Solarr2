@@ -118,16 +118,23 @@ class SyncService {
 
   // Public method: sync photos for a specific draft to a survey
   async syncPhotosForDraft(draftId: string, surveyId: string): Promise<void> {
+    console.log("syncPhotosForDraft called with:", { draftId, surveyId });
     const photos = await offlineStorage.getAllPhotos();
+    console.log("Total photos in storage:", photos.length);
     const pending = photos.filter(p => !p.isUploaded && p.draftId === draftId);
+    console.log("Photos to upload for this draft:", pending.length);
+    
     for (const photo of pending) {
       try {
+        console.log("Uploading photo:", photo.id);
         await this.uploadPhotoToSupabase(surveyId, photo);
         await offlineStorage.markPhotoAsUploaded(photo.id);
+        console.log("Successfully uploaded photo:", photo.id);
       } catch (e) {
         console.error(`Failed to upload photo ${photo.id} for draft ${draftId}:`, e);
       }
     }
+    console.log("Finished syncing photos for draft");
   }
 
   // Process individual sync item from offlineStorage queue

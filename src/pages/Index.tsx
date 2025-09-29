@@ -39,7 +39,7 @@ import { offlineStorage } from "@/services/offlineStorage";
 import { useToast } from "@/hooks/use-toast";
 import { SupabaseService } from "@/services/supabaseService";
 import { SubmitSurveyButton } from "@/components/SubmitSurveyButton";
-import { syncPhotosForDraft } from "@/services/syncService";
+import { syncService } from "@/services/syncService";
 import { useSearchParams } from "react-router-dom";
 
 interface RoofFace {
@@ -904,8 +904,10 @@ const Index = () => {
       try {
         const currentDraftId =
           draftId || localStorage.getItem("draftId") || undefined;
+        console.log("Syncing photos for draft:", currentDraftId, "to survey:", result.id);
         if (currentDraftId && result.id) {
-          await syncPhotosForDraft(currentDraftId, result.id);
+          await syncService.syncPhotosForDraft(currentDraftId, result.id);
+          console.log("Photo sync completed successfully");
         }
       } catch (e) {
         console.error("Post-submit photo sync failed:", e);

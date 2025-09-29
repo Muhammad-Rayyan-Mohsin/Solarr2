@@ -49,22 +49,7 @@ export function PhotoUpload({
       for (const file of Array.from(files)) {
         if (photos.length >= maxPhotos) break;
         
-        // Generate unique photo ID
-        const photoId = `${id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        
-        // Save to offline storage
-        await offlineStorage.savePhoto(photoId, file, 'survey', id, undefined, getDraftId());
-        
-        // Add to sync queue
-        await offlineStorage.addToSyncQueue({
-          type: 'CREATE',
-          section: 'photos',
-          field: photoId,
-          value: { filename: file.name, size: file.size },
-          maxRetries: 3
-        });
-        
-        // Update UI
+        // Convert to base64 for immediate display
         const reader = new FileReader();
         reader.onload = (e) => {
           if (e.target?.result) {
@@ -73,9 +58,13 @@ export function PhotoUpload({
           }
         };
         reader.readAsDataURL(file);
+        
+        // Also save to offline storage for sync later
+        const photoId = `${id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        await offlineStorage.savePhoto(photoId, file, 'survey', id, undefined, getDraftId());
       }
     } catch (error) {
-      console.error('Failed to save photo:', error);
+      console.error('Failed to process photo:', error);
     } finally {
       setIsUploading(false);
     }
