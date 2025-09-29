@@ -1005,42 +1005,166 @@ const Index = () => {
   useEffect(() => {
     const loadSavedData = async () => {
       try {
-        // Check URL path for survey ID
-        const pathParts = window.location.pathname.split("/");
-        const surveyIdIndex = pathParts.indexOf("survey") + 1;
-        const isEditMode =
-          surveyIdIndex > 0 && pathParts[surveyIdIndex + 1] === "edit";
-        const surveyId = isEditMode ? pathParts[surveyIdIndex] : null;
-
-        if (isEditMode && surveyId) {
-          // Load survey data from Supabase using the full survey function
+        // Check if we're in edit mode via URL parameter
+        if (surveyId) {
           try {
             const fullSurvey = await SupabaseService.getFullSurvey(surveyId);
             if (!fullSurvey) {
               throw new Error("Survey not found");
             }
             
-            // For now, just load the basic survey data
-            // The full survey reconstruction from normalized schema would be complex
-            // and should be implemented properly when needed
-            const basicFormData = {
+            // Reconstruct form data from full survey with all sections and images
+            const reconstructedFormData: FormData = {
               ...DEFAULT_FORM_DATA,
+              
+              // Basic info
               surveyDate: fullSurvey.surveyDate || "",
               surveyorInfo: fullSurvey.surveyorInfo || DEFAULT_FORM_DATA.surveyorInfo,
               customerName: fullSurvey.customerName || "",
               siteAddress: fullSurvey.siteAddress || "",
               postcode: fullSurvey.postcode || "",
               gridReference: fullSurvey.gridReference || "",
+              what3words: fullSurvey.what3words || "",
               phone: fullSurvey.phone || "",
               email: fullSurvey.email || "",
               secondaryContactName: fullSurvey.secondaryContactName || "",
               secondaryContactPhone: fullSurvey.secondaryContactPhone || "",
+
+              // Electricity baseline
+              annualConsumption: fullSurvey.electricity_baseline?.annual_consumption?.toString() || "",
+              mpanNumber: fullSurvey.electricity_baseline?.mpan_number || "",
+              electricityProvider: fullSurvey.electricity_baseline?.electricity_provider || "",
+              networkOperator: fullSurvey.electricity_baseline?.network_operator || "",
+              customerPermissionGranted: fullSurvey.electricity_baseline?.customer_permission_granted || false,
+              daytimeImportRate: fullSurvey.electricity_baseline?.daytime_import_rate?.toString() || "",
+              nighttimeImportRate: fullSurvey.electricity_baseline?.nighttime_import_rate?.toString() || "",
+              standingCharge: fullSurvey.electricity_baseline?.standing_charge?.toString() || "",
+              tariffType: fullSurvey.electricity_baseline?.tariff_type || "",
+              smartMeterPresent: fullSurvey.electricity_baseline?.smart_meter_present as any,
+              segTariffAvailable: fullSurvey.electricity_baseline?.seg_tariff_available as any,
+              segTariffExplanation: fullSurvey.electricity_baseline?.seg_tariff_explanation || "",
+              smartTariffAvailable: fullSurvey.electricity_baseline?.smart_tariff_available as any,
+
+              // Property overview
+              propertyType: fullSurvey.property_overview?.property_type || "",
+              propertyAge: fullSurvey.property_overview?.property_age || "",
+              listedBuilding: fullSurvey.property_overview?.listed_building as any,
+              conservationArea: fullSurvey.property_overview?.conservation_area as any,
+              newBuild: fullSurvey.property_overview?.new_build as any,
+              sharedRoof: fullSurvey.property_overview?.shared_roof as any,
+              scaffoldAccess: fullSurvey.property_overview?.scaffold_access as any,
+              storageArea: fullSurvey.property_overview?.storage_area as any,
+              restrictedParking: fullSurvey.property_overview?.restricted_parking || "",
+
+              // Roof faces
+              roofFaces: (fullSurvey.roof_faces || []).map((rf: any) => ({
+                id: rf.id,
+                label: rf.label || "",
+                orientation: rf.orientation || 0,
+                pitch: rf.pitch || 30,
+                width: rf.width?.toString() || "",
+                length: rf.length?.toString() || "",
+                area: rf.area?.toString() || "",
+                covering: rf.covering || "",
+                coveringCondition: rf.covering_condition || "",
+                obstructions: rf.obstructions || [],
+                shading: rf.shading || [],
+                gutterHeight: rf.gutter_height || "",
+                rafterSpacing: rf.rafter_spacing || "",
+                rafterDepth: rf.rafter_depth || "",
+                battenDepth: rf.batten_depth || "",
+                membraneType: rf.membrane_type || "",
+                membraneCondition: rf.membrane_condition || "",
+                structuralDefects: rf.structural_defects || "",
+                plannedPanelCount: rf.planned_panel_count?.toString() || "",
+                photos: (rf.assets || []).filter((a: any) => a.kind === 'photo').map((a: any) => a.storagePath) || []
+              })),
+
+              // Loft/attic
+              loftHatchWidth: fullSurvey.loft_attic?.loft_hatch_width?.toString() || "",
+              loftHatchHeight: fullSurvey.loft_attic?.loft_hatch_height?.toString() || "",
+              loftAccessType: fullSurvey.loft_attic?.loft_access_type || "",
+              loftHeadroom: fullSurvey.loft_attic?.loft_headroom || "",
+              loftBoardsInPlace: fullSurvey.loft_attic?.loft_boards_in_place as any,
+              roofTimberCondition: fullSurvey.loft_attic?.roof_timber_condition || "",
+              roofTimberNotes: fullSurvey.loft_attic?.roof_timber_notes || "",
+              wallSpaceInverter: fullSurvey.loft_attic?.wall_space_inverter as any,
+              wallSpaceInverterNotes: fullSurvey.loft_attic?.wall_space_inverter_notes || "",
+              wallSpaceBattery: fullSurvey.loft_attic?.wall_space_battery as any,
+              wallSpaceBatteryNotes: fullSurvey.loft_attic?.wall_space_battery_notes || "",
+              loftInsulationThickness: fullSurvey.loft_attic?.loft_insulation_thickness?.toString() || "",
+              loftLighting: fullSurvey.loft_attic?.loft_lighting || "",
+              loftPowerSocket: fullSurvey.loft_attic?.loft_power_socket as any,
+
+              // Electrical supply
+              supplyType: fullSurvey.electrical_supply?.supply_type || "",
+              mainFuseRating: fullSurvey.electrical_supply?.main_fuse_rating || "",
+              consumerUnitMake: fullSurvey.electrical_supply?.consumer_unit_make || "",
+              consumerUnitLocation: fullSurvey.electrical_supply?.consumer_unit_location || "",
+              spareFuseWays: fullSurvey.electrical_supply?.spare_fuse_ways?.toString() || "",
+              existingSurgeProtection: fullSurvey.electrical_supply?.existing_surge_protection as any,
+              earthBondingVerified: fullSurvey.electrical_supply?.earth_bonding_verified as any,
+              earthingSystemType: fullSurvey.electrical_supply?.earthing_system_type || "",
+              cableRouteToRoof: fullSurvey.electrical_supply?.cable_route_to_roof || [],
+              cableRouteToBattery: fullSurvey.electrical_supply?.cable_route_to_battery || [],
+              dnoNotificationRequired: fullSurvey.electrical_supply?.dno_notification_required || false,
+              evChargerInstalled: fullSurvey.electrical_supply?.ev_charger_installed as any,
+              evChargerLoad: fullSurvey.electrical_supply?.ev_charger_load?.toString() || "",
+
+              // Battery storage
+              batteryRequired: fullSurvey.battery_storage?.battery_required || "",
+              preferredInstallLocation: fullSurvey.battery_storage?.preferred_install_location || "",
+              distanceFromCU: fullSurvey.battery_storage?.distance_from_cu || "",
+              mountingSurface: fullSurvey.battery_storage?.mounting_surface || "",
+              ventilationAdequate: fullSurvey.battery_storage?.ventilation_adequate as any,
+              fireEgressCompliance: fullSurvey.battery_storage?.fire_egress_compliance as any,
+              ambientTempMin: fullSurvey.battery_storage?.ambient_temp_min?.toString() || "",
+              ambientTempMax: fullSurvey.battery_storage?.ambient_temp_max?.toString() || "",
+              ipRatingRequired: fullSurvey.battery_storage?.ip_rating_required || "",
+
+              // Health & safety
+              asbestosPresence: fullSurvey.health_safety?.asbestos_presence || "",
+              workingAtHeightDifficulties: fullSurvey.health_safety?.working_at_height_difficulties || "",
+              fragileRoofAreas: fullSurvey.health_safety?.fragile_roof_areas || [],
+              livestockPetsOnSite: fullSurvey.health_safety?.livestock_pets_on_site as any,
+              livestockPetsNotes: fullSurvey.health_safety?.livestock_pets_notes || "",
+              specialAccessInstructions: fullSurvey.health_safety?.special_access_instructions || "",
+
+              // Customer preferences
+              preferredContactMethod: fullSurvey.customer_preferences?.preferred_contact_method || "",
+              installationStartDate: fullSurvey.customer_preferences?.installation_start_date || "",
+              installationEndDate: fullSurvey.customer_preferences?.installation_end_date || "",
+              customerAway: fullSurvey.customer_preferences?.customer_away || false,
+              customerAwayNotes: fullSurvey.customer_preferences?.customer_away_notes || "",
+              budgetRange: fullSurvey.customer_preferences?.budget_range || "",
+              interestedInEvCharger: fullSurvey.customer_preferences?.interested_in_ev_charger as any,
+              interestedInEnergyMonitoring: fullSurvey.customer_preferences?.interested_in_energy_monitoring as any,
+              additionalNotes: fullSurvey.customer_preferences?.additional_notes || "",
+
+              // Add images from assets array
+              annualConsumptionPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'annualConsumption' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              mpanPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'mpanNumber' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              scaffoldAccessPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'scaffoldAccess' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              storageAreaPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'storageArea' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              roofTimberPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'roofTimber' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              wallSpaceInverterPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'wallSpaceInverter' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              wallSpaceBatteryPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'wallSpaceBattery' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              mainFusePhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'mainFuse' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              consumerUnitLocationPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'consumerUnitLocation' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              spareFuseWaysPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'spareFuseWays' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              existingSurgeProtectionPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'existingSurgeProtection' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              earthBondingPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'earthBonding' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              earthingSystemPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'earthingSystem' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              ventilationPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'ventilation' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              fireEgressPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'fireEgress' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              asbestosPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'asbestos' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
+              customerSignature: (fullSurvey.assets || []).filter((a: any) => a.kind === 'signature')[0]?.storagePath || ""
             };
 
-            setFormData(basicFormData);
+            setFormData(reconstructedFormData);
             toast({
-              title: "Survey Loaded for Editing",
-              description: "Basic survey information loaded. Full data reconstruction in progress.",
+              title: "Survey Loaded",
+              description: "Complete survey data including all images has been loaded for editing.",
             });
             return;
           } catch (error) {
@@ -1050,8 +1174,6 @@ const Index = () => {
               description: "Failed to load survey for editing",
               variant: "destructive",
             });
-            // Redirect back to submissions page on error
-            window.location.href = "/submissions";
             return;
           }
         }
