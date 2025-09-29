@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { Eye, Edit, Download, FileText, ArrowLeft } from "lucide-react";
+import { Eye, Edit, Download, FileText, ArrowLeft, Trash2 } from "lucide-react";
 import { PDFService } from "@/services/pdfService";
 
 export default function SubmissionsNew() {
@@ -32,6 +32,44 @@ export default function SubmissionsNew() {
     }
     // Redirect to edit page with survey ID
     navigate(`/survey?survey=${survey.id}`);
+  };
+
+  const handleDelete = async (survey: any) => {
+    if (!survey.id) {
+      toast({
+        title: "Error",
+        description: "Survey ID not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Confirm deletion
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete the survey for ${survey.customer_name}? This action cannot be undone and will remove all data including images.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      // Call the delete service
+      await SupabaseService.deleteSurvey(survey.id);
+      
+      // Refresh the surveys list
+      await loadSurveys();
+      
+      toast({
+        title: "Survey Deleted",
+        description: "Survey and all associated data have been permanently deleted.",
+      });
+    } catch (error) {
+      console.error("Failed to delete survey:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete survey. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleViewDetails = async (survey: any) => {
@@ -362,6 +400,15 @@ export default function SubmissionsNew() {
                         >
                           <FileText className="h-4 w-4" />
                           PDF Report
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(survey)}
+                          className="flex items-center gap-1"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
                         </Button>
                       </div>
                     </TableCell>
