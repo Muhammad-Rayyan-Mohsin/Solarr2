@@ -203,7 +203,15 @@ export default function SubmissionsNew() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SurveyHeader />
+      <SurveyHeader 
+        customerName="Survey Submissions"
+        currentStep={1}
+        totalSteps={1}
+        completedSteps={[]}
+        isOnline={navigator.onLine}
+        isDarkMode={false}
+        onThemeToggle={() => {}}
+      />
       
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">

@@ -147,14 +147,7 @@ export function DatePickerInput({
           }
           popperClassName="react-datepicker-popper"
           popperPlacement="bottom-start"
-          popperModifiers={[
-            {
-              name: "offset",
-              options: {
-                offset: [0, 8],
-              },
-            },
-          ]}
+          popperModifiers={undefined}
         />
       </div>
 

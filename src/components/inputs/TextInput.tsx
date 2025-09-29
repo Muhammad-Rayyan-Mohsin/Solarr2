@@ -17,6 +17,7 @@ interface TextInputProps {
   flagMessage?: string;
   enableVoice?: boolean;
   includeLocation?: boolean;
+  description?: string;
 }
 
 export function TextInput({

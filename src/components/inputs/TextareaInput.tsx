@@ -16,6 +16,7 @@ interface TextareaInputProps {
   isFlagged?: boolean;
   flagMessage?: string;
   enableVoice?: boolean;
+  description?: string;
 }
 
 export function TextareaInput({

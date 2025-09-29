@@ -19,6 +19,7 @@ interface NumberInputProps {
   flagMessage?: string;
   enableVoice?: boolean;
   unit?: string;
+  description?: string;
 }
 
 export function NumberInput({

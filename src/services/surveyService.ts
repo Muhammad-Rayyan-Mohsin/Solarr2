@@ -321,7 +321,7 @@ export class SurveyService {
       customer_name: survey.customer_name,
       site_address: survey.site_address,
       postcode: survey.postcode,
-      mpan_number: survey.electricity_baseline?.mpan_number
+      mpan_number: survey.electricity_baseline?.[0]?.mpan_number
     })) || []
   }
 

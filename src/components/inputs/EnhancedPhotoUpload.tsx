@@ -147,22 +147,18 @@ export function EnhancedPhotoUpload({
             {required && <span className="text-destructive ml-1">*</span>}
           </Label>
           {showGuidelines && guidelines.length > 0 && (
-            <HelpTooltip
-              content={
-                <div className="space-y-2">
-                  <p className="font-medium">Photo Guidelines:</p>
-                  {guidelines.map((guideline, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <span className="text-xs">{guideline.icon || "•"}</span>
-                      <div>
-                        <p className="text-xs font-medium">{guideline.title}</p>
-                        <p className="text-xs text-muted-foreground">{guideline.description}</p>
-                      </div>
-                    </div>
-                  ))}
+            <div className="mb-2 p-2 bg-muted/50 rounded-md text-xs">
+              <p className="font-medium mb-1">Photo Guidelines:</p>
+              {guidelines.map((guideline, index) => (
+                <div key={index} className="flex items-start gap-2 mb-1">
+                  <span>{guideline.icon || "•"}</span>
+                  <div>
+                    <p className="font-medium">{guideline.title}</p>
+                    <p className="text-muted-foreground">{guideline.description}</p>
+                  </div>
                 </div>
-              }
-            />
+              ))}
+            </div>
           )}
         </div>
         

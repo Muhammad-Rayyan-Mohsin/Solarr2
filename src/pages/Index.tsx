@@ -1489,6 +1489,7 @@ const Index = () => {
     return {
       completed: totalCompleted,
       total: totalFields,
+      overall: totalFields > 0 ? (totalCompleted / totalFields) * 100 : 0,
       completedSteps: totalCompleted >= totalFields / 2 ? [1] : [],
       sections: sectionProgress,
     };
