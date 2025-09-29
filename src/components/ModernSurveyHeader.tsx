@@ -85,9 +85,7 @@ export function ModernSurveyHeader({
 
               {/* Logo - Better mobile layout */}
               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-solar-gradient rounded-full flex items-center justify-center flex-shrink-0 sm:block hidden">
-                  <span className="text-sm sm:text-lg">☀️</span>
-                </div>
+                <span className="text-sm sm:text-lg leading-none translate-y-[1px] sm:block hidden">☀️</span>
                 <div className="min-w-0 flex-1">
                   <h1 className="font-heading font-bold text-sm sm:text-lg text-foreground truncate">SolarSpark</h1>
                   <p className="text-xs text-muted-foreground truncate">

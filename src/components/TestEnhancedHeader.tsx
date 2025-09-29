@@ -87,7 +87,7 @@ export function TestEnhancedHeader({
               {/* Logo & Brand */}
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
-                  <span className="text-white text-sm font-bold">☀️</span>
+                  <span className="text-white text-sm font-bold leading-none translate-y-[1px]">☀️</span>
                 </div>
                 <div className="min-w-0">
                   <h1 className="font-heading font-bold text-lg text-foreground leading-tight">SolarSpark</h1>

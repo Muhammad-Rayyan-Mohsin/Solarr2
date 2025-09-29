@@ -2,8 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, Suspense } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
@@ -21,6 +22,24 @@ const Loading = () => (
     </div>
   </div>
 );
+
+function PageTransition({ children }: { children: React.ReactNode }) {
+  const prefersReducedMotion = useReducedMotion();
+
+  if (prefersReducedMotion) return <>{children}</>;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
+      className="min-h-screen"
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 const App = () => {
   useEffect(() => {
@@ -62,16 +81,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Suspense fallback={<Loading />}>
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/survey" element={<Index />} />
-              <Route path="/submissions" element={<SubmissionsNew />} />
-              <Route path="/solar-api-test" element={<SolarApiTest />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+          <RouterTransitions />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
@@ -79,3 +89,22 @@ const App = () => {
 };
 
 export default App;
+
+function RouterTransitions() {
+  const location = useLocation();
+
+  return (
+    <Suspense fallback={<Loading />}>
+      <AnimatePresence mode="wait" initial={false}>
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
+          <Route path="/survey" element={<PageTransition><Index /></PageTransition>} />
+          <Route path="/submissions" element={<PageTransition><SubmissionsNew /></PageTransition>} />
+          <Route path="/solar-api-test" element={<PageTransition><SolarApiTest /></PageTransition>} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+        </Routes>
+      </AnimatePresence>
+    </Suspense>
+  );
+}
