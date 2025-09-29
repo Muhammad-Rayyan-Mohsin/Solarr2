@@ -101,17 +101,17 @@ export class SupabaseService {
 
       const filePaths: string[] = Array.isArray(paths) ? paths.filter(Boolean) : [];
 
-      // Delete files from storage (best-effort)
+      // Delete files from storage via Edge Function (uses service role)
       if (filePaths.length > 0) {
-        const { error: storageError } = await supabase.storage
-          .from('surveys')
-          .remove(filePaths);
-        if (storageError) {
-          console.error('Error deleting files from storage:', storageError);
+        const { data: fnData, error: fnError } = await supabase.functions.invoke('delete-survey-files', {
+          body: { paths: filePaths },
+        });
+        if (fnError) {
+          console.error('Edge function delete-survey-files error:', fnError, fnData);
         }
       }
 
-      console.log(`Survey ${surveyId} deleted with ${filePaths.length} files removed from storage`);
+      console.log(`Survey ${surveyId} deleted; attempted to remove ${filePaths.length} files from storage`);
     } catch (error) {
       console.error('Error deleting survey:', error);
       throw error;

@@ -1,1 +1,4 @@
 project_id = "jmjvcvahzmmugonhyiuo"
+
+[functions.delete-survey-files]
+verify_jwt = false
