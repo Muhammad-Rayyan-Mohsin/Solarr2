@@ -110,48 +110,7 @@ export default function SubmissionsNew() {
     }
   };
 
-  const generateCSV = (survey: any) => {
-    try {
-      // Only use fields available in surveys_list view
-      const fields = [
-        ["Survey Date", survey.survey_date],
-        ["Customer Name", survey.customer_name],
-        ["Site Address", survey.site_address],
-        ["Postcode", survey.postcode],
-        ["MPAN Number", survey.mpan_number],
-        ["Status", survey.status],
-        ["Created At", survey.created_at],
-      ];
-
-      const csvContent = fields
-        .map(([label, value]) => `${label},"${value || ""}"`)
-        .join("\n");
-
-      const blob = new Blob([csvContent], { type: "text/csv" });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `survey-${survey.id || "unknown"}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-
-      toast({
-        title: "CSV Downloaded",
-        description: "Survey data has been exported to CSV",
-      });
-    } catch (error) {
-      console.error("Failed to generate CSV:", error);
-      toast({
-        title: "Error",
-        description: "Failed to generate CSV file",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const generateFullCSV = async (survey: any) => {
+  const generateCSV = async (survey: any) => {
     try {
       const fullSurvey = await SupabaseService.getFullSurvey(survey.id);
 
@@ -256,6 +215,17 @@ export default function SubmissionsNew() {
         ['Livestock/Pets Notes', fullSurvey.health_safety?.livestock_pets_notes],
         ['Special Access Instructions', fullSurvey.health_safety?.special_access_instructions],
 
+        // Customer preferences
+        ['Preferred Contact Method', fullSurvey.customer_preferences?.preferred_contact_method],
+        ['Installation Start Date', fullSurvey.customer_preferences?.installation_start_date],
+        ['Installation End Date', fullSurvey.customer_preferences?.installation_end_date],
+        ['Customer Away', yn(fullSurvey.customer_preferences?.customer_away)],
+        ['Customer Away Notes', fullSurvey.customer_preferences?.customer_away_notes],
+        ['Budget Range', fullSurvey.customer_preferences?.budget_range],
+        ['Interested in EV Charger', fullSurvey.customer_preferences?.interested_in_ev_charger],
+        ['Interested in Energy Monitoring', fullSurvey.customer_preferences?.interested_in_energy_monitoring],
+        ['Additional Notes', fullSurvey.customer_preferences?.additional_notes],
+
         // Roof faces (as JSON) and counts
         ['Number of Roof Faces', (fullSurvey.roof_faces?.length || 0)],
         ['Roof Faces JSON', json(fullSurvey.roof_faces)],
@@ -273,21 +243,21 @@ export default function SubmissionsNew() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `survey-full-${survey.id || 'unknown'}.csv`;
+      a.download = `survey-complete-${survey.id || 'unknown'}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
 
       toast({
-        title: 'Full CSV Downloaded',
+        title: 'CSV Downloaded',
         description: 'Complete survey data has been exported to CSV',
       });
     } catch (error) {
-      console.error('Failed to generate full CSV:', error);
+      console.error('Failed to generate CSV:', error);
       toast({
         title: 'Error',
-        description: 'Failed to generate full CSV file',
+        description: 'Failed to generate CSV file',
         variant: 'destructive',
       });
     }
@@ -352,13 +322,7 @@ export default function SubmissionsNew() {
           </div>
         ) : surveys.length === 0 ? (
           <div className="text-center py-12">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">
-              No surveys found
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              No surveys have been submitted yet.
-            </p>
+            <p className="text-lg text-muted-foreground mb-4">No surveys found</p>
             <Button onClick={() => navigate("/survey")}>
               Create New Survey
             </Button>
@@ -434,16 +398,7 @@ export default function SubmissionsNew() {
                           className="flex items-center gap-1"
                         >
                           <Download className="h-4 w-4" />
-                          CSV
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => generateFullCSV(survey)}
-                          className="flex items-center gap-1"
-                        >
-                          <FileText className="h-4 w-4" />
-                          Full CSV
+                          CSV Export
                         </Button>
                         <Button
                           variant="default"
