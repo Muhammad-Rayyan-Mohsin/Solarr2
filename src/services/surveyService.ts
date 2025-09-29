@@ -66,7 +66,7 @@ export interface SurveyFormData {
     gutterHeight: string;
     rafterSpacing: string;
     rafterDepth: string;
-    battenDepth: string;
+    rafterWidth: string;
     membraneType: string;
     membraneCondition: string;
     structuralDefects: string;
@@ -121,11 +121,6 @@ export interface SurveyFormData {
   mountingSurface: string;
   ventilationAdequate: "yes" | "no" | "na" | null;
   ventilationPhoto: string[];
-  fireEgressCompliance: "yes" | "no" | "na" | null;
-  fireEgressPhoto: string[];
-  ambientTempMin: string;
-  ambientTempMax: string;
-  ipRatingRequired: string;
 
   // Section 7 - Health, Safety & Hazards
   asbestosPresence: string;

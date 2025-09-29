@@ -99,7 +99,7 @@ create table if not exists public.roof_faces (
   gutter_height text,
   rafter_spacing text,
   rafter_depth text,
-  batten_depth text,
+  rafter_width text,
   membrane_type text,
   membrane_condition text,
   structural_defects text,
@@ -188,11 +188,7 @@ create table if not exists public.battery_storage (
   preferred_install_location text,
   distance_from_cu text,
   mounting_surface text,
-  ventilation_adequate text check (ventilation_adequate in ('yes','no','na')),
-  fire_egress_compliance text check (fire_egress_compliance in ('yes','no','na')),
-  ambient_temp_min numeric(10,2),
-  ambient_temp_max numeric(10,2),
-  ip_rating_required text
+  ventilation_adequate text check (ventilation_adequate in ('yes','no','na'))
   -- Photos -> assets
 );
 
@@ -469,7 +465,7 @@ begin
   insert into public.roof_faces (
     id, survey_id, label, orientation, pitch, width, length, area,
     covering, covering_condition, obstructions, shading,
-    gutter_height, rafter_spacing, rafter_depth, batten_depth,
+    gutter_height, rafter_spacing, rafter_depth, rafter_width,
     membrane_type, membrane_condition, structural_defects,
     planned_panel_count
   )
@@ -486,7 +482,7 @@ begin
       then array(select jsonb_array_elements_text(rf->'obstructions')) else null end,
     case when rf->'shading' is not null and jsonb_typeof(rf->'shading') = 'array'
       then array(select jsonb_array_elements_text(rf->'shading')) else null end,
-    rf->>'gutterHeight', rf->>'rafterSpacing', rf->>'rafterDepth', rf->>'battenDepth',
+    rf->>'gutterHeight', rf->>'rafterSpacing', rf->>'rafterDepth', rf->>'rafterWidth',
     rf->>'membraneType', rf->>'membraneCondition', rf->>'structuralDefects',
     nullif(rf->>'plannedPanelCount','')::int
   from jsonb_array_elements(coalesce(payload->'roofFaces','[]'::jsonb)) as rf;
@@ -546,7 +542,7 @@ begin
   -- battery_storage
   insert into public.battery_storage (
     survey_id, battery_required, preferred_install_location, distance_from_cu, mounting_surface,
-    ventilation_adequate, fire_egress_compliance, ambient_temp_min, ambient_temp_max, ip_rating_required
+    ventilation_adequate
   )
   values (
     v_survey_id,
@@ -554,11 +550,7 @@ begin
     payload->>'preferredInstallLocation',
     payload->>'distanceFromCU',
     payload->>'mountingSurface',
-    nullif(payload->>'ventilationAdequate',''),
-    nullif(payload->>'fireEgressCompliance',''),
-    nullif(payload->>'ambientTempMin','')::numeric,
-    nullif(payload->>'ambientTempMax','')::numeric,
-    payload->>'ipRatingRequired'
+    nullif(payload->>'ventilationAdequate','')
   );
 
   -- health_safety

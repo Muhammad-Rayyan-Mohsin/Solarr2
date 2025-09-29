@@ -152,10 +152,6 @@ export default function Submissions() {
         ["Distance from CU", survey.distance_from_cu],
         ["Mounting Surface", survey.mounting_surface],
         ["Ventilation Adequate", survey.ventilation_adequate],
-        ["Fire Egress Compliance", survey.fire_egress_compliance],
-        ["Temperature Range Min", survey.temperature_range_min],
-        ["Temperature Range Max", survey.temperature_range_max],
-        ["IP Rating", survey.ip_rating],
         ["Asbestos Presence", survey.asbestos_presence],
         [
           "Working at Height Difficulties",

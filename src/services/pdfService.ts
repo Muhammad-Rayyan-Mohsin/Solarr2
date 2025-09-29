@@ -280,10 +280,6 @@ export class PDFService {
         yPos = this.addField(doc, "Distance from CU", bs.distance_from_cu, yPos);
         yPos = this.addField(doc, "Mounting Surface", bs.mounting_surface, yPos);
         yPos = this.addField(doc, "Ventilation Adequate", bs.ventilation_adequate, yPos);
-        yPos = this.addField(doc, "Fire Egress Compliance", bs.fire_egress_compliance, yPos);
-        yPos = this.addField(doc, "Ambient Temp Min", bs.ambient_temp_min ? `${bs.ambient_temp_min}°C` : '', yPos);
-        yPos = this.addField(doc, "Ambient Temp Max", bs.ambient_temp_max ? `${bs.ambient_temp_max}°C` : '', yPos);
-        yPos = this.addField(doc, "IP Rating Required", bs.ip_rating_required, yPos);
         yPos += 5;
       }
 

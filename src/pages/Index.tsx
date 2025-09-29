@@ -57,7 +57,7 @@ interface RoofFace {
   gutterHeight: string;
   rafterSpacing: string;
   rafterDepth: string;
-  battenDepth: string;
+  rafterWidth: string;
   membraneType: string;
   membraneCondition: string;
   structuralDefects: string;
@@ -86,24 +86,12 @@ interface FormData {
   // Section 1 - Electricity Baseline
   annualConsumption: string;
   annualConsumptionPhoto: string[];
-  mpanNumber: string;
-  mpanPhoto: string[];
-  electricityProvider: string;
-  networkOperator: string;
-  customerPermissionGranted: boolean;
-  daytimeImportRate: string;
-  nighttimeImportRate: string;
-  standingCharge: string;
-  tariffType: string;
   smartMeterPresent: "yes" | "no" | "na" | null;
-  segTariffAvailable: "yes" | "no" | "na" | null;
-  segTariffExplanation: string;
-  smartTariffAvailable: "yes" | "no" | "na" | null;
-  customerSignature: string;
 
   // Section 2 - Property Overview
   propertyType: string;
   propertyAge: string;
+  occupancyStatus: string;
   listedBuilding: "yes" | "no" | "na" | null;
   conservationArea: "yes" | "no" | "na" | null;
   newBuild: "yes" | "no" | "na" | null;
@@ -164,11 +152,6 @@ interface FormData {
   mountingSurface: string;
   ventilationAdequate: "yes" | "no" | "na" | null;
   ventilationPhoto: string[];
-  fireEgressCompliance: "yes" | "no" | "na" | null;
-  fireEgressPhoto: string[];
-  ambientTempMin: string;
-  ambientTempMax: string;
-  ipRatingRequired: string;
 
   // Section 7 - Health, Safety & Hazards
   asbestosPresence: string;
@@ -191,49 +174,6 @@ interface FormData {
   additionalNotes: string;
 }
 
-const electricityProviderOptions = [
-  { value: "british-gas", label: "British Gas" },
-  { value: "edf-energy", label: "EDF Energy" },
-  { value: "eon", label: "E.ON" },
-  { value: "npower", label: "npower" },
-  { value: "scottish-power", label: "Scottish Power" },
-  { value: "sse", label: "SSE" },
-  { value: "octopus-energy", label: "Octopus Energy" },
-  { value: "ovo-energy", label: "OVO Energy" },
-  { value: "bulb", label: "Bulb" },
-  { value: "shell-energy", label: "Shell Energy" },
-  { value: "utilita", label: "Utilita" },
-  { value: "green-network-energy", label: "Green Network Energy" },
-  { value: "outfox-the-market", label: "Outfox the Market" },
-  { value: "pure-planet", label: "Pure Planet" },
-  { value: "people-energy", label: "People's Energy" },
-  { value: "avro-energy", label: "Avro Energy" },
-  { value: "green", label: "Green" },
-  { value: "utility-warehouse", label: "Utility Warehouse" },
-  { value: "so-energy", label: "So Energy" },
-  { value: "other", label: "Other" },
-];
-
-const networkOperatorOptions = [
-  { value: "ukpn", label: "UK Power Networks" },
-  { value: "western-power", label: "Western Power Distribution" },
-  { value: "northern-powergrid", label: "Northern Powergrid" },
-  { value: "sp-energy-networks", label: "SP Energy Networks" },
-  { value: "ssen", label: "Scottish and Southern Electricity Networks" },
-  { value: "electricity-northwest", label: "Electricity North West" },
-  {
-    value: "northern-ireland-electricity",
-    label: "Northern Ireland Electricity",
-  },
-];
-
-const tariffTypeOptions = [
-  { value: "fixed", label: "Fixed" },
-  { value: "variable", label: "Variable" },
-  { value: "ev", label: "EV" },
-  { value: "agile", label: "Agile" },
-];
-
 const propertyTypeOptions = [
   { value: "detached", label: "Detached" },
   { value: "semi", label: "Semi-detached" },
@@ -249,6 +189,14 @@ const propertyAgeOptions = [
   { value: "1980-2000", label: "1980-2000" },
   { value: "2000-2010", label: "2000-2010" },
   { value: "2010-2023", label: "2010-2023" },
+];
+
+const occupancyStatusOptions = [
+  { value: "owner-occupied", label: "Owner Occupied" },
+  { value: "tenant-occupied", label: "Tenant Occupied" },
+  { value: "vacant", label: "Vacant" },
+  { value: "under-renovation", label: "Under Renovation" },
+  { value: "holiday-home", label: "Holiday Home" },
 ];
 
 const loftAccessTypeOptions = [
@@ -368,24 +316,12 @@ const DEFAULT_FORM_DATA: FormData = {
   // Section 1 - Electricity Baseline
   annualConsumption: "",
   annualConsumptionPhoto: [],
-  mpanNumber: "",
-  mpanPhoto: [],
-  electricityProvider: "",
-  networkOperator: "",
-  customerPermissionGranted: false,
-  daytimeImportRate: "",
-  nighttimeImportRate: "",
-  standingCharge: "",
-  tariffType: "",
   smartMeterPresent: null,
-  segTariffAvailable: null,
-  segTariffExplanation: "",
-  smartTariffAvailable: null,
-  customerSignature: "",
 
   // Section 2 - Property Overview
   propertyType: "",
   propertyAge: "",
+  occupancyStatus: "",
   listedBuilding: null,
   conservationArea: null,
   newBuild: null,
@@ -413,7 +349,7 @@ const DEFAULT_FORM_DATA: FormData = {
       gutterHeight: "",
       rafterSpacing: "",
       rafterDepth: "",
-      battenDepth: "",
+      rafterWidth: "",
       membraneType: "",
       membraneCondition: "",
       structuralDefects: "",
@@ -469,11 +405,6 @@ const DEFAULT_FORM_DATA: FormData = {
   mountingSurface: "",
   ventilationAdequate: null,
   ventilationPhoto: [],
-  fireEgressCompliance: null,
-  fireEgressPhoto: [],
-  ambientTempMin: "",
-  ambientTempMax: "",
-  ipRatingRequired: "",
 
   // Section 7 - Health, Safety & Hazards
   asbestosPresence: "",
@@ -518,24 +449,12 @@ const TEST_FORM_DATA: FormData = {
   // Section 1 - Electricity Baseline
   annualConsumption: "4200",
   annualConsumptionPhoto: [],
-  mpanNumber: "1234567890123",
-  mpanPhoto: [],
-  electricityProvider: "octopus-energy",
-  networkOperator: "ukpn",
-  customerPermissionGranted: true,
-  daytimeImportRate: "28.5",
-  nighttimeImportRate: "12.3",
-  standingCharge: "0.45",
-  tariffType: "fixed",
   smartMeterPresent: "yes",
-  segTariffAvailable: "yes",
-  segTariffExplanation: "Smart Export Guarantee at 5.5p/kWh",
-  smartTariffAvailable: "yes",
-  customerSignature: "",
 
   // Section 2 - Property Overview
   propertyType: "semi",
   propertyAge: "1980-2000",
+  occupancyStatus: "owner-occupied",
   listedBuilding: "no",
   conservationArea: "no",
   newBuild: "no",
@@ -563,7 +482,7 @@ const TEST_FORM_DATA: FormData = {
       gutterHeight: "2.1",
       rafterSpacing: "600",
       rafterDepth: "150",
-      battenDepth: "50",
+      rafterWidth: "50",
       membraneType: "Bituminous felt",
       membraneCondition: "good",
       structuralDefects: "Minor wear on ridge tiles",
@@ -585,7 +504,7 @@ const TEST_FORM_DATA: FormData = {
       gutterHeight: "2.1",
       rafterSpacing: "600",
       rafterDepth: "150",
-      battenDepth: "50",
+      rafterWidth: "50",
       membraneType: "Bituminous felt",
       membraneCondition: "good",
       structuralDefects: "None",
@@ -641,11 +560,6 @@ const TEST_FORM_DATA: FormData = {
   mountingSurface: "brick",
   ventilationAdequate: "yes",
   ventilationPhoto: [],
-  fireEgressCompliance: "yes",
-  fireEgressPhoto: [],
-  ambientTempMin: "5",
-  ambientTempMax: "35",
-  ipRatingRequired: "ip65",
 
   // Section 7 - Health, Safety & Hazards
   asbestosPresence: "no",
@@ -719,21 +633,174 @@ const Index = () => {
   function getMissingRequiredFields(): string[] {
     const missing: string[] = [];
     const checks: Array<{ key: keyof FormData; label: string }> = [
+      // Section 0 - Contact Information
       { key: "customerName", label: "Customer Name" },
-      { key: "customerName", label: "Customer Name" },
+      { key: "phone", label: "Phone" },
+      { key: "email", label: "Email" },
+      
+      // Section 1 - Address (using existing fields in FormData)
       { key: "siteAddress", label: "Site Address" },
       { key: "postcode", label: "Postcode" },
       { key: "gridReference", label: "Grid Reference" },
-      { key: "phone", label: "Phone" },
-      { key: "email", label: "Email" },
-      { key: "surveyDate", label: "Survey Date" },
+      { key: "what3words", label: "What3Words Address" },
+      
+      // Section 2 - Property Overview
+      { key: "propertyType", label: "Property Type" },
+      { key: "propertyAge", label: "Property Age" },
+      { key: "occupancyStatus", label: "Occupancy Status" },
+      
+      // Section 7 - Health & Safety
+      { key: "asbestosPresence", label: "Asbestos Presence" },
+      { key: "workingAtHeightDifficulties", label: "Working at Height Difficulties" },
+      { key: "livestockPetsOnSite", label: "Livestock/Pets on Site" },
+      { key: "specialAccessInstructions", label: "Special Access Instructions" },
+      
+      // Section 8 - Customer Preferences
+      { key: "preferredContactMethod", label: "Preferred Contact Method" },
+      { key: "installationStartDate", label: "Installation Start Date" },
+      { key: "installationEndDate", label: "Installation End Date" },
+      { key: "budgetRange", label: "Budget Range" },
+      { key: "interestedInEvCharger", label: "Interested in EV Charger" },
+      { key: "interestedInEnergyMonitoring", label: "Interested in Energy Monitoring" },
     ];
 
     for (const { key, label } of checks) {
       const v = formData[key];
-      if (typeof v !== "string" || v.trim().length === 0) missing.push(label);
+      // Handle different types of values
+      if (v === null || v === undefined) {
+        missing.push(label);
+      } else if (typeof v === "string" && v.trim().length === 0) {
+        missing.push(label);
+      } else if (typeof v === "boolean") {
+        // Boolean fields are considered filled if they have any value
+        continue;
+      }
     }
+    
+    // Check Section 3 - Roof Inspection (at least one roof face with complete data)
+    if (!formData.roofFaces || formData.roofFaces.length === 0) {
+      missing.push("Roof Faces (at least one required)");
+    } else {
+      const hasCompleteRoofFace = formData.roofFaces.some((face) => {
+        return (
+          face.width && face.width.trim() !== "" &&
+          face.length && face.length.trim() !== "" &&
+          face.area && face.area.trim() !== "" &&
+          face.orientation !== null && face.orientation !== undefined &&
+          face.pitch !== null && face.pitch !== undefined &&
+          face.covering && face.covering.trim() !== "" &&
+          face.coveringCondition && face.coveringCondition.trim() !== "" &&
+          face.gutterHeight && face.gutterHeight.trim() !== "" &&
+          face.rafterSpacing && face.rafterSpacing.trim() !== "" &&
+          face.rafterDepth && face.rafterDepth.trim() !== "" &&
+          face.rafterWidth && face.rafterWidth.trim() !== "" &&
+          face.membraneType && face.membraneType.trim() !== "" &&
+          face.membraneCondition && face.membraneCondition.trim() !== "" &&
+          Array.isArray(face.photos) && face.photos.length > 0
+        );
+      });
+      
+      if (!hasCompleteRoofFace) {
+        missing.push("Complete Roof Face Data (all 13 fields + photos required)");
+      }
+    }
+    
+    // Check Section 5 - Electrical Supply photo arrays
+    const photoChecks: Array<{ key: keyof FormData; label: string }> = [
+      { key: "earthingSystemPhoto", label: "Earthing System Photo" },
+    ];
+    
+    for (const { key, label} of photoChecks) {
+      const v = formData[key];
+      if (!Array.isArray(v) || v.length === 0) {
+        missing.push(label);
+      }
+    }
+    
+    // Check Section 6 - Battery & Storage (all 6 fields required)
+    const batteryChecks: Array<{ key: keyof FormData; label: string }> = [
+      { key: "batteryRequired", label: "Battery Required" },
+      { key: "preferredInstallLocation", label: "Preferred Install Location" },
+      { key: "distanceFromCU", label: "Distance From Consumer Unit" },
+      { key: "mountingSurface", label: "Mounting Surface" },
+      { key: "ventilationAdequate", label: "Ventilation Adequate" },
+    ];
+    
+    for (const { key, label } of batteryChecks) {
+      const v = formData[key];
+      if (v === null || v === undefined) {
+        missing.push(label);
+      } else if (typeof v === "string" && v.trim().length === 0) {
+        missing.push(label);
+      }
+    }
+    
+    // Check ventilationPhoto (photo array)
+    if (!Array.isArray(formData.ventilationPhoto) || formData.ventilationPhoto.length === 0) {
+      missing.push("Ventilation Photo");
+    }
+    
+    // Check Section 7 - Health & Safety photo arrays
+    if (!Array.isArray(formData.asbestosPhoto) || formData.asbestosPhoto.length === 0) {
+      missing.push("Asbestos Photo");
+    }
+    if (!Array.isArray(formData.fragileRoofAreas) || formData.fragileRoofAreas.length === 0) {
+      missing.push("Fragile Roof Areas Photo");
+    }
+    
     return missing;
+  }
+
+  // Validate phone number format
+  function validatePhoneNumber(phone: string): boolean {
+    // UK phone number regex - matches various formats
+    // e.g., 01234 567890, 07123 456789, +44 7123 456789, (01234) 567890
+    const phoneRegex = /^(?:(?:\+44\s?|0)(?:\d\s?){9,10})$/;
+    const cleanPhone = phone.replace(/[\s()-]/g, '');
+    return phoneRegex.test(cleanPhone) && cleanPhone.length >= 10 && cleanPhone.length <= 13;
+  }
+
+  // Validate UK postcode format
+  function validateUKPostcode(postcode: string): boolean {
+    // UK postcode regex - comprehensive pattern
+    const postcodeRegex = /^[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}$/i;
+    return postcodeRegex.test(postcode.trim());
+  }
+
+  // Validate field formats
+  function getInvalidFormatFields(): string[] {
+    const invalid: string[] = [];
+    
+    // Validate phone format
+    if (formData.phone && formData.phone.trim().length > 0) {
+      if (!validatePhoneNumber(formData.phone)) {
+        invalid.push("Phone (invalid UK phone format)");
+      }
+    }
+
+    // Validate secondary phone if provided
+    if (formData.secondaryContactPhone && formData.secondaryContactPhone.trim().length > 0) {
+      if (!validatePhoneNumber(formData.secondaryContactPhone)) {
+        invalid.push("Secondary Contact Phone (invalid UK phone format)");
+      }
+    }
+
+    // Validate postcode format
+    if (formData.postcode && formData.postcode.trim().length > 0) {
+      if (!validateUKPostcode(formData.postcode)) {
+        invalid.push("Postcode (invalid UK postcode format)");
+      }
+    }
+
+    // Validate survey date format
+    if (formData.surveyDate && formData.surveyDate.trim().length > 0) {
+      const date = new Date(formData.surveyDate);
+      if (isNaN(date.getTime())) {
+        invalid.push("Survey Date (invalid date format)");
+      }
+    }
+
+    return invalid;
   }
 
   // Basic guard: prevent empty submissions
@@ -828,6 +895,17 @@ const Index = () => {
         toast({
           title: "Missing required fields",
           description: `Please fill: ${missing.join(", ")}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate field formats
+      const invalidFormats = getInvalidFormatFields();
+      if (invalidFormats.length > 0) {
+        toast({
+          title: "Invalid field formats",
+          description: `Please correct: ${invalidFormats.join(", ")}`,
           variant: "destructive",
         });
         return;
@@ -1032,22 +1110,12 @@ const Index = () => {
 
               // Electricity baseline
               annualConsumption: fullSurvey.electricity_baseline?.annual_consumption?.toString() || "",
-              mpanNumber: fullSurvey.electricity_baseline?.mpan_number || "",
-              electricityProvider: fullSurvey.electricity_baseline?.electricity_provider || "",
-              networkOperator: fullSurvey.electricity_baseline?.network_operator || "",
-              customerPermissionGranted: fullSurvey.electricity_baseline?.customer_permission_granted || false,
-              daytimeImportRate: fullSurvey.electricity_baseline?.daytime_import_rate?.toString() || "",
-              nighttimeImportRate: fullSurvey.electricity_baseline?.nighttime_import_rate?.toString() || "",
-              standingCharge: fullSurvey.electricity_baseline?.standing_charge?.toString() || "",
-              tariffType: fullSurvey.electricity_baseline?.tariff_type || "",
               smartMeterPresent: fullSurvey.electricity_baseline?.smart_meter_present as any,
-              segTariffAvailable: fullSurvey.electricity_baseline?.seg_tariff_available as any,
-              segTariffExplanation: fullSurvey.electricity_baseline?.seg_tariff_explanation || "",
-              smartTariffAvailable: fullSurvey.electricity_baseline?.smart_tariff_available as any,
 
               // Property overview
               propertyType: fullSurvey.property_overview?.property_type || "",
               propertyAge: fullSurvey.property_overview?.property_age || "",
+              occupancyStatus: fullSurvey.property_overview?.occupancy_status || "",
               listedBuilding: fullSurvey.property_overview?.listed_building as any,
               conservationArea: fullSurvey.property_overview?.conservation_area as any,
               newBuild: fullSurvey.property_overview?.new_build as any,
@@ -1072,7 +1140,7 @@ const Index = () => {
                 gutterHeight: rf.gutter_height || "",
                 rafterSpacing: rf.rafter_spacing || "",
                 rafterDepth: rf.rafter_depth || "",
-                battenDepth: rf.batten_depth || "",
+                rafterWidth: rf.rafter_width || "",
                 membraneType: rf.membrane_type || "",
                 membraneCondition: rf.membrane_condition || "",
                 structuralDefects: rf.structural_defects || "",
@@ -1117,10 +1185,6 @@ const Index = () => {
               distanceFromCU: fullSurvey.battery_storage?.distance_from_cu || "",
               mountingSurface: fullSurvey.battery_storage?.mounting_surface || "",
               ventilationAdequate: fullSurvey.battery_storage?.ventilation_adequate as any,
-              fireEgressCompliance: fullSurvey.battery_storage?.fire_egress_compliance as any,
-              ambientTempMin: fullSurvey.battery_storage?.ambient_temp_min?.toString() || "",
-              ambientTempMax: fullSurvey.battery_storage?.ambient_temp_max?.toString() || "",
-              ipRatingRequired: fullSurvey.battery_storage?.ip_rating_required || "",
 
               // Health & safety
               asbestosPresence: fullSurvey.health_safety?.asbestos_presence || "",
@@ -1143,7 +1207,6 @@ const Index = () => {
 
               // Add images from assets array
               annualConsumptionPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'annualConsumption' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
-              mpanPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'mpanNumber' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
               scaffoldAccessPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'scaffoldAccess' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
               storageAreaPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'storageArea' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
               roofTimberPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'roofTimber' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
@@ -1156,9 +1219,7 @@ const Index = () => {
               earthBondingPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'earthBonding' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
               earthingSystemPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'earthingSystem' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
               ventilationPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'ventilation' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
-              fireEgressPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'fireEgress' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
-              asbestosPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'asbestos' && a.kind === 'photo').map((a: any) => a.storagePath) || [],
-              customerSignature: (fullSurvey.assets || []).filter((a: any) => a.kind === 'signature')[0]?.storagePath || ""
+              asbestosPhoto: (fullSurvey.assets || []).filter((a: any) => a.field === 'asbestos' && a.kind === 'photo').map((a: any) => a.storagePath) || []
             };
 
             setFormData(reconstructedFormData);
@@ -1436,15 +1497,10 @@ const Index = () => {
           "preferredInstallLocation",
           "distanceFromCU",
           "mountingSurface",
-          "ipRatingRequired",
           "ventilationAdequate",
-          "fireEgressCompliance",
-          "ambientTempMin",
-          "ambientTempMax",
           "ventilationPhoto",
-          "fireEgressPhoto",
         ],
-        total: 11,
+        total: 6,
       },
       safety: {
         fields: [
@@ -1577,15 +1633,6 @@ const Index = () => {
   const generateRecommendedActions = () => {
     const actions = [];
 
-    // Check for required photos
-    if (formData.mpanPhoto.length === 0) {
-      actions.push("Upload MPAN photo for verification");
-    }
-
-    if (!formData.customerPermissionGranted) {
-      actions.push("Obtain customer permission for DNO contact");
-    }
-
     // Check for asbestos presence
     if (formData.asbestosPresence === "yes") {
       actions.push("Arrange asbestos survey before installation");
@@ -1695,8 +1742,6 @@ const Index = () => {
         ["Site Address", formData.siteAddress, "General"],
         ["Postcode", formData.postcode, "General"],
         ["Annual Consumption", formData.annualConsumption, "Electricity"],
-        ["MPAN Number", formData.mpanNumber, "Electricity"],
-        ["Electricity Provider", formData.electricityProvider, "Electricity"],
         ["Property Type", formData.propertyType, "Property"],
         ["Total PV Capacity", calculateTotalPvCapacity(), "Summary"],
         ["Total Roof Area", calculateTotalRoofArea(), "Summary"],
@@ -2143,194 +2188,17 @@ const Index = () => {
                     }
                   ]}
                 />
-              </div>
 
-              {/* MPAN Details - Text + Photo grouped */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
-                  MPAN / Supply Details
-                </h3>
-                <TextWithPhotoInput
-                  id="mpan-number"
-                  label="MPAN / Supply Number"
-                  textValue={formData.mpanNumber}
-                  onTextChange={(value) => updateFormData("mpanNumber", value)}
-                  photos={formData.mpanPhoto}
-                  onPhotosChange={(photos) => updateFormData("mpanPhoto", photos)}
-                  placeholder="S1234567890123"
-                  required
-                  maxPhotos={2}
-                  photoGuidelines={[
-                    {
-                      title: "Clear MPAN Number",
-                      description: "Ensure the MPAN number is clearly visible and readable",
-                      icon: "•"
-                    },
-                    {
-                      title: "Good Lighting",
-                      description: "Take photo in good lighting conditions",
-                      icon: "•"
-                    },
-                    {
-                      title: "Full Meter Display",
-                      description: "Include the entire meter display in the photo",
-                      icon: "•"
-                    }
-                  ]}
-                />
-              </div>
-
-              {/* Provider & Network Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
-                  Provider & Network Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <DropdownSelect
-                  id="electricity-provider"
-                    label="Current Electricity Provider"
-                  value={formData.electricityProvider}
-                  onChange={(value) =>
-                    updateFormData("electricityProvider", value)
-                  }
-                  options={electricityProviderOptions}
-                  placeholder="Select provider..."
-                  required
-                />
-
-                <DropdownSelect
-                  id="network-operator"
-                    label="Network Operator (DNO)"
-                  value={formData.networkOperator}
-                  onChange={(value) => updateFormData("networkOperator", value)}
-                  options={networkOperatorOptions}
-                  placeholder="Select DNO..."
-                  required
-                />
-                </div>
-              </div>
-
-              {/* Tariff & Rates Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
-                  Tariff & Rates Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <DropdownSelect
-                    id="tariff-type"
-                    label="Current Tariff Type"
-                    value={formData.tariffType}
-                    onChange={(value) => updateFormData("tariffType", value)}
-                    options={tariffTypeOptions}
-                    placeholder="Select tariff type..."
-                  required
-                />
-
-                <NumberInput
-                  id="daytime-import-rate"
-                    label="Day-time Import Rate"
-                  value={formData.daytimeImportRate}
-                  onChange={(value) =>
-                    updateFormData("daytimeImportRate", value)
-                  }
-                  min={0}
-                  max={100}
-                  step={0.01}
-                  unit="p/kWh"
-                  required
-                />
-
-                <NumberInput
-                  id="nighttime-import-rate"
-                    label="Night-time Import Rate"
-                  value={formData.nighttimeImportRate}
-                  onChange={(value) =>
-                    updateFormData("nighttimeImportRate", value)
-                  }
-                  min={0}
-                  max={100}
-                  step={0.01}
-                  unit="p/kWh"
-                />
-
-                <NumberInput
-                  id="standing-charge"
-                    label="Standing Charge"
-                  value={formData.standingCharge}
-                  onChange={(value) => updateFormData("standingCharge", value)}
-                  min={0}
-                  max={10}
-                  step={0.01}
-                  unit="£/day"
-                  required
-                />
-                </div>
-              </div>
-
-              {/* Smart Meter & Export Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
-                  Smart Meter & Export Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <YesNoNADropdown
                   id="smart-meter-present"
-                    label="Smart Meter Present"
+                  label="Smart Meter Present"
                   value={formData.smartMeterPresent}
                   onChange={(value) =>
                     updateFormData("smartMeterPresent", value)
                   }
                   required
-                    description="Is a smart meter currently installed?"
+                  description="Is a smart meter currently installed?"
                 />
-
-                <YesNoNADropdown
-                  id="seg-tariff-available"
-                    label="SEG Tariff Available"
-                  value={formData.segTariffAvailable}
-                  onChange={(value) =>
-                    updateFormData("segTariffAvailable", value)
-                  }
-                  required
-                    description="Smart Export Guarantee tariff available"
-                  />
-
-                  <YesNoNADropdown
-                    id="smart-tariff-available"
-                    label="Smart Tariff Available"
-                    value={formData.smartTariffAvailable}
-                    onChange={(value) =>
-                      updateFormData("smartTariffAvailable", value)
-                    }
-                    description="Depends on smart meter and solar presence"
-                />
-              </div>
-
-                {formData.segTariffAvailable === "yes" && (
-                  <TextInput
-                    id="seg-tariff-explanation"
-                    label="SEG Tariff Details"
-                    value={formData.segTariffExplanation}
-                    onChange={(value) => updateFormData("segTariffExplanation", value)}
-                    placeholder="e.g., Smart Export Guarantee at 5.5p/kWh"
-                    description="Provide details about the SEG tariff rate and terms"
-                  />
-                )}
-              </div>
-
-              {/* Customer Permission */}
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
-                  Customer Permission
-                </h3>
-              <SignatureInput
-                id="customer-permission"
-                  label="Customer Permission & Signature"
-                  value={formData.customerSignature}
-                  onChange={(value) => updateFormData("customerSignature", value)}
-                required
-                  description="Customer signature granting permission for solar installation"
-              />
               </div>
             </div>
           </SurveySection>
@@ -2368,6 +2236,16 @@ const Index = () => {
                   onChange={(value) => updateFormData("propertyAge", value)}
                   options={propertyAgeOptions}
                   placeholder="Select age range..."
+                  required
+                />
+
+                <DropdownSelect
+                  id="occupancy-status"
+                    label="Occupancy Status"
+                  value={formData.occupancyStatus}
+                  onChange={(value) => updateFormData("occupancyStatus", value)}
+                  options={occupancyStatusOptions}
+                  placeholder="Select occupancy status..."
                   required
                 />
                 </div>
@@ -3252,18 +3130,6 @@ const Index = () => {
                   placeholder="Select surface type..."
                   required
                 />
-
-                  <DropdownSelect
-                    id="ip-rating-required"
-                    label="IP Rating Required"
-                    value={formData.ipRatingRequired}
-                    onChange={(value) =>
-                      updateFormData("ipRatingRequired", value)
-                    }
-                    options={ipRatingOptions}
-                    placeholder="Select IP rating..."
-                    required
-                  />
                 </div>
               </div>
 
@@ -3283,32 +3149,7 @@ const Index = () => {
                   required
                     description="Is adequate ventilation available for battery cooling?"
                 />
-
-                <YesNoNADropdown
-                  id="fire-egress-compliance"
-                    label="Fire Egress Compliance"
-                  value={formData.fireEgressCompliance}
-                  onChange={(value) =>
-                    updateFormData("fireEgressCompliance", value)
-                  }
-                  required
-                    description="Does the installation comply with fire egress requirements?"
-                />
                 </div>
-
-                <TemperatureRangeInput
-                  id="ambient-temperature"
-                  label="Ambient Temperature Range"
-                  minTemp={formData.ambientTempMin}
-                  maxTemp={formData.ambientTempMax}
-                  onMinTempChange={(value) =>
-                    updateFormData("ambientTempMin", value)
-                  }
-                  onMaxTempChange={(value) =>
-                    updateFormData("ambientTempMax", value)
-                  }
-                  required
-                />
               </div>
 
               {/* Ventilation Assessment - Text + Photo grouped */}
@@ -3341,41 +3182,6 @@ const Index = () => {
                       title: "Ventilation Requirements",
                       description: "Show any additional ventilation requirements",
                       icon: "📋"
-                    }
-                  ]}
-                />
-              </div>
-
-              {/* Fire Egress Assessment - Text + Photo grouped */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
-                  🚪 Fire Egress Assessment
-                </h3>
-                <TextWithPhotoInput
-                  id="fire-egress"
-                  label="Fire Egress Details"
-                  textValue=""
-                  onTextChange={() => {}}
-                photos={formData.fireEgressPhoto}
-                  onPhotosChange={(photos) => updateFormData("fireEgressPhoto", photos)}
-                  placeholder="Describe fire egress compliance, any issues, or additional notes..."
-                  multiline
-                maxPhotos={3}
-                  photoGuidelines={[
-                    {
-                      title: "Egress Routes",
-                      description: "Show clear egress routes and exits",
-                      icon: "•"
-                    },
-                    {
-                      title: "Fire Safety",
-                      description: "Document fire safety measures and compliance",
-                      icon: "🔥"
-                    },
-                    {
-                      title: "Access Points",
-                      description: "Show access points and emergency exits",
-                      icon: "🚨"
                     }
                   ]}
                 />
@@ -3455,6 +3261,7 @@ const Index = () => {
                 }
                 placeholder="Describe any difficulties or special considerations..."
                 rows={3}
+                required
               />
               </div>
 
@@ -3539,6 +3346,7 @@ const Index = () => {
                 }
                 placeholder="Any special access requirements or instructions..."
                 rows={3}
+                required
                   description="Include any special access requirements, gate codes, or restrictions"
                 />
               </div>
@@ -3599,6 +3407,7 @@ const Index = () => {
                   onAwayNotesChange={(value) =>
                     updateFormData("customerAwayNotes", value)
                   }
+                  required
                 />
               </div>
 
@@ -3625,6 +3434,17 @@ const Index = () => {
                   }
                   required
                     description="Would you like to include an EV charger in the installation?"
+                  />
+
+                  <YesNoNADropdown
+                    id="interested-in-energy-monitoring"
+                    label="Interested in Energy Monitoring"
+                    value={formData.interestedInEnergyMonitoring}
+                    onChange={(value) =>
+                      updateFormData("interestedInEnergyMonitoring", value)
+                    }
+                    required
+                    description="Would you like to include energy monitoring in the installation?"
                   />
                 </div>
               </div>
@@ -3698,6 +3518,8 @@ const Index = () => {
                   formData={formData}
                   onSubmit={handleSubmitSurvey}
                   isSubmitting={isSubmitting}
+                  missingFields={getMissingRequiredFields()}
+                  invalidFields={getInvalidFormatFields()}
                 />
               </div>
             </div>

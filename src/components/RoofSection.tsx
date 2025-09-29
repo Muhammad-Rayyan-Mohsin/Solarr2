@@ -26,7 +26,7 @@ interface RoofFace {
   gutterHeight: string;
   rafterSpacing: string;
   rafterDepth: string;
-  battenDepth: string;
+  rafterWidth: string;
   membraneType: string;
   membraneCondition: string;
   structuralDefects: string;
@@ -96,7 +96,7 @@ export function RoofSection({ roofFaces, onRoofFacesChange }: RoofSectionProps) 
       gutterHeight: "",
       rafterSpacing: "",
       rafterDepth: "",
-      battenDepth: "",
+      rafterWidth: "",
       membraneType: "",
       membraneCondition: "",
       structuralDefects: "",
@@ -120,7 +120,10 @@ export function RoofSection({ roofFaces, onRoofFacesChange }: RoofSectionProps) 
           const width = field === 'width' ? value : face.width;
           const length = field === 'length' ? value : face.length;
           if (width && length) {
-            const area = (parseFloat(width) * parseFloat(length)).toFixed(2);
+            // Deduct 40cm (0.4m) border from all edges for usable area
+            const usableWidth = Math.max(0, parseFloat(width) - 0.8);
+            const usableLength = Math.max(0, parseFloat(length) - 0.8);
+            const area = (usableWidth * usableLength).toFixed(2);
             updatedFace.area = area;
           }
         }
@@ -306,10 +309,10 @@ export function RoofSection({ roofFaces, onRoofFacesChange }: RoofSectionProps) 
                   />
                   
                   <NumberInput
-                    id={`${face.id}-batten-depth`}
-                    label="Batten Depth"
-                    value={face.battenDepth}
-                    onChange={(value) => updateRoofFace(face.id, 'battenDepth', value)}
+                    id={`${face.id}-rafter-width`}
+                    label="Rafter Width"
+                    value={face.rafterWidth}
+                    onChange={(value) => updateRoofFace(face.id, 'rafterWidth', value)}
                     min={0}
                     max={10}
                     step={0.1}
