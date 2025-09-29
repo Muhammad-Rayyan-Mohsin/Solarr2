@@ -660,6 +660,10 @@ export type Database = {
         Args: { payload: Json }
         Returns: string
       }
+      delete_full_survey: {
+        Args: { p_survey_id: string }
+        Returns: string[]
+      }
       get_full_survey: {
         Args: { p_survey_id: string }
         Returns: Json

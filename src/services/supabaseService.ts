@@ -92,44 +92,26 @@ export class SupabaseService {
     return data;
   }
 
-  // Delete a complete survey with all related data and assets
+  // Delete a complete survey with all related data and assets using RPC (bypasses RLS via SECURITY DEFINER)
   static async deleteSurvey(surveyId: string): Promise<void> {
     try {
-      // First, get all assets for this survey to delete from storage
-      const { data: assets, error: assetsError } = await supabase
-        .from('assets')
-        .select('storage_object_path')
-        .eq('survey_id', surveyId);
+      // Call RPC to delete DB rows and return storage file paths
+      const { data: paths, error: rpcError } = await supabase.rpc('delete_full_survey', { p_survey_id: surveyId });
+      if (rpcError) throw rpcError;
 
-      if (assetsError) {
-        console.error('Error fetching assets for deletion:', assetsError);
-        // Continue with deletion even if assets fetch fails
-      }
+      const filePaths: string[] = Array.isArray(paths) ? paths.filter(Boolean) : [];
 
-      // Delete all files from storage
-      if (assets && assets.length > 0) {
-        const filePaths = assets.map(asset => asset.storage_object_path);
+      // Delete files from storage (best-effort)
+      if (filePaths.length > 0) {
         const { error: storageError } = await supabase.storage
           .from('surveys')
           .remove(filePaths);
-
         if (storageError) {
           console.error('Error deleting files from storage:', storageError);
-          // Continue with deletion even if storage deletion fails
         }
       }
 
-      // Delete all database records (cascade will handle related tables)
-      const { error: deleteError } = await supabase
-        .from('surveys')
-        .delete()
-        .eq('id', surveyId);
-
-      if (deleteError) {
-        throw deleteError;
-      }
-
-      console.log(`Survey ${surveyId} and all related data deleted successfully`);
+      console.log(`Survey ${surveyId} deleted with ${filePaths.length} files removed from storage`);
     } catch (error) {
       console.error('Error deleting survey:', error);
       throw error;
