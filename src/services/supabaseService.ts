@@ -135,19 +135,24 @@ export class SupabaseService {
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id || 'anonymous';
     const filePath = `surveys/${userId}/${surveyId}/assets/${section}/${field}/${filename}`;
+    console.info('[uploadPhoto] Uploading', { userId, surveyId, section, field, filePath, mime: file.type, size: file.size });
 
     // Upload to Supabase Storage
     const { error: uploadError } = await supabase.storage
       .from("surveys")
       .upload(filePath, file, {
-        contentType: file.type,
+        contentType: file.type || 'application/octet-stream',
         cacheControl: "3600",
         upsert: false,
       });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('[uploadPhoto] Storage upload failed', { filePath, message: uploadError.message, name: uploadError.name, status: (uploadError as any).statusCode });
+      throw uploadError;
+    }
 
     // Create asset record in the new assets table
+    console.info('[uploadPhoto] Inserting asset', { filePath });
     const { data: asset, error: assetError } = await supabase
       .from("assets")
       .insert({
@@ -164,7 +169,10 @@ export class SupabaseService {
       .select()
       .single();
 
-    if (assetError) throw assetError;
+    if (assetError) {
+      console.error('[uploadPhoto] Asset insert failed', { filePath, message: assetError.message, code: assetError.code });
+      throw assetError;
+    }
     return asset.id;
   }
 

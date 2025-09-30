@@ -182,18 +182,23 @@ export class SurveyService {
   ): Promise<string> {
     const fileExt = file.name.split('.').pop()
     const fileName = `${crypto.randomUUID()}.${fileExt}`
-    const filePath = `surveys/${(await supabase.auth.getUser()).data.user?.id}/${surveyId}/assets/${section}/${field}/${fileName}`
+    const { data: { user } } = await supabase.auth.getUser()
+    const userId = user?.id || 'anonymous'
+    const filePath = `surveys/${userId}/${surveyId}/assets/${section}/${field}/${fileName}`
     
     // Upload to storage
+    console.info('[uploadAsset] Uploading', { userId, surveyId, section, field, kind, filePath, mime: file.type, size: file.size })
     const { error: uploadError } = await supabase.storage
       .from('surveys')
-      .upload(filePath, file)
+      .upload(filePath, file, { contentType: file.type || 'application/octet-stream', cacheControl: '3600', upsert: false })
     
     if (uploadError) {
+      console.error('[uploadAsset] Storage upload failed', { filePath, message: uploadError.message, name: uploadError.name, status: (uploadError as any).statusCode })
       throw new Error(`Failed to upload file: ${uploadError.message}`)
     }
     
     // Create asset record
+    console.info('[uploadAsset] Creating asset record', { filePath })
     const { data: asset, error: assetError } = await supabase
       .from('assets')
       .insert({
@@ -210,6 +215,7 @@ export class SurveyService {
       .single()
     
     if (assetError) {
+      console.error('[uploadAsset] Asset insert failed', { filePath, message: assetError.message, code: assetError.code })
       throw new Error(`Failed to create asset record: ${assetError.message}`)
     }
     
