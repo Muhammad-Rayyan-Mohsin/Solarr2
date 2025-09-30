@@ -38,14 +38,19 @@ export class PhotoUploadHandler {
       const timestamp = Date.now();
       const fileExtension = file.name.split('.').pop() || 'jpg';
       const filename = `${field}_${index}_${timestamp}.${fileExtension}`;
-      const storagePath = `surveys/${surveyId}/${section}/${field}/${filename}`;
+      // Ensure storage path aligns with storage policies and the rest of the app
+      // Path format: surveys/{userId}/{surveyId}/assets/{section}/{field}/{filename}
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || 'anonymous';
+      const storagePath = `surveys/${userId}/${surveyId}/assets/${section}/${field}/${filename}`;
 
       // Upload to Supabase storage
       const { error: uploadError } = await supabase.storage
         .from('surveys')
         .upload(storagePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
+          contentType: file.type || 'application/octet-stream',
         });
 
       if (uploadError) {
