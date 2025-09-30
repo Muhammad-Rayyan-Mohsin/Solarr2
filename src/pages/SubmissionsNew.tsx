@@ -298,11 +298,11 @@ export default function SubmissionsNew() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/survey")}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Home
+              Back to Survey
             </Button>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">

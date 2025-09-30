@@ -324,14 +324,14 @@ export default function Submissions() {
         isOnline={true}
         isDarkMode={isDarkMode}
         onThemeToggle={() => setIsDarkMode(!isDarkMode)}
-        backTo="/"
-        backTooltip="Back to Home"
+        backTo="/survey"
+        backTooltip="Back to Survey"
       />
 
       <div className="container mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Submitted Surveys</h1>
-          <Button onClick={() => (window.location.href = "/")}>
+          <Button onClick={() => (window.location.href = "/survey")}>
             New Survey
           </Button>
         </div>

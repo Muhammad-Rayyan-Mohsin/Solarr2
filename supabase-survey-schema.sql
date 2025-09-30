@@ -405,7 +405,7 @@ begin
   )
   values (
     v_survey_id, coalesce(auth.uid(), '00000000-0000-0000-0000-000000000000'::uuid), coalesce((payload->>'status'),'draft'),
-    (payload->>'surveyDate')::date,
+    coalesce((payload->>'surveyDate')::date, current_date),
     payload#>>'{surveyorInfo,name}',
     payload#>>'{surveyorInfo,telephone}',
     payload#>>'{surveyorInfo,email}',

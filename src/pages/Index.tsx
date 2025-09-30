@@ -6,8 +6,8 @@ import { RedFlagsSummary } from "@/components/RedFlagsSummary";
 import { TextInput } from "@/components/inputs/TextInput";
 import { What3WordsInput } from "@/components/inputs/What3WordsInput";
 import { NumberInput } from "@/components/inputs/NumberInput";
-import { SolarTestInputs } from "@/components/SolarTestInputs";
 import { SolarApiTestButton } from "@/components/SolarApiTestButton";
+import { FillFormButton } from "@/components/FillFormButton";
 import { DropdownSelect } from "@/components/inputs/DropdownSelect";
 import { YesNoNADropdown } from "@/components/inputs/YesNoNADropdown";
 import { TextWithPhotoInput } from "@/components/inputs/TextWithPhotoInput";
@@ -41,6 +41,9 @@ import { SupabaseService } from "@/services/supabaseService";
 import { SubmitSurveyButton } from "@/components/SubmitSurveyButton";
 import { syncService } from "@/services/syncService";
 import { useSearchParams } from "react-router-dom";
+import { FormDataMapper } from "@/utils/form-data-mapper";
+import { PhotoUploadHandler } from "@/utils/photo-upload-handler";
+import { DataTypeFixes } from "@/utils/data-type-fixes";
 
 interface RoofFace {
   id: string;
@@ -172,6 +175,9 @@ interface FormData {
   interestedInEvCharger: "yes" | "no" | "na" | null;
   interestedInEnergyMonitoring: "yes" | "no" | "na" | null;
   additionalNotes: string;
+  
+  // Section 9 - Customer Signature
+  customerSignature: string; // base64 signature data
 }
 
 const propertyTypeOptions = [
@@ -425,6 +431,9 @@ const DEFAULT_FORM_DATA: FormData = {
   interestedInEvCharger: null,
   interestedInEnergyMonitoring: null,
   additionalNotes: "",
+  
+  // Section 9 - Customer Signature
+  customerSignature: "",
 };
 
 // Test form data (pre-filled for testing)
@@ -581,6 +590,9 @@ const TEST_FORM_DATA: FormData = {
   interestedInEnergyMonitoring: "yes",
   additionalNotes:
     "Customer prefers morning installations. Has existing solar thermal system that needs assessment.",
+  
+  // Section 9 - Customer Signature
+  customerSignature: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", // Mock signature data
 };
 
 // Toggle this to switch between test and default data
@@ -881,10 +893,21 @@ const Index = () => {
     // Check if we're in edit mode
     const isEditMode = surveyId !== null;
     
-    // Use the original FormData structure for the RPC function
-    // The RPC function expects the original form structure, not the flat schema
+    // Fix data types and map form data to database-compatible format
+    const { data: fixedFormData, errors: dataErrors } = DataTypeFixes.validateAndFixFormData(formData);
+    
+    if (dataErrors.length > 0) {
+      toast({
+        title: "Data validation errors",
+        description: dataErrors.join(", "),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // The RPC function expects form data format, not database format
     const surveyData = {
-      ...formData,
+      ...fixedFormData,
       status: "completed" as const,
     };
 
@@ -978,17 +1001,40 @@ const Index = () => {
         throw submitError; // Re-throw to be caught by outer catch block
       }
 
-      // After online create, sync photos for this draft
+      // Handle photo uploads and asset creation
       try {
-        const currentDraftId =
-          draftId || localStorage.getItem("draftId") || undefined;
-        console.log("Syncing photos for draft:", currentDraftId, "to survey:", result.id);
-        if (currentDraftId && result.id) {
-          await syncService.syncPhotosForDraft(currentDraftId, result.id);
-          console.log("Photo sync completed successfully");
+        if (result?.id) {
+          console.log("Processing photos for survey:", result.id);
+          
+          // Upload all photos and create asset records
+          const { assets, errors } = await PhotoUploadHandler.uploadAllPhotos(formData, result.id);
+          
+          if (assets.length > 0) {
+            const { success, errors: assetErrors } = await PhotoUploadHandler.createAssetRecords(assets);
+            if (!success) {
+              console.error("Asset creation errors:", assetErrors);
+            }
+          }
+          
+          if (errors.length > 0) {
+            console.warn("Photo upload errors:", errors);
+            toast({
+              title: "Survey Submitted",
+              description: "Survey saved, but some photos may need to be re-uploaded.",
+              variant: "destructive",
+            });
+          } else {
+            console.log("All photos processed successfully");
+          }
         }
-      } catch (e) {
-        console.error("Post-submit photo sync failed:", e);
+      } catch (photoError) {
+        console.error("Photo processing error:", photoError);
+        // Don't fail the entire submission for photo issues
+        toast({
+          title: "Survey Submitted",
+          description: "Survey saved, but some photos may need to be re-uploaded.",
+          variant: "destructive",
+        });
       }
 
       // Clear local draft
@@ -1316,12 +1362,7 @@ const Index = () => {
   const handleTestDataFill = (testData: any) => {
     setFormData(prev => ({
       ...prev,
-      customerName: testData.customerName,
-      siteAddress: testData.siteAddress,
-      postcode: testData.postcode,
-      gridReference: testData.gridReference,
-      phone: testData.phone,
-      email: testData.email
+      ...testData
     }));
   };
 
@@ -1410,9 +1451,8 @@ const Index = () => {
           "segTariffAvailable",
           "segTariffExplanation",
           "smartTariffAvailable",
-          "customerSignature",
         ],
-        total: 15,
+        total: 14,
       },
       property: {
         fields: [
@@ -1527,6 +1567,12 @@ const Index = () => {
         ],
         total: 8,
       },
+      signature: {
+        fields: [
+          "customerSignature",
+        ],
+        total: 1,
+      },
     };
 
     const calculateSectionProgress = (section: keyof typeof sections) => {
@@ -1570,6 +1616,7 @@ const Index = () => {
       battery: calculateSectionProgress("battery"),
       safety: calculateSectionProgress("safety"),
       preferences: calculateSectionProgress("preferences"),
+      signature: calculateSectionProgress("signature"),
     };
 
     // Calculate total progress
@@ -1609,7 +1656,7 @@ const Index = () => {
     // Calculate total PV capacity based on roof faces and planned panel count
     let totalCapacity = 0;
     formData.roofFaces.forEach((face) => {
-      if (face.plannedPanelCount && face.plannedPanelCount !== "") {
+      if (face.plannedPanelCount && face.plannedPanelCount.trim() !== "") {
         // Assuming average panel capacity of 400W
         const panelCount = parseInt(face.plannedPanelCount);
         const faceCapacity = (panelCount * 400) / 1000; // Convert to kW
@@ -1623,7 +1670,7 @@ const Index = () => {
     // Calculate total roof area from all roof faces
     let totalArea = 0;
     formData.roofFaces.forEach((face) => {
-      if (face.area && face.area !== "") {
+      if (face.area && face.area.trim() !== "") {
         totalArea += parseFloat(face.area);
       }
     });
@@ -1793,9 +1840,9 @@ const Index = () => {
         showStartButton={false}
       />
 
-      {/* Solar API Test Component - Development Only */}
+      {/* Fill Form Button - Development Only */}
       <div className="container mx-auto px-6 mb-8">
-        <SolarTestInputs onFillForm={handleTestDataFill} />
+        <FillFormButton onFillForm={handleTestDataFill} />
       </div>
 
       {/* Abstract Progress Indicator - Desktop Only */}
@@ -3467,9 +3514,39 @@ const Index = () => {
             </div>
           </SurveySection>
 
-          {/* Section 9 - Auto-Generated Summary */}
+          {/* Section 9 - Customer Signature */}
           <SurveySection
-            title="Section 9 - Auto-Generated Summary"
+            title="Section 9 - Customer Signature"
+            isOpen={currentSection === "signature"}
+            onToggle={() => toggleSection("signature")}
+            completedFields={formData.customerSignature ? 1 : 0}
+            totalFields={1}
+            flaggedFields={0}
+          >
+            <div className="space-y-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                  ✍️ Digital Signature Required
+                </h3>
+                <p className="text-sm text-blue-800">
+                  Please provide your digital signature to confirm the accuracy of the information provided in this survey.
+                </p>
+              </div>
+              
+              <SignatureInput
+                id="customer-signature"
+                label="Customer Signature"
+                value={formData.customerSignature}
+                onChange={(value) => updateFormData("customerSignature", value)}
+                required={true}
+                description="Click and drag to sign in the box below. This signature confirms the accuracy of the survey information."
+              />
+            </div>
+          </SurveySection>
+
+          {/* Section 10 - Auto-Generated Summary */}
+          <SurveySection
+            title="Section 10 - Auto-Generated Summary"
             isOpen={currentSection === "summary"}
             onToggle={() => toggleSection("summary")}
             completedFields={progress.completed}
@@ -3501,7 +3578,8 @@ const Index = () => {
                       electrical: "Electrical Supply",
                       battery: "Battery & Storage",
                       safety: "Health & Safety",
-                      preferences: "Preferences & Next Steps"
+                      preferences: "Preferences & Next Steps",
+                      signature: "Customer Signature"
                     };
                     return sectionNames[key] || key;
                   })
