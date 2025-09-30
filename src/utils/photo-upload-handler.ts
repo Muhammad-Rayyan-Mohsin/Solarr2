@@ -42,11 +42,13 @@ export class PhotoUploadHandler {
       // Path format: surveys/{userId}/{surveyId}/assets/{section}/{field}/{filename}
       const { data: { user } } = await supabase.auth.getUser();
       const userId = user?.id || 'anonymous';
-      const storagePath = `surveys/${userId}/${surveyId}/assets/${section}/${field}/${filename}`;
+      // For pre-auth stage, upload to public staging bucket under a clear prefix
+      // Object path omits bucket name and starts with 'staging/' for later detection/migration
+      const storagePath = `staging/${surveyId}/assets/${section}/${field}/${filename}`;
 
       // Upload to Supabase storage
       const { error: uploadError } = await supabase.storage
-        .from('surveys')
+        .from('staging-uploads')
         .upload(storagePath, file, {
           cacheControl: '3600',
           upsert: false,

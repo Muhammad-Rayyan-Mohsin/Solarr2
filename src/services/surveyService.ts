@@ -184,12 +184,13 @@ export class SurveyService {
     const fileName = `${crypto.randomUUID()}.${fileExt}`
     const { data: { user } } = await supabase.auth.getUser()
     const userId = user?.id || 'anonymous'
-    const filePath = `surveys/${userId}/${surveyId}/assets/${section}/${field}/${fileName}`
+    // Pre-auth stage: upload into public staging bucket
+    const filePath = `staging/${surveyId}/assets/${section}/${field}/${fileName}`
     
     // Upload to storage
     console.info('[uploadAsset] Uploading', { userId, surveyId, section, field, kind, filePath, mime: file.type, size: file.size })
     const { error: uploadError } = await supabase.storage
-      .from('surveys')
+      .from('staging-uploads')
       .upload(filePath, file, { contentType: file.type || 'application/octet-stream', cacheControl: '3600', upsert: false })
     
     if (uploadError) {
@@ -235,9 +236,10 @@ export class SurveyService {
     if (fetchError) {
       throw new Error(`Failed to fetch asset: ${fetchError.message}`)
     }
-    
+    // Pick bucket based on path prefix
+    const bucket = asset.storage_object_path?.startsWith('staging/') ? 'staging-uploads' : 'surveys'
     const { data: signedUrl, error: urlError } = await supabase.storage
-      .from('surveys')
+      .from(bucket)
       .createSignedUrl(asset.storage_object_path, expiresIn)
     
     if (urlError) {

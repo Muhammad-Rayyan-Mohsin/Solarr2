@@ -78,8 +78,9 @@ create table if not exists public.property_overview (
   shared_roof text check (shared_roof in ('yes','no','na')),
   scaffold_access text check (scaffold_access in ('yes','no','na')),
   storage_area text check (storage_area in ('yes','no','na')),
-  restricted_parking text
-  -- scaffoldAccessPhoto, storageAreaPhoto -> assets
+  restricted_parking text,
+  scaffold_access_photo text[],  -- Photo paths array
+  storage_area_photo text[]      -- Photo paths array
 );
 
 -- Section 3 - Roof Inspection: 1:N roof faces
@@ -446,7 +447,8 @@ begin
   -- property_overview
   insert into public.property_overview (
     survey_id, property_type, property_age, listed_building, conservation_area, new_build,
-    shared_roof, scaffold_access, storage_area, restricted_parking
+    shared_roof, scaffold_access, storage_area, restricted_parking,
+    scaffold_access_photo, storage_area_photo
   )
   values (
     v_survey_id,
@@ -458,7 +460,11 @@ begin
     nullif(payload->>'sharedRoof',''),
     nullif(payload->>'scaffoldAccess',''),
     nullif(payload->>'storageArea',''),
-    payload->>'restrictedParking'
+    payload->>'restrictedParking',
+    case when payload->'scaffoldAccessPhoto' is not null and jsonb_typeof(payload->'scaffoldAccessPhoto') = 'array'
+      then array(select jsonb_array_elements_text(payload->'scaffoldAccessPhoto')) else null end,
+    case when payload->'storageAreaPhoto' is not null and jsonb_typeof(payload->'storageAreaPhoto') = 'array'
+      then array(select jsonb_array_elements_text(payload->'storageAreaPhoto')) else null end
   );
 
   -- roof_faces (array)

@@ -24,3 +24,26 @@ with check (bucket_id = 'surveys' and owner = auth.uid());
 create policy "surveys_storage_delete_own"
 on storage.objects for delete to authenticated
 using (bucket_id = 'surveys' and owner = auth.uid());
+
+-- Public staging bucket for pre-auth uploads
+-- Create a public bucket named 'staging-uploads' in the Dashboard first
+
+-- Allow anonymous insert (uploads) into staging bucket
+create policy "staging_uploads_insert_anon"
+on storage.objects for insert to anon
+with check (bucket_id = 'staging-uploads');
+
+-- Allow anonymous read from staging bucket (optional: keep for preview)
+create policy "staging_uploads_select_anon"
+on storage.objects for select to anon
+using (bucket_id = 'staging-uploads');
+
+-- Restrict updates/deletes in staging to authenticated users only (optional hardening)
+create policy "staging_uploads_update_auth"
+on storage.objects for update to authenticated
+using (bucket_id = 'staging-uploads')
+with check (bucket_id = 'staging-uploads');
+
+create policy "staging_uploads_delete_auth"
+on storage.objects for delete to authenticated
+using (bucket_id = 'staging-uploads');

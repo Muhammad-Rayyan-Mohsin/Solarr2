@@ -134,12 +134,13 @@ export class SupabaseService {
     // Get user ID for storage path (or use anonymous fallback)
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id || 'anonymous';
-    const filePath = `surveys/${userId}/${surveyId}/assets/${section}/${field}/${filename}`;
-    console.info('[uploadPhoto] Uploading', { userId, surveyId, section, field, filePath, mime: file.type, size: file.size });
+    // Pre-auth stage: upload into public staging bucket
+    const filePath = `staging/${surveyId}/assets/${section}/${field}/${filename}`;
+    console.info('[uploadPhoto] Uploading (staging)', { surveyId, section, field, filePath, mime: file.type, size: file.size });
 
     // Upload to Supabase Storage
     const { error: uploadError } = await supabase.storage
-      .from("surveys")
+      .from("staging-uploads")
       .upload(filePath, file, {
         contentType: file.type || 'application/octet-stream',
         cacheControl: "3600",
@@ -152,7 +153,7 @@ export class SupabaseService {
     }
 
     // Create asset record in the new assets table
-    console.info('[uploadPhoto] Inserting asset', { filePath });
+    console.info('[uploadPhoto] Inserting asset (staging path recorded)', { filePath });
     const { data: asset, error: assetError } = await supabase
       .from("assets")
       .insert({

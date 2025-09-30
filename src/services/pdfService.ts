@@ -5,12 +5,16 @@ import { supabase } from "@/integrations/supabase/client";
 export class PDFService {
   private static async getImageAsBase64(storagePath: string): Promise<string | null> {
     try {
+      // Determine the bucket based on the storage path
+      // If path starts with 'staging/', use 'staging_uploads', otherwise use 'surveys'
+      const bucket = storagePath.startsWith('staging/') ? 'staging_uploads' : 'surveys';
+      
       const { data, error } = await supabase.storage
-        .from('surveys')
+        .from(bucket)
         .download(storagePath);
       
       if (error) {
-        console.error('Error downloading image:', error);
+        console.error(`Error downloading image from ${bucket}:`, error, storagePath);
         return null;
       }
       
@@ -37,6 +41,43 @@ export class PDFService {
     return y + (splitText.length * lineHeight);
   }
 
+  private static async addImageFromPath(doc: jsPDF, filePath: string, yPos: number, label?: string): Promise<number> {
+    try {
+      const base64Image = await this.getImageAsBase64(filePath);
+      if (!base64Image) {
+        console.warn(`Failed to load image: ${filePath}`);
+        return yPos;
+      }
+
+      // Check if we need a new page
+      if (yPos > 230) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      const imgWidth = 80;
+      const imgHeight = 60;
+      
+      if (label) {
+        doc.setFont("helvetica", "bold");
+        doc.text(label, 20, yPos);
+        yPos += 8;
+      }
+      
+      // Determine image format from file extension
+      let format = 'JPEG';
+      if (filePath.includes('.png')) format = 'PNG';
+      else if (filePath.includes('.gif')) format = 'GIF';
+      else if (filePath.includes('.webp')) format = 'WEBP';
+      
+      doc.addImage(base64Image, format, 20, yPos, imgWidth, imgHeight);
+      return yPos + imgHeight + 10;
+    } catch (error) {
+      console.error('Error adding image from path to PDF:', error, filePath);
+      return yPos;
+    }
+  }
+
   private static addSection(doc: jsPDF, title: string, yPos: number): number {
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
@@ -49,6 +90,12 @@ export class PDFService {
   private static addField(doc: jsPDF, label: string, value: any, yPos: number, maxWidth: number = 170): number {
     if (value === null || value === undefined || value === '') return yPos;
     
+    // Skip if it's an array of file paths (images will be handled separately)
+    if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string' && value[0].includes('/')) {
+      // This is likely a file path array, skip it
+      return yPos;
+    }
+    
     doc.setFont("helvetica", "bold");
     doc.text(`${label}:`, 20, yPos);
     doc.setFont("helvetica", "normal");
@@ -57,13 +104,34 @@ export class PDFService {
     return this.addWrappedText(doc, valueStr, 70, yPos, maxWidth - 50, 6) + 3;
   }
 
-  private static async addImageToDoc(doc: jsPDF, asset: any, yPos: number): Promise<number> {
+  private static async addImagesFromFieldArray(doc: jsPDF, fieldValue: any, yPos: number, sectionLabel: string): Promise<number> {
+    if (!Array.isArray(fieldValue) || fieldValue.length === 0) return yPos;
+    
+    // Check if this is an array of file paths
+    if (typeof fieldValue[0] === 'string' && fieldValue[0].includes('/')) {
+      for (let i = 0; i < fieldValue.length; i++) {
+        const filePath = fieldValue[i];
+        if (yPos > 200) {
+          doc.addPage();
+          yPos = 20;
+        }
+        yPos = await this.addImageFromPath(doc, filePath, yPos, `${sectionLabel} - Image ${i + 1}`);
+      }
+    }
+    
+    return yPos;
+  }
+
+  private static async addImageToDoc(doc: jsPDF, asset: any, yPos: number, label?: string): Promise<number> {
     try {
       const base64Image = await this.getImageAsBase64(asset.storagePath);
-      if (!base64Image) return yPos;
+      if (!base64Image) {
+        console.warn(`Failed to load image: ${asset.storagePath}`);
+        return yPos;
+      }
 
       // Check if we need a new page
-      if (yPos > 250) {
+      if (yPos > 230) {
         doc.addPage();
         yPos = 20;
       }
@@ -72,18 +140,20 @@ export class PDFService {
       const imgHeight = 60;
       
       doc.setFont("helvetica", "bold");
-      doc.text(`${asset.section} - ${asset.field}:`, 20, yPos);
+      const imageLabel = label || `${asset.section} - ${asset.field}`;
+      doc.text(imageLabel, 20, yPos);
       yPos += 8;
       
       // Determine image format from mime type
       let format = 'JPEG';
       if (asset.mimeType?.includes('png')) format = 'PNG';
       else if (asset.mimeType?.includes('gif')) format = 'GIF';
+      else if (asset.mimeType?.includes('webp')) format = 'WEBP';
       
       doc.addImage(base64Image, format, 20, yPos, imgWidth, imgHeight);
       return yPos + imgHeight + 10;
     } catch (error) {
-      console.error('Error adding image to PDF:', error);
+      console.error('Error adding image to PDF:', error, asset);
       return yPos;
     }
   }
@@ -163,6 +233,18 @@ export class PDFService {
         yPos = this.addField(doc, "SEG Tariff Explanation", eb.seg_tariff_explanation, yPos);
         yPos = this.addField(doc, "Smart Tariff Available", eb.smart_tariff_available, yPos);
         yPos += 5;
+
+        // Add Section 1 images
+        const section1Assets = fullSurvey.assets?.filter((a: any) => 
+          a.section === 'Section 1 - Electricity Baseline' || a.section === 'electricity_baseline'
+        ) || [];
+        for (const asset of section1Assets) {
+          if (yPos > 200) {
+            doc.addPage();
+            yPos = 20;
+          }
+          yPos = await this.addImageToDoc(doc, asset, yPos);
+        }
       }
 
       // Property Overview
@@ -179,6 +261,26 @@ export class PDFService {
         yPos = this.addField(doc, "Storage Area", po.storage_area, yPos);
         yPos = this.addField(doc, "Restricted Parking", po.restricted_parking, yPos);
         yPos += 5;
+
+        // Add Section 2 images from assets table
+        const section2Assets = fullSurvey.assets?.filter((a: any) => 
+          a.section === 'Section 2 - Property Overview' || a.section === 'property_overview'
+        ) || [];
+        for (const asset of section2Assets) {
+          if (yPos > 200) {
+            doc.addPage();
+            yPos = 20;
+          }
+          yPos = await this.addImageToDoc(doc, asset, yPos);
+        }
+
+        // Add Section 2 images from photo array fields
+        if (po.scaffold_access_photo) {
+          yPos = await this.addImagesFromFieldArray(doc, po.scaffold_access_photo, yPos, "Scaffold Access");
+        }
+        if (po.storage_area_photo) {
+          yPos = await this.addImagesFromFieldArray(doc, po.storage_area_photo, yPos, "Storage Area");
+        }
       }
 
       // Check if we need a new page
@@ -241,6 +343,18 @@ export class PDFService {
         yPos = this.addField(doc, "Loft Lighting", la.loft_lighting, yPos);
         yPos = this.addField(doc, "Loft Power Socket", la.loft_power_socket, yPos);
         yPos += 5;
+
+        // Add Section 4 (Loft/Attic) images
+        const section4Assets = fullSurvey.assets?.filter((a: any) => 
+          a.section === 'Section 4 - Loft/Attic' || a.section === 'loft_attic'
+        ) || [];
+        for (const asset of section4Assets) {
+          if (yPos > 200) {
+            doc.addPage();
+            yPos = 20;
+          }
+          yPos = await this.addImageToDoc(doc, asset, yPos);
+        }
       }
 
       // Electrical Supply
@@ -265,6 +379,18 @@ export class PDFService {
         yPos = this.addField(doc, "EV Charger Installed", es.ev_charger_installed, yPos);
         yPos = this.addField(doc, "EV Charger Load", es.ev_charger_load ? `${es.ev_charger_load}kW` : '', yPos);
         yPos += 5;
+
+        // Add Section 5 (Electrical Supply) images
+        const section5Assets = fullSurvey.assets?.filter((a: any) => 
+          a.section === 'Section 5 - Electrical Supply' || a.section === 'electrical_supply'
+        ) || [];
+        for (const asset of section5Assets) {
+          if (yPos > 200) {
+            doc.addPage();
+            yPos = 20;
+          }
+          yPos = await this.addImageToDoc(doc, asset, yPos);
+        }
       }
 
       // Battery Storage
@@ -281,6 +407,18 @@ export class PDFService {
         yPos = this.addField(doc, "Mounting Surface", bs.mounting_surface, yPos);
         yPos = this.addField(doc, "Ventilation Adequate", bs.ventilation_adequate, yPos);
         yPos += 5;
+
+        // Add Section 6 (Battery Storage) images
+        const section6Assets = fullSurvey.assets?.filter((a: any) => 
+          a.section === 'Section 6 - Battery Storage' || a.section === 'battery_storage'
+        ) || [];
+        for (const asset of section6Assets) {
+          if (yPos > 200) {
+            doc.addPage();
+            yPos = 20;
+          }
+          yPos = await this.addImageToDoc(doc, asset, yPos);
+        }
       }
 
       // Health & Safety
@@ -298,6 +436,23 @@ export class PDFService {
         yPos = this.addField(doc, "Livestock/Pets Notes", hs.livestock_pets_notes, yPos);
         yPos = this.addField(doc, "Special Access Instructions", hs.special_access_instructions, yPos);
         yPos += 5;
+
+        // Add Section 7 (Health & Safety) images from assets table
+        const section7Assets = fullSurvey.assets?.filter((a: any) => 
+          a.section === 'Section 7 - Health & Safety' || a.section === 'health_safety'
+        ) || [];
+        for (const asset of section7Assets) {
+          if (yPos > 200) {
+            doc.addPage();
+            yPos = 20;
+          }
+          yPos = await this.addImageToDoc(doc, asset, yPos);
+        }
+
+        // Add fragile roof areas images from photo array field
+        if (hs.fragile_roof_areas) {
+          yPos = await this.addImagesFromFieldArray(doc, hs.fragile_roof_areas, yPos, "Fragile Roof Areas");
+        }
       }
 
       // Customer Preferences
@@ -318,17 +473,50 @@ export class PDFService {
         yPos = this.addField(doc, "Interested in Energy Monitoring", cp.interested_in_energy_monitoring, yPos);
         yPos = this.addField(doc, "Additional Notes", cp.additional_notes, yPos);
         yPos += 5;
+
+        // Add Section 8 (Customer Preferences) images - signature
+        const section8Assets = fullSurvey.assets?.filter((a: any) => 
+          a.section === 'Section 8 - Customer Preferences' || a.section === 'customer_preferences'
+        ) || [];
+        for (const asset of section8Assets) {
+          if (yPos > 200) {
+            doc.addPage();
+            yPos = 20;
+          }
+          yPos = await this.addImageToDoc(doc, asset, yPos);
+        }
       }
 
-      // General Images (not specific to roof faces)
-      if (fullSurvey.assets && fullSurvey.assets.length > 0) {
+      // General Images (not specific to roof faces or already covered sections)
+      const generalAssets = fullSurvey.assets?.filter((a: any) => {
+        // Filter out assets already shown in specific sections
+        const sectionPrefixes = [
+          'Section 1 - Electricity Baseline',
+          'Section 2 - Property Overview', 
+          'Section 4 - Loft/Attic',
+          'Section 5 - Electrical Supply',
+          'Section 6 - Battery Storage',
+          'Section 7 - Health & Safety',
+          'Section 8 - Customer Preferences',
+          'electricity_baseline',
+          'property_overview',
+          'loft_attic',
+          'electrical_supply',
+          'battery_storage',
+          'health_safety',
+          'customer_preferences'
+        ];
+        return !sectionPrefixes.some(prefix => a.section?.includes(prefix));
+      }) || [];
+
+      if (generalAssets.length > 0) {
         if (yPos > 150) {
           doc.addPage();
           yPos = 20;
         }
         yPos = this.addSection(doc, "Additional Images", yPos);
         
-        for (const asset of fullSurvey.assets) {
+        for (const asset of generalAssets) {
           if (yPos > 200) {
             doc.addPage();
             yPos = 20;
