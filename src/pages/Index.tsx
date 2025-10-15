@@ -6,7 +6,6 @@ import { RedFlagsSummary } from "@/components/RedFlagsSummary";
 import { TextInput } from "@/components/inputs/TextInput";
 import { What3WordsInput } from "@/components/inputs/What3WordsInput";
 import { NumberInput } from "@/components/inputs/NumberInput";
-import { SolarApiTestButton } from "@/components/SolarApiTestButton";
 import { FillFormButton } from "@/components/FillFormButton";
 import { DropdownSelect } from "@/components/inputs/DropdownSelect";
 import { YesNoNADropdown } from "@/components/inputs/YesNoNADropdown";
@@ -28,6 +27,8 @@ import { PhoneInputComponent } from "@/components/inputs/PhoneInput";
 import { SimplePhoneInput } from "@/components/inputs/SimplePhoneInput";
 import { EnhancedSliderInput } from "@/components/inputs/EnhancedSliderInput";
 import { EnhancedPhotoUpload } from "@/components/inputs/EnhancedPhotoUpload";
+import { SurveyAerialImage } from "@/components/SurveyAerialImage";
+import { SmartLocationInput } from "@/components/inputs/SmartLocationInput";
 import { AbstractProgressIndicator } from "@/components/AbstractProgressIndicator";
 import { UserFeedbackModal } from "@/components/UserFeedbackModal";
 import { BudgetRangeSlider } from "@/components/inputs/BudgetRangeSlider";
@@ -1366,6 +1367,33 @@ const Index = () => {
     }));
   };
 
+  // Handle location enrichment from SmartLocationInput
+  const handleLocationEnrichment = (locationData: any) => {
+    // Update all location fields
+    if (locationData.address) {
+      updateFormData("siteAddress", locationData.address);
+    }
+    if (locationData.postcode) {
+      updateFormData("postcode", locationData.postcode);
+    }
+    if (locationData.gridReference) {
+      updateFormData("gridReference", locationData.gridReference);
+    }
+    if (locationData.what3words) {
+      updateFormData("what3words", locationData.what3words);
+    }
+
+    // If solar data is available, process it
+    if (locationData.solarData) {
+      const solarApiData = {
+        ...locationData.solarData.insights,
+        rawBuildingInsights: locationData.solarData.rawInsights,
+        rawDataLayers: locationData.solarData.rawDataLayers,
+      };
+      handleSolarDataReceived(solarApiData);
+    }
+  };
+
   // Handle solar data from LocationInput
   const handleSolarDataReceived = (solarApiData: any) => {
     setSolarData(solarApiData);
@@ -1989,7 +2017,6 @@ const Index = () => {
                 onChange={(value) => updateFormData("customerName", value)}
                 placeholder="Enter customer's full name..."
                 required
-                includeLocation
               />
                 </div>
               </div>
@@ -1999,6 +2026,16 @@ const Index = () => {
                 <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
                   Location Information
                 </h3>
+
+                {/* Smart Location Enrichment */}
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-lg p-4">
+                  <SmartLocationInput onLocationEnriched={handleLocationEnrichment} />
+                </div>
+
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">Or enter location details manually below:</p>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <TextInput
                 id="site-address"
@@ -2024,9 +2061,6 @@ const Index = () => {
                 onSolarDataReceived={handleSolarDataReceived}
                 required
               />
-              <div className="flex justify-center mt-4">
-                <SolarApiTestButton />
-              </div>
               <What3WordsInput
                     id="what3words"
                     label="What3Words"
@@ -2036,6 +2070,19 @@ const Index = () => {
                   />
                 </div>
               </div>
+
+              {/* Aerial Image Display */}
+              {solarData?.rawDataLayers?.rgbUrl && (
+                <div className="mt-6">
+                  <SurveyAerialImage
+                    latitude={parseFloat(formData.gridReference.split(',')[0]) || 0}
+                    longitude={parseFloat(formData.gridReference.split(',')[1]) || 0}
+                    rgbUrl={solarData.rawDataLayers.rgbUrl}
+                    maskUrl={solarData.rawDataLayers.maskUrl}
+                    imageryQuality={solarData.rawDataLayers.imageryQuality}
+                  />
+                </div>
+              )}
 
               {/* Solar API Insights Display */}
               {solarData && (
@@ -2047,26 +2094,32 @@ const Index = () => {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                       <div>
                         <p className="text-sm text-muted-foreground">Max Panels</p>
-                        <p className="text-2xl font-bold text-green-600">{solarData.maxPanels}</p>
+                        <p className="text-2xl font-bold text-green-600">{solarData.maxPanels || 0}</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Usable Roof Area</p>
-                        <p className="text-2xl font-bold text-green-600">{solarData.usableRoofArea}m²</p>
+                        <p className="text-2xl font-bold text-green-600">{solarData.usableRoofArea || 0}m²</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Est. Annual Energy</p>
-                        <p className="text-2xl font-bold text-green-600">{Math.round(solarData.estimatedYearlyEnergy).toLocaleString()}kWh</p>
+                        <p className="text-2xl font-bold text-green-600">{solarData.estimatedYearlyEnergy ? Math.round(solarData.estimatedYearlyEnergy).toLocaleString() : 0}kWh</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Roof Suitability</p>
-                        <p className="text-2xl font-bold text-green-600">{solarData.obstructions.usablePercentage}%</p>
+                        <p className="text-2xl font-bold text-green-600">{solarData.obstructions?.usablePercentage || 'N/A'}{solarData.obstructions?.usablePercentage ? '%' : ''}</p>
                       </div>
                     </div>
                     
                     <div className="text-sm text-green-700">
-                      <p><strong>Shading Analysis:</strong> {solarData.obstructions.shadingPercentage}% of roof affected by shadows/obstructions</p>
-                      <p><strong>Response Time:</strong> {solarData.apiResponseTime}ms | <strong>Data Quality:</strong> {solarData.dataQuality}</p>
-                      <p><strong>Detected Roof Faces:</strong> {solarData.roofSegments.length} segments automatically identified</p>
+                      {solarData.obstructions && (
+                        <p><strong>Shading Analysis:</strong> {solarData.obstructions.shadingPercentage}% of roof affected by shadows/obstructions</p>
+                      )}
+                      {solarData.apiResponseTime && solarData.dataQuality && (
+                        <p><strong>Response Time:</strong> {solarData.apiResponseTime}ms | <strong>Data Quality:</strong> {solarData.dataQuality}</p>
+                      )}
+                      {solarData.roofSegments && (
+                        <p><strong>Detected Roof Faces:</strong> {solarData.roofSegments.length} segments automatically identified</p>
+                      )}
                     </div>
                     
                     {/* Debug data for development */}

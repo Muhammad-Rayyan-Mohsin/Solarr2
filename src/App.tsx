@@ -10,6 +10,7 @@ import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 import SubmissionsNew from "./pages/SubmissionsNew";
 import SolarApiTest from "./pages/SolarApiTest";
+import SolarMap from "./pages/SolarMap";
 
 const queryClient = new QueryClient();
 
@@ -101,6 +102,7 @@ function RouterTransitions() {
           <Route path="/survey" element={<PageTransition><Index /></PageTransition>} />
           <Route path="/submissions" element={<PageTransition><SubmissionsNew /></PageTransition>} />
           <Route path="/solar-api-test" element={<PageTransition><SolarApiTest /></PageTransition>} />
+          <Route path="/solar-map" element={<PageTransition><SolarMap /></PageTransition>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>

@@ -1,178 +1,97 @@
-import React, { useState } from "react";
-import { CheckCircle, Circle, AlertTriangle, Clock, FileText, Home, Zap, Battery, Shield, Settings } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Progress } from "@/components/ui/progress";
+import { CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface SectionProgress {
+interface Section {
   id: string;
-  title: string;
+  name: string;
   completed: number;
   total: number;
-  status: "completed" | "in-progress" | "pending" | "flagged";
-  flaggedFields?: number;
-  estimatedTime?: string;
-  icon?: React.ReactNode;
 }
 
 interface AbstractProgressIndicatorProps {
-  sections: SectionProgress[];
+  sections: Section[];
   currentSection?: string;
-  overallProgress: number;
-  className?: string;
+  onSectionClick?: (sectionId: string) => void;
+  variant?: "default" | "minimal" | "detailed";
 }
-
-// Section icons mapping
-const sectionIcons: Record<string, React.ReactNode> = {
-  "general": <FileText className="h-4 w-4" />,
-  "electricity": <Zap className="h-4 w-4" />,
-  "property": <Home className="h-4 w-4" />,
-  "roof": <Home className="h-4 w-4" />,
-  "loft": <Home className="h-4 w-4" />,
-  "electrical": <Zap className="h-4 w-4" />,
-  "battery": <Battery className="h-4 w-4" />,
-  "safety": <Shield className="h-4 w-4" />,
-  "preferences": <Settings className="h-4 w-4" />,
-  "summary": <FileText className="h-4 w-4" />,
-};
 
 export function AbstractProgressIndicator({
   sections,
   currentSection,
-  overallProgress,
-  className,
+  onSectionClick,
+  variant = "default"
 }: AbstractProgressIndicatorProps) {
-  const [hoveredSection, setHoveredSection] = useState<string | null>(null);
+  const totalFields = sections.reduce((sum, section) => sum + section.total, 0);
+  const completedFields = sections.reduce((sum, section) => sum + section.completed, 0);
+  const overallProgress = totalFields > 0 ? (completedFields / totalFields) * 100 : 0;
 
-  const getSectionIcon = (section: SectionProgress) => {
-    const baseIcon = sectionIcons[section.id] || <Circle className="h-4 w-4" />;
-    
-    switch (section.status) {
-      case "completed":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "flagged":
-        return <AlertTriangle className="h-4 w-4 text-orange-500" />;
-      case "in-progress":
-        return <Clock className="h-4 w-4 text-black" />;
-      default:
-        return <Circle className="h-4 w-4 text-gray-400" />;
-    }
-  };
-
-  const getSectionColor = (section: SectionProgress) => {
-    switch (section.status) {
-      case "completed":
-        return "bg-green-500";
-      case "flagged":
-        return "bg-orange-500";
-      case "in-progress":
-        return "bg-black";
-      default:
-        return "bg-gray-300";
-    }
-  };
-
-  const getProgressGradient = () => {
-    const completedCount = sections.filter(s => s.status === "completed").length;
-    const inProgressCount = sections.filter(s => s.status === "in-progress").length;
-    const flaggedCount = sections.filter(s => s.status === "flagged").length;
-    
-    if (completedCount === 0) {
-      return "from-gray-300 to-gray-300";
-    }
-    
-    const total = sections.length;
-    const completedPercent = (completedCount / total) * 100;
-    const inProgressPercent = (inProgressCount / total) * 100;
-    const flaggedPercent = (flaggedCount / total) * 100;
-    
-    if (flaggedCount > 0) {
-      return "from-green-500 via-orange-500 to-gray-300";
-    } else if (inProgressCount > 0) {
-      return "from-green-500 via-black to-gray-300";
-    } else {
-      return "from-green-500 to-gray-300";
-    }
-  };
-
-  const completedSections = sections.filter(s => s.status === "completed").length;
-  const flaggedSections = sections.filter(s => s.status === "flagged").length;
+  if (variant === "minimal") {
+    return (
+      <div className="w-full space-y-2">
+        <div className="flex justify-between text-sm">
+          <span>Progress</span>
+          <span className="font-medium">{Math.round(overallProgress)}%</span>
+        </div>
+        <Progress value={overallProgress} className="h-2" />
+      </div>
+    );
+  }
 
   return (
-    <TooltipProvider>
-      <div className={cn("w-full", className)}>
-        {/* Main Progress Bar */}
-        <div className="relative">
-          {/* Background Track */}
-          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-            {/* Progress Fill with Gradient */}
-            <div 
-              className={cn(
-                "h-full rounded-full transition-all duration-500 ease-out",
-                `bg-gradient-to-r ${getProgressGradient()}`
-              )}
-              style={{ width: `${overallProgress}%` }}
-            />
-          </div>
-          
-          {/* Section Icons */}
-          <div className="flex justify-between items-center mt-3 -mx-1">
-            {sections.map((section, index) => {
-              const position = (index / (sections.length - 1)) * 100;
-              const isHovered = hoveredSection === section.id;
-              
-              return (
-                <Tooltip key={section.id}>
-                  <TooltipTrigger asChild>
-                    <div
-                      className={cn(
-                        "relative mobile-progress-circle transition-all duration-300 cursor-pointer",
-                        "hover:scale-110 hover:shadow-lg",
-                        getSectionColor(section),
-                        section.status === "completed" && "shadow-md",
-                        section.status === "flagged" && "animate-pulse",
-                        section.status === "in-progress" && "ring-2 ring-gray-200 dark:ring-gray-800",
-                        isHovered && "scale-110 shadow-lg"
-                      )}
-                      style={{ 
-                        position: 'absolute',
-                        left: `${position}%`,
-                        transform: 'translateX(-50%)',
-                        top: '-12px'
-                      }}
-                      onMouseEnter={() => setHoveredSection(section.id)}
-                      onMouseLeave={() => setHoveredSection(null)}
-                    >
-                      <div className="text-white">
-                        {getSectionIcon(section)}
-                      </div>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs">
-                    <div className="space-y-2">
-                      <div className="font-semibold text-sm">{section.title}</div>
-                      <div className="text-xs text-muted-foreground hidden sm:block">
-                        {section.completed}/{section.total} questions completed
-                      </div>
-                      {section.flaggedFields && section.flaggedFields > 0 && (
-                        <div className="text-xs text-orange-600">
-                          {section.flaggedFields} flagged field{section.flaggedFields !== 1 ? 's' : ''}
-                        </div>
-                      )}
-                      {section.estimatedTime && (
-                        <div className="text-xs text-blue-600">
-                          Est. {section.estimatedTime}
-                        </div>
-                      )}
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              );
-            })}
-          </div>
+    <div className="w-full space-y-4">
+      {/* Overall Progress */}
+      <div className="space-y-2">
+        <div className="flex justify-between items-center">
+          <h3 className="font-semibold text-lg">Survey Progress</h3>
+          <span className="text-sm font-medium">
+            {completedFields} / {totalFields} fields
+          </span>
         </div>
-
-        {/* Progress Summary */}
+        <Progress value={overallProgress} className="h-3" />
       </div>
-    </TooltipProvider>
+
+      {/* Section Progress */}
+      {variant === "detailed" && (
+        <div className="space-y-3">
+          {sections.map((section) => {
+            const sectionProgress =
+              section.total > 0 ? (section.completed / section.total) * 100 : 0;
+            const isComplete = section.completed === section.total && section.total > 0;
+            const isCurrent = currentSection === section.id;
+
+            return (
+              <button
+                key={section.id}
+                onClick={() => onSectionClick?.(section.id)}
+                className={cn(
+                  "w-full text-left p-3 rounded-lg border transition-all",
+                  isCurrent && "border-primary bg-primary/5",
+                  !isCurrent && "border-gray-200 hover:border-gray-300"
+                )}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    {isComplete && (
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    )}
+                    <span className={cn(
+                      "font-medium",
+                      isCurrent && "text-primary"
+                    )}>
+                      {section.name}
+                    </span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {section.completed}/{section.total}
+                  </span>
+                </div>
+                <Progress value={sectionProgress} className="h-2" />
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

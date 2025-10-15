@@ -1,199 +1,128 @@
-import React from "react";
-import { CheckCircle, Circle, AlertTriangle, Clock, Zap } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle2, Circle, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface SectionProgress {
+interface Section {
   id: string;
-  title: string;
+  name: string;
   completed: number;
   total: number;
-  status: "completed" | "in-progress" | "pending" | "flagged";
-  flaggedFields?: number;
-  estimatedTime?: string;
+  flagged?: number;
 }
 
 interface EnhancedProgressIndicatorProps {
-  sections: SectionProgress[];
+  sections: Section[];
   currentSection?: string;
-  overallProgress: number;
-  className?: string;
-  showDetails?: boolean;
-  showTimeEstimates?: boolean;
-  showFlags?: boolean;
+  onSectionClick?: (sectionId: string) => void;
+  showFlagged?: boolean;
 }
 
 export function EnhancedProgressIndicator({
   sections,
   currentSection,
-  overallProgress,
-  className,
-  showDetails = true,
-  showTimeEstimates = true,
-  showFlags = true,
+  onSectionClick,
+  showFlagged = true
 }: EnhancedProgressIndicatorProps) {
-  const completedSections = sections.filter(s => s.status === "completed").length;
-  const flaggedSections = sections.filter(s => s.status === "flagged").length;
-  const totalSections = sections.length;
-
-  const getSectionIcon = (section: SectionProgress) => {
-    switch (section.status) {
-      case "completed":
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
-      case "flagged":
-        return <AlertTriangle className="h-5 w-5 text-orange-500" />;
-      case "in-progress":
-        return <Clock className="h-5 w-5 text-blue-500" />;
-      default:
-        return <Circle className="h-5 w-5 text-muted-foreground" />;
-    }
-  };
-
-  const getSectionStatusColor = (section: SectionProgress) => {
-    switch (section.status) {
-      case "completed":
-        return "text-green-600";
-      case "flagged":
-        return "text-orange-500";
-      case "in-progress":
-        return "text-blue-500";
-      default:
-        return "text-muted-foreground";
-    }
-  };
-
-  const getProgressColor = (progress: number) => {
-    if (progress >= 100) return "bg-green-500";
-    if (progress >= 75) return "bg-blue-500";
-    if (progress >= 50) return "bg-yellow-500";
-    if (progress >= 25) return "bg-orange-500";
-    return "bg-red-500";
-  };
+  const totalFields = sections.reduce((sum, section) => sum + section.total, 0);
+  const completedFields = sections.reduce((sum, section) => sum + section.completed, 0);
+  const flaggedFields = sections.reduce((sum, section) => sum + (section.flagged || 0), 0);
+  const overallProgress = totalFields > 0 ? (completedFields / totalFields) * 100 : 0;
 
   return (
-    <Card className={cn("w-full", className)}>
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-foreground">
-            Survey Progress
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <Zap className="h-4 w-4 text-primary" />
-            <Badge variant="secondary" className="text-xs">
-              {completedSections}/{totalSections} sections
-            </Badge>
-          </div>
-        </div>
-        
-        {/* Overall Progress Bar */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Overall Progress</span>
-            <span className="font-medium text-foreground">{Math.round(overallProgress)}%</span>
-          </div>
-          <Progress 
-            value={overallProgress} 
-            className="h-2"
-          />
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        {/* Summary Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{completedSections}</div>
-            <div className="text-xs text-muted-foreground">Completed</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-500">
-              {sections.filter(s => s.status === "in-progress").length}
+    <Card>
+      <CardContent className="pt-6">
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold text-xl">Survey Progress</h3>
+              <div className="text-right">
+                <div className="text-2xl font-bold" style={{ color: "hsl(174.7 83.9% 31.6%)" }}>
+                  {Math.round(overallProgress)}%
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {completedFields} of {totalFields}
+                </div>
+              </div>
             </div>
-            <div className="text-xs text-muted-foreground">In Progress</div>
+            <Progress value={overallProgress} className="h-4" />
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-orange-500">{flaggedSections}</div>
-            <div className="text-xs text-muted-foreground">Flagged</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-muted-foreground">
-              {sections.filter(s => s.status === "pending").length}
-            </div>
-            <div className="text-xs text-muted-foreground">Pending</div>
-          </div>
-        </div>
 
-        {/* Section Details */}
-        {showDetails && (
+          {/* Flags Summary */}
+          {showFlagged && flaggedFields > 0 && (
+            <div className="flex items-center space-x-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-yellow-600" />
+              <span className="text-sm font-medium text-yellow-800">
+                {flaggedFields} field{flaggedFields !== 1 ? 's' : ''} require{flaggedFields === 1 ? 's' : ''} attention
+              </span>
+            </div>
+          )}
+
+          {/* Sections */}
           <div className="space-y-3">
-            <h4 className="text-sm font-medium text-foreground">Section Details</h4>
-            <div className="space-y-2">
-              {sections.map((section) => (
-                <div
+            {sections.map((section) => {
+              const sectionProgress =
+                section.total > 0 ? (section.completed / section.total) * 100 : 0;
+              const isComplete = section.completed === section.total && section.total > 0;
+              const isCurrent = currentSection === section.id;
+              const hasFlagged = (section.flagged || 0) > 0;
+
+              return (
+                <button
                   key={section.id}
+                  onClick={() => onSectionClick?.(section.id)}
                   className={cn(
-                    "flex items-center gap-3 p-3 rounded-lg border transition-colors",
-                    currentSection === section.id
-                      ? "bg-primary/5 border-primary/20"
-                      : "bg-muted/30 border-border/50 hover:bg-muted/50"
+                    "w-full text-left p-4 rounded-lg border-2 transition-all",
+                    isCurrent && "border-[hsl(174.7,83.9%,31.6%)] bg-[hsl(174.7,83.9%,31.6%)]/5 shadow-md",
+                    !isCurrent && isComplete && "border-green-200 bg-green-50",
+                    !isCurrent && !isComplete && "border-gray-200 hover:border-gray-300 hover:shadow-sm"
                   )}
                 >
-                  {getSectionIcon(section)}
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h5 className={cn(
-                        "text-sm font-medium truncate",
-                        getSectionStatusColor(section)
-                      )}>
-                        {section.title}
-                      </h5>
-                      {showFlags && section.flaggedFields && section.flaggedFields > 0 && (
-                        <Badge variant="destructive" className="text-xs">
-                          {section.flaggedFields} flag{section.flaggedFields !== 1 ? "s" : ""}
-                        </Badge>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      {isComplete ? (
+                        <CheckCircle2 className="h-6 w-6 text-green-500 flex-shrink-0" />
+                      ) : isCurrent ? (
+                        <Circle className="h-6 w-6 text-[hsl(174.7,83.9%,31.6%)] flex-shrink-0" />
+                      ) : (
+                        <Circle className="h-6 w-6 text-gray-300 flex-shrink-0" />
                       )}
-                    </div>
-                    
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex-1">
-                        <Progress 
-                          value={(section.completed / section.total) * 100} 
-                          className="h-1"
-                        />
+                      <div>
+                        <span className={cn(
+                          "font-semibold block",
+                          isCurrent && "text-[hsl(174.7,83.9%,31.6%)]",
+                          isComplete && !isCurrent && "text-green-700"
+                        )}>
+                          {section.name}
+                        </span>
+                        {hasFlagged && (
+                          <span className="text-xs text-yellow-600 font-medium flex items-center mt-1">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            {section.flagged} flagged
+                          </span>
+                        )}
                       </div>
-                      <span className="text-xs text-muted-foreground">
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-semibold">
                         {section.completed}/{section.total}
-                      </span>
-                    </div>
-                    
-                    {showTimeEstimates && section.estimatedTime && (
-                      <div className="text-xs text-muted-foreground mt-1">
-                        Est. {section.estimatedTime}
                       </div>
-                    )}
+                      <div className="text-xs text-muted-foreground">
+                        {Math.round(sectionProgress)}%
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Quick Actions */}
-        <div className="pt-2 border-t border-border/50">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>
-              {flaggedSections > 0 && (
-                <span className="text-orange-500 font-medium">
-                  {flaggedSections} section{flaggedSections !== 1 ? "s" : ""} need attention
-                </span>
-              )}
-            </span>
-            <span>
-              {Math.round(overallProgress)}% complete
-            </span>
+                  <Progress 
+                    value={sectionProgress} 
+                    className={cn(
+                      "h-2",
+                      isCurrent && "[&>div]:bg-[hsl(174.7,83.9%,31.6%)]"
+                    )}
+                  />
+                </button>
+              );
+            })}
           </div>
         </div>
       </CardContent>
