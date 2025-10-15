@@ -57,10 +57,10 @@ const conditionOptions = [
 ];
 
 const rafterSpacingOptions = [
-  { value: "400", label: "400mm" },
-  { value: "450", label: "450mm" },
-  { value: "600", label: "600mm" },
-  { value: "900", label: "900mm" },
+  { value: "40", label: "40cm" },
+  { value: "45", label: "45cm" },
+  { value: "60", label: "60cm" },
+  { value: "90", label: "90cm" },
   { value: "other", label: "Other" }
 ];
 
@@ -71,12 +71,27 @@ const membraneTypeOptions = [
 ];
 
 const gutterHeightOptions = [
-  { value: "0-2", label: "0-2m" },
-  { value: "2-4", label: "2-4m" },
-  { value: "4-6", label: "4-6m" },
-  { value: "6-8", label: "6-8m" },
-  { value: "8-10", label: "8-10m" },
-  { value: "10+", label: "10m+" }
+  { value: "0.5", label: "0.5m" },
+  { value: "1.0", label: "1.0m" },
+  { value: "1.5", label: "1.5m" },
+  { value: "2.0", label: "2.0m" },
+  { value: "2.5", label: "2.5m" },
+  { value: "3.0", label: "3.0m" },
+  { value: "3.5", label: "3.5m" },
+  { value: "4.0", label: "4.0m" },
+  { value: "4.5", label: "4.5m" },
+  { value: "5.0", label: "5.0m" },
+  { value: "5.5", label: "5.5m" },
+  { value: "6.0", label: "6.0m" },
+  { value: "6.5", label: "6.5m" },
+  { value: "7.0", label: "7.0m" },
+  { value: "7.5", label: "7.5m" },
+  { value: "8.0", label: "8.0m" },
+  { value: "8.5", label: "8.5m" },
+  { value: "9.0", label: "9.0m" },
+  { value: "9.5", label: "9.5m" },
+  { value: "10.0", label: "10.0m" },
+  { value: "other", label: "Other" }
 ];
 
 export function RoofSection({ roofFaces, onRoofFacesChange }: RoofSectionProps) {
@@ -278,18 +293,18 @@ export function RoofSection({ roofFaces, onRoofFacesChange }: RoofSectionProps) 
                   Structural Details
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <DropdownSelect
+                  <TextInput
                     id={`${face.id}-gutter-height`}
-                    label="Gutter Height Above Ground"
+                    label="Gutter Height Above Ground (m)"
                     value={face.gutterHeight}
                     onChange={(value) => updateRoofFace(face.id, 'gutterHeight', value)}
-                    options={gutterHeightOptions}
+                    placeholder="e.g., 2.5"
                     required
                   />
                   
                   <DropdownSelect
                     id={`${face.id}-rafter-spacing`}
-                    label="Rafter Spacing"
+                    label="Rafter Spacing (cm)"
                     value={face.rafterSpacing}
                     onChange={(value) => updateRoofFace(face.id, 'rafterSpacing', value)}
                     options={rafterSpacingOptions}
