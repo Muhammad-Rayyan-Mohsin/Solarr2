@@ -123,7 +123,7 @@ export class SolarApiTester {
         location.lng,
         100, // radius
         'IMAGERY_AND_ALL_FLUX_LAYERS',
-        undefined, // Accept any quality
+        'LOW', // Use LOW for best coverage
         0.1
       );
       const duration = Date.now() - startTime;

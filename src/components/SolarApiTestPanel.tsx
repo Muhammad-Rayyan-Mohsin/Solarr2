@@ -357,7 +357,7 @@ export function SolarApiTestPanel() {
         const [insights, dataLayers] = await Promise.all([
           GoogleSolarApiService.getBuildingInsights(location.lat, location.lng),
           // Omit quality parameter to accept any available quality
-          GoogleSolarApiService.getDataLayers(location.lat, location.lng, 100, 'IMAGERY_AND_ALL_FLUX_LAYERS', undefined, 0.1)
+          GoogleSolarApiService.getDataLayers(location.lat, location.lng, 100, 'IMAGERY_AND_ALL_FLUX_LAYERS', 'LOW', 0.1)
         ]);
         const duration = Date.now() - startTime;
         const formatted = GoogleSolarApiService.formatSolarData(insights);

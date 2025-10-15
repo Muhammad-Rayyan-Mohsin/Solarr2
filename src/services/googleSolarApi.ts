@@ -115,25 +115,21 @@ export class GoogleSolarApiService {
    *
    * @param  {number} latitude      Latitude coordinate
    * @param  {number} longitude     Longitude coordinate
-   * @param  {string} requiredQuality  Optional minimum quality level (omit to accept any quality including BASE)
    * @param  {string} apiKey        Google Cloud API key
+   * @param  {string} requiredQuality  Minimum quality level (defaults to LOW for best coverage)
    * @return {Promise<BuildingInsightsResponse>}  Building Insights response
    */
   static async getBuildingInsights(
     latitude: number, 
     longitude: number,
     apiKey: string = API_CONFIG.GOOGLE_MAPS_API_KEY,
-    requiredQuality?: 'HIGH' | 'MEDIUM' | 'LOW'
+    requiredQuality: 'HIGH' | 'MEDIUM' | 'LOW' = 'LOW'
   ): Promise<BuildingInsightsResponse> {
     const args: Record<string, string> = {
       'location.latitude': latitude.toFixed(5),
       'location.longitude': longitude.toFixed(5),
+      'requiredQuality': requiredQuality, // Use LOW by default for best coverage
     };
-    
-    // Only include requiredQuality if specified (omit to accept any available quality including BASE)
-    if (requiredQuality) {
-      args['requiredQuality'] = requiredQuality;
-    }
     
     console.log('GET buildingInsights', args);
     const params = new URLSearchParams({ ...args, key: apiKey });
@@ -170,7 +166,7 @@ export class GoogleSolarApiService {
     longitude: number,
     radiusMeters: number = 50,
     view: 'FULL_LAYERS' | 'DSM_LAYER' | 'IMAGERY_LAYER' | 'IMAGERY_AND_ANNUAL_FLUX_LAYERS' | 'IMAGERY_AND_ALL_FLUX_LAYERS' = 'IMAGERY_AND_ALL_FLUX_LAYERS',
-    requiredQuality?: 'HIGH' | 'MEDIUM' | 'LOW',  // Optional: omit to accept any quality
+    requiredQuality: 'HIGH' | 'MEDIUM' | 'LOW' = 'LOW',  // Use LOW by default for best coverage
     pixelSizeMeters: number = 0.1,
     apiKey: string = API_CONFIG.GOOGLE_MAPS_API_KEY
   ): Promise<DataLayersResponse> {
@@ -179,13 +175,9 @@ export class GoogleSolarApiService {
       'location.longitude': longitude.toFixed(5),
       'radiusMeters': radiusMeters.toString(),
       'view': view,
+      'requiredQuality': requiredQuality, // Use LOW by default for best coverage
       'pixelSizeMeters': pixelSizeMeters.toString(),
     };
-    
-    // Only include requiredQuality if specified (omit to accept any available quality)
-    if (requiredQuality) {
-      args['requiredQuality'] = requiredQuality;
-    }
     console.log('GET dataLayers', args);
     const params = new URLSearchParams({ ...args, key: apiKey });
     const url = `${this.BASE_URL}/dataLayers:get?${params}`;
