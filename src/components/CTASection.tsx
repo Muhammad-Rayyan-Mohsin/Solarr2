@@ -26,7 +26,7 @@ const CTASection = () => {
           </h2>
           <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 leading-relaxed font-medium">
             Join thousands of homeowners who have already discovered their solar
-            savings potential. Get your personalized assessment in minutes.
+            savings potential. Get your personalized assessment in 45-60 minutes.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8">
@@ -42,7 +42,7 @@ const CTASection = () => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-white/80">
             <div className="flex items-center space-x-2">
               <Clock className="h-4 w-4" />
-              <span className="text-xs sm:text-sm">Takes ~3 minutes</span>
+              <span className="text-xs sm:text-sm">Professional assessment</span>
             </div>
             <span className="hidden sm:inline text-sm">•</span>
             <span className="text-xs sm:text-sm">No signup required</span>

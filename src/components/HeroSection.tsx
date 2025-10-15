@@ -23,8 +23,8 @@ const HeroSection = () => {
             </h1>
 
             <p className="hero-subtitle text-lg sm:text-xl lg:text-2xl mb-8 max-w-2xl mx-auto lg:mx-0 text-gray-600">
-              Answer a few structured questions so we can understand your
-              baseline and next steps. Takes just a few minutes.
+              Comprehensive solar assessment conducted by our professional team.
+              Takes 45-60 minutes for accurate results.
             </p>
 
             {/* Trust Badges - Centered on mobile, left-aligned on desktop */}

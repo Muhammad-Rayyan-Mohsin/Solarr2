@@ -12,9 +12,9 @@ const benefits = [
   {
     icon: DollarSign,
     emoji: "⚡",
-    title: "Quick Process",
+    title: "Professional Assessment",
     description:
-      "Streamlined questions designed to take just a few minutes to complete.",
+      "Comprehensive evaluation conducted by our professional team to ensure accuracy and compliance.",
   },
   {
     icon: Shield,

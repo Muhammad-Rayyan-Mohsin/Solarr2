@@ -11,7 +11,7 @@ const testimonials = [
   {
     name: 'Mike Chen',
     location: 'Phoenix, AZ',
-    quote: 'Quick, easy, and no pressure. Got exactly the information I needed to make an informed decision about solar.',
+    quote: 'Professional, thorough, and no pressure. Got exactly the information I needed to make an informed decision about solar.',
     rating: 5
   },
   {

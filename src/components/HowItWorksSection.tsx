@@ -4,7 +4,7 @@ const steps = [
   {
     icon: CheckCircle2,
     emoji: "❓",
-    title: "Quick Questions",
+    title: "Professional Assessment",
     description:
       "Answer simple questions about your property, energy usage, and preferences.",
   },

@@ -9,7 +9,7 @@ const faqs = [
   {
     question: "How long does the assessment take?",
     answer:
-      "Our solar readiness assessment typically takes 3-5 minutes to complete. We've designed it to be quick and straightforward while still gathering all the essential information needed for accurate results.",
+      "Our comprehensive solar assessment typically takes 45-60 minutes to complete. This detailed evaluation ensures we gather all necessary information about your property, roof structure, energy usage, and preferences for the most accurate solar recommendations. Professional surveyors conduct these assessments to ensure precision and compliance with local regulations.",
   },
   {
     question: "What data do you collect?",
