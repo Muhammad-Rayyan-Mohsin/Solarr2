@@ -28,6 +28,11 @@ import type { GeoTiff } from './solar';
  * @return {HTMLCanvasElement}  Canvas element with the rendered image.
  */
 export function renderRGB(rgb: GeoTiff, mask?: GeoTiff): HTMLCanvasElement {
+  console.log('🔍 renderRGB called with mask:', !!mask);
+  if (mask) {
+    console.log('⚠️ WARNING: Mask is being passed to renderRGB');
+  }
+  
   // Create an HTML canvas to draw the image.
   // https://www.w3schools.com/tags/canvas_createimagedata.asp
   const canvas = document.createElement('canvas');

@@ -79,7 +79,11 @@ function GeoTIFFImage({ url, type, location }: { url: string; type: 'rgb' | 'dsm
 
       // Use current showMask state if applyMask is not explicitly provided
       const shouldApplyMask = applyMask !== undefined ? applyMask : showMask;
-      console.log(`Rendering ${type} image with mask:`, shouldApplyMask);
+      console.log(`=== DEBUG RENDER ${type.toUpperCase()} ===`);
+      console.log('applyMask parameter:', applyMask);
+      console.log('showMask state:', showMask);
+      console.log('shouldApplyMask calculated:', shouldApplyMask);
+      console.log('shouldApplyMask === true:', shouldApplyMask === true);
 
       // Download and process GeoTIFF
       if (type === 'rgb') {
