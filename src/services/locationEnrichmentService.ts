@@ -43,7 +43,7 @@ export class LocationEnrichmentService {
       console.log('Enriching from address:', address);
       
       // Geocode the address
-      const geocodeResult = await GoogleGeocodingApiService.geocode(address);
+      const geocodeResult = await GoogleGeocodingApiService.geocodeAddress(address);
       
       if (!geocodeResult.results || geocodeResult.results.length === 0) {
         return {
@@ -121,7 +121,7 @@ export class LocationEnrichmentService {
       console.log('Enriching from postcode:', postcode);
       
       // For UK postcodes, we can use Google Geocoding
-      const geocodeResult = await GoogleGeocodingApiService.geocode(postcode);
+      const geocodeResult = await GoogleGeocodingApiService.geocodeAddress(postcode);
       
       if (!geocodeResult.results || geocodeResult.results.length === 0) {
         return {
