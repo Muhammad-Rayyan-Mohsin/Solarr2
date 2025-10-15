@@ -78,7 +78,7 @@ export class LocationEnrichmentService {
       let solarData: any = undefined;
       try {
         const insights = await GoogleSolarApiService.getBuildingInsights(lat, lng);
-        const dataLayers = await GoogleSolarApiService.getDataLayers(lat, lng, 100, 'IMAGERY_AND_ALL_FLUX_LAYERS', 'LOW');
+        const dataLayers = await GoogleSolarApiService.getDataLayers(lat, lng, 100, 'IMAGERY_AND_ALL_FLUX_LAYERS');
         solarData = {
           insights: GoogleSolarApiService.formatSolarData(insights),
           rawInsights: insights,
@@ -155,7 +155,7 @@ export class LocationEnrichmentService {
       let solarData: any = undefined;
       try {
         const insights = await GoogleSolarApiService.getBuildingInsights(lat, lng);
-        const dataLayers = await GoogleSolarApiService.getDataLayers(lat, lng, 100, 'IMAGERY_AND_ALL_FLUX_LAYERS', 'LOW');
+        const dataLayers = await GoogleSolarApiService.getDataLayers(lat, lng, 100, 'IMAGERY_AND_ALL_FLUX_LAYERS');
         solarData = {
           insights: GoogleSolarApiService.formatSolarData(insights),
           rawInsights: insights,
@@ -232,7 +232,7 @@ export class LocationEnrichmentService {
       let solarData: any = undefined;
       try {
         const insights = await GoogleSolarApiService.getBuildingInsights(lat, lng);
-        const dataLayers = await GoogleSolarApiService.getDataLayers(lat, lng, 100, 'IMAGERY_AND_ALL_FLUX_LAYERS', 'LOW');
+        const dataLayers = await GoogleSolarApiService.getDataLayers(lat, lng, 100, 'IMAGERY_AND_ALL_FLUX_LAYERS');
         solarData = {
           insights: GoogleSolarApiService.formatSolarData(insights),
           rawInsights: insights,

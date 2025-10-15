@@ -66,7 +66,7 @@ export function GPSInput({
       
       // Try data layers separately
       console.log('Calling getDataLayers...');
-      const dataLayers = await GoogleSolarApiService.getDataLayers(latitude, longitude, 100, 'IMAGERY_AND_ALL_FLUX_LAYERS', 'HIGH', 0.1);
+      const dataLayers = await GoogleSolarApiService.getDataLayers(latitude, longitude, 100, 'IMAGERY_AND_ALL_FLUX_LAYERS', undefined, 0.1);
       console.log('Data layers received:', dataLayers);
 
       const formattedData = GoogleSolarApiService.formatSolarData(buildingInsights);

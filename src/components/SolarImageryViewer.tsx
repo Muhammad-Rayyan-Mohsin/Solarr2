@@ -51,7 +51,7 @@ export function SolarImageryViewer({ latitude, longitude, address }: SolarImager
     try {
       const [buildingInsights, dataLayers] = await Promise.all([
         GoogleSolarApiService.getBuildingInsights(latitude, longitude, apiKey),
-        GoogleSolarApiService.getDataLayers(latitude, longitude, 100, 'IMAGERY_AND_ALL_FLUX_LAYERS', 'HIGH', 0.1, apiKey)
+        GoogleSolarApiService.getDataLayers(latitude, longitude, 100, 'IMAGERY_AND_ALL_FLUX_LAYERS', undefined, 0.1, apiKey)
       ]);
 
       const formattedData = GoogleSolarApiService.formatSolarData(buildingInsights);
