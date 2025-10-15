@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, AlertCircle, Image as ImageIcon, Eye, EyeOff } from 'lucide-react';
+import { Loader2, AlertCircle, Image as ImageIcon, Eye, EyeOff, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { API_CONFIG } from '@/lib/config';
 import { downloadGeoTIFF } from '@/lib/solar/solar';
 import { renderRGB } from '@/lib/solar/visualize';
@@ -27,6 +27,11 @@ export function SurveyAerialImage({
   const [error, setError] = useState<string | null>(null);
   const [showMask, setShowMask] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const imageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     if (rgbUrl && maskUrl) {
@@ -40,6 +45,51 @@ export function SurveyAerialImage({
       loadImage();
     }
   }, [showMask]);
+
+  // Reset zoom and pan when image changes
+  useEffect(() => {
+    if (imageUrl) {
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+    }
+  }, [imageUrl]);
+
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev * 1.5, 5));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev / 1.5, 0.5));
+  };
+
+  const handleReset = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      setPan({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(prev => Math.max(0.5, Math.min(5, prev * delta)));
+  };
 
   const loadImage = async () => {
     if (!rgbUrl) return;
@@ -132,11 +182,69 @@ export function SurveyAerialImage({
 
           {!isLoading && !error && imageUrl && (
             <div className="space-y-3">
-              <div className="relative rounded-lg overflow-hidden border-2 border-gray-200 max-w-2xl mx-auto">
+              {/* Zoom Controls */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleZoomOut}
+                    disabled={zoom <= 0.5}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ZoomOut className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm text-muted-foreground min-w-[60px] text-center">
+                    {Math.round(zoom * 100)}%
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleZoomIn}
+                    disabled={zoom >= 5}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ZoomIn className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReset}
+                    className="h-8 px-2"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-1" />
+                    Reset
+                  </Button>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Scroll to zoom • Drag to pan
+                </div>
+              </div>
+
+              {/* Image Container */}
+              <div 
+                className="relative rounded-lg overflow-hidden border-2 border-gray-200 max-w-2xl mx-auto bg-gray-100"
+                style={{ 
+                  height: '320px',
+                  cursor: isDragging ? 'grabbing' : 'grab'
+                }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onWheel={handleWheel}
+              >
                 <img 
+                  ref={imageRef}
                   src={imageUrl} 
                   alt="Property aerial view"
-                  className="w-full h-auto max-h-80 object-contain"
+                  className="w-full h-auto select-none"
+                  style={{
+                    transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
+                    transformOrigin: 'center',
+                    transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+                  }}
+                  draggable={false}
                 />
               </div>
 
