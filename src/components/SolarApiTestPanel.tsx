@@ -59,6 +59,7 @@ function GeoTIFFImage({ url, type, location }: { url: string; type: 'rgb' | 'dsm
   const [error, setError] = useState<string | null>(null);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [showMask, setShowMask] = useState(false);
+  console.log(`🔧 GeoTIFFImage component initialized for ${type} with showMask:`, showMask);
 
   // Listen for "Load All Images" event
   useEffect(() => {
@@ -91,11 +92,13 @@ function GeoTIFFImage({ url, type, location }: { url: string; type: 'rgb' | 'dsm
         let canvas: HTMLCanvasElement;
         
         if (shouldApplyMask) {
-          console.log('Applying mask to RGB image');
+          console.log('🚫 APPLYING MASK - shouldApplyMask is TRUE');
+          console.log('shouldApplyMask value:', shouldApplyMask);
           const mask = await downloadGeoTIFF(location.imagery.maskUrl, API_CONFIG.GOOGLE_MAPS_API_KEY);
           canvas = renderRGB(rgb, mask);
         } else {
-          console.log('Rendering full RGB image without mask');
+          console.log('✅ RENDERING FULL RGB - shouldApplyMask is FALSE');
+          console.log('shouldApplyMask value:', shouldApplyMask);
           canvas = renderRGB(rgb);
         }
         setImageUrl(canvas.toDataURL());
