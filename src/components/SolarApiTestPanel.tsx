@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { 
   Play, 
   CheckCircle, 
@@ -14,7 +16,9 @@ import {
   Zap,
   Image,
   BarChart3,
-  Clock
+  Clock,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { runSolarApiTests } from '@/tests/solarApiTest';
@@ -246,14 +250,86 @@ export function SolarApiTestPanel() {
   const [results, setResults] = useState<TestResult[]>([]);
   const [progress, setProgress] = useState(0);
   const [currentTest, setCurrentTest] = useState('');
-  const [locationTests, setLocationTests] = useState<LocationTest[]>([
-    { name: 'London, UK', lat: 51.5074, lng: -0.1278, status: 'pending' },
-    { name: 'Manchester, UK', lat: 53.4808, lng: -2.2426, status: 'pending' },
-    { name: 'Bristol, UK', lat: 51.4545, lng: -2.5879, status: 'pending' }
-  ]);
+  const [locationTests, setLocationTests] = useState<LocationTest[]>([]);
+  const [locationInput, setLocationInput] = useState({ name: '', lat: '', lng: '' });
   const { toast } = useToast();
 
+  const addLocation = () => {
+    if (!locationInput.name || !locationInput.lat || !locationInput.lng) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please provide name, latitude, and longitude',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const lat = parseFloat(locationInput.lat);
+    const lng = parseFloat(locationInput.lng);
+
+    if (isNaN(lat) || isNaN(lng)) {
+      toast({
+        title: 'Invalid Coordinates',
+        description: 'Please enter valid latitude and longitude numbers',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      toast({
+        title: 'Invalid Coordinates',
+        description: 'Latitude must be -90 to 90, Longitude must be -180 to 180',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const newLocation: LocationTest = {
+      name: locationInput.name,
+      lat,
+      lng,
+      status: 'pending'
+    };
+
+    setLocationTests(prev => [...prev, newLocation]);
+    setLocationInput({ name: '', lat: '', lng: '' });
+
+    toast({
+      title: 'Location Added',
+      description: `Added ${newLocation.name} to test list`,
+    });
+  };
+
+  const removeLocation = (index: number) => {
+    setLocationTests(prev => prev.filter((_, i) => i !== index));
+    toast({
+      title: 'Location Removed',
+      description: 'Location removed from test list',
+    });
+  };
+
+  const clearAllLocations = () => {
+    setLocationTests([]);
+    setResults([]);
+    setProgress(0);
+    setCurrentTest('');
+    toast({
+      title: 'Cleared All',
+      description: 'All locations and results cleared',
+    });
+  };
+
   const runInteractiveTests = async () => {
+    if (locationTests.length === 0) {
+      toast({
+        title: 'No Locations',
+        description: 'Please add at least one location to test',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsRunning(true);
     setResults([]);
     setProgress(0);
@@ -536,6 +612,114 @@ export function SolarApiTestPanel() {
       </CardHeader>
 
       <CardContent className="space-y-6">
+        {/* Location Input Form */}
+        <Card className="mb-6">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Add Test Locations
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+              <div>
+                <Label htmlFor="location-name">Location Name</Label>
+                <Input
+                  id="location-name"
+                  placeholder="e.g., London, UK"
+                  value={locationInput.name}
+                  onChange={(e) => setLocationInput(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="latitude">Latitude</Label>
+                <Input
+                  id="latitude"
+                  type="number"
+                  step="any"
+                  placeholder="51.5074"
+                  value={locationInput.lat}
+                  onChange={(e) => setLocationInput(prev => ({ ...prev, lat: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="longitude">Longitude</Label>
+                <Input
+                  id="longitude"
+                  type="number"
+                  step="any"
+                  placeholder="-0.1278"
+                  value={locationInput.lng}
+                  onChange={(e) => setLocationInput(prev => ({ ...prev, lng: e.target.value }))}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={addLocation} className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add
+                </Button>
+              </div>
+            </div>
+
+            {/* Location List */}
+            {locationTests.length > 0 && (
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium">Test Locations ({locationTests.length})</h4>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearAllLocations}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Clear All
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {locationTests.map((location, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Badge variant={
+                          location.status === 'success' ? 'default' :
+                          location.status === 'error' ? 'destructive' :
+                          location.status === 'running' ? 'secondary' : 'outline'
+                        }>
+                          {location.status}
+                        </Badge>
+                        <div>
+                          <p className="font-medium">{location.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeLocation(index)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {locationTests.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No locations added yet. Add locations above to test the Solar API.</p>
+                <p className="text-sm mt-2">
+                  Try: London (51.5074, -0.1278), New York (40.7128, -74.0060), or San Francisco (37.7749, -122.4194)
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Progress Bar */}
         {isRunning && (
           <div className="space-y-2">
