@@ -72,20 +72,26 @@ function GeoTIFFImage({ url, type, location }: { url: string; type: 'rgb' | 'dsm
     return () => window.removeEventListener('loadAllImages', handleLoadAll as EventListener);
   }, [location.name, hasLoaded, isLoading]);
 
-  const renderImage = async (applyMask: boolean = showMask) => {
+  const renderImage = async (applyMask?: boolean) => {
     try {
       setIsLoading(true);
       setError(null);
+
+      // Use current showMask state if applyMask is not explicitly provided
+      const shouldApplyMask = applyMask !== undefined ? applyMask : showMask;
+      console.log(`Rendering ${type} image with mask:`, shouldApplyMask);
 
       // Download and process GeoTIFF
       if (type === 'rgb') {
         const rgb = await downloadGeoTIFF(url, API_CONFIG.GOOGLE_MAPS_API_KEY);
         let canvas: HTMLCanvasElement;
         
-        if (applyMask) {
+        if (shouldApplyMask) {
+          console.log('Applying mask to RGB image');
           const mask = await downloadGeoTIFF(location.imagery.maskUrl, API_CONFIG.GOOGLE_MAPS_API_KEY);
           canvas = renderRGB(rgb, mask);
         } else {
+          console.log('Rendering full RGB image without mask');
           canvas = renderRGB(rgb);
         }
         setImageUrl(canvas.toDataURL());
@@ -94,7 +100,7 @@ function GeoTIFFImage({ url, type, location }: { url: string; type: 'rgb' | 'dsm
         const sortedValues = Array.from(data.rasters[0]).sort((x, y) => x - y);
         
         let canvas: HTMLCanvasElement;
-        if (applyMask) {
+        if (shouldApplyMask) {
           const mask = await downloadGeoTIFF(location.imagery.maskUrl, API_CONFIG.GOOGLE_MAPS_API_KEY);
           canvas = renderPalette({
             data,
@@ -116,7 +122,7 @@ function GeoTIFFImage({ url, type, location }: { url: string; type: 'rgb' | 'dsm
         const data = await downloadGeoTIFF(url, API_CONFIG.GOOGLE_MAPS_API_KEY);
         
         let canvas: HTMLCanvasElement;
-        if (applyMask) {
+        if (shouldApplyMask) {
           const mask = await downloadGeoTIFF(location.imagery.maskUrl, API_CONFIG.GOOGLE_MAPS_API_KEY);
           canvas = renderPalette({
             data,
@@ -228,7 +234,11 @@ function GeoTIFFImage({ url, type, location }: { url: string; type: 'rgb' | 'dsm
                 <input
                   type="checkbox"
                   checked={showMask}
-                  onChange={(e) => setShowMask(e.target.checked)}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setShowMask(checked);
+                    renderImage(checked);
+                  }}
                   className="rounded"
                 />
                 <span>Show roof only</span>
@@ -250,6 +260,7 @@ function GeoTIFFImage({ url, type, location }: { url: string; type: 'rgb' | 'dsm
                 setImageUrl(null);
                 setHasLoaded(false);
                 setError(null);
+                renderImage(showMask);
               }}
               variant="ghost"
               size="sm"

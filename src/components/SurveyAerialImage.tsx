@@ -107,13 +107,17 @@ export function SurveyAerialImage({
       setIsLoading(true);
       setError(null);
 
+      console.log('Loading image with showMask:', showMask);
       const rgb = await downloadGeoTIFF(rgbUrl, API_CONFIG.GOOGLE_MAPS_API_KEY);
       
       let canvas: HTMLCanvasElement;
-      if (showMask && maskUrl) {
+      // Only apply mask if explicitly enabled
+      if (showMask === true && maskUrl) {
+        console.log('Applying mask to image');
         const mask = await downloadGeoTIFF(maskUrl, API_CONFIG.GOOGLE_MAPS_API_KEY);
         canvas = renderRGB(rgb, mask);
       } else {
+        console.log('Rendering full RGB image without mask');
         canvas = renderRGB(rgb);
       }
       
