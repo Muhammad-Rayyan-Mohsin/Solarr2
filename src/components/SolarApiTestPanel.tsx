@@ -18,7 +18,8 @@ import {
   BarChart3,
   Clock,
   Plus,
-  Trash2
+  Trash2,
+  Download
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { runSolarApiTests } from '@/tests/solarApiTest';
@@ -203,12 +204,21 @@ function GeoTIFFImage({ url, type, location }: { url: string; type: 'rgb' | 'dsm
     );
   }
 
+  const handleDownload = () => {
+    if (!imageUrl) return;
+    
+    const link = document.createElement('a');
+    link.download = `${location.name.replace(/[^a-z0-9]/gi, '_')}_${type}_solar_data.png`;
+    link.href = imageUrl;
+    link.click();
+  };
+
   if (imageUrl) {
     return (
       <div className="space-y-2">
         <img 
           src={imageUrl} 
-          alt={`${type} visualization`}
+          alt={`${type} visualization for ${location.name}`}
           className="w-full h-auto rounded border"
         />
         <div className="flex items-center justify-between">
@@ -225,18 +235,29 @@ function GeoTIFFImage({ url, type, location }: { url: string; type: 'rgb' | 'dsm
               </label>
             )}
           </div>
-          <Button 
-            onClick={() => {
-              setImageUrl(null);
-              setHasLoaded(false);
-              setError(null);
-            }}
-            variant="ghost"
-            size="sm"
-            className="text-xs"
-          >
-            Reload Image
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={handleDownload}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Download
+            </Button>
+            <Button 
+              onClick={() => {
+                setImageUrl(null);
+                setHasLoaded(false);
+                setError(null);
+              }}
+              variant="ghost"
+              size="sm"
+              className="text-xs"
+            >
+              Reload Image
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -708,12 +729,128 @@ export function SolarApiTestPanel() {
               </div>
             )}
 
+            {/* Demo Locations */}
+            <div className="mt-4">
+              <h4 className="font-medium mb-3">Quick Add Demo Locations</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocationInput({ name: 'London, UK', lat: '51.5074', lng: '-0.1278' })}
+                  className="text-left justify-start"
+                >
+                  <MapPin className="h-3 w-3 mr-2" />
+                  London, UK
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocationInput({ name: 'New York, USA', lat: '40.7128', lng: '-74.0060' })}
+                  className="text-left justify-start"
+                >
+                  <MapPin className="h-3 w-3 mr-2" />
+                  New York, USA
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocationInput({ name: 'San Francisco, USA', lat: '37.7749', lng: '-122.4194' })}
+                  className="text-left justify-start"
+                >
+                  <MapPin className="h-3 w-3 mr-2" />
+                  San Francisco, USA
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocationInput({ name: 'Berlin, Germany', lat: '52.5200', lng: '13.4050' })}
+                  className="text-left justify-start"
+                >
+                  <MapPin className="h-3 w-3 mr-2" />
+                  Berlin, Germany
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocationInput({ name: 'Tokyo, Japan', lat: '35.6762', lng: '139.6503' })}
+                  className="text-left justify-start"
+                >
+                  <MapPin className="h-3 w-3 mr-2" />
+                  Tokyo, Japan
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocationInput({ name: 'Sydney, Australia', lat: '-33.8688', lng: '151.2093' })}
+                  className="text-left justify-start"
+                >
+                  <MapPin className="h-3 w-3 mr-2" />
+                  Sydney, Australia
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocationInput({ name: 'Toronto, Canada', lat: '43.6532', lng: '-79.3832' })}
+                  className="text-left justify-start"
+                >
+                  <MapPin className="h-3 w-3 mr-2" />
+                  Toronto, Canada
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocationInput({ name: 'Dubai, UAE', lat: '25.2048', lng: '55.2708' })}
+                  className="text-left justify-start"
+                >
+                  <MapPin className="h-3 w-3 mr-2" />
+                  Dubai, UAE
+                </Button>
+              </div>
+              <div className="flex items-center justify-between mt-3">
+                <p className="text-xs text-muted-foreground">
+                  Click any button above to auto-fill the form, then click "Add" to add it to your test list.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const demoLocations = [
+                      { name: 'London, UK', lat: 51.5074, lng: -0.1278 },
+                      { name: 'New York, USA', lat: 40.7128, lng: -74.0060 },
+                      { name: 'San Francisco, USA', lat: 37.7749, lng: -122.4194 },
+                      { name: 'Berlin, Germany', lat: 52.5200, lng: 13.4050 },
+                      { name: 'Tokyo, Japan', lat: 35.6762, lng: 139.6503 },
+                      { name: 'Sydney, Australia', lat: -33.8688, lng: 151.2093 },
+                      { name: 'Toronto, Canada', lat: 43.6532, lng: -79.3832 },
+                      { name: 'Dubai, UAE', lat: 25.2048, lng: 55.2708 }
+                    ];
+                    
+                    setLocationTests(prev => [...prev, ...demoLocations.map(loc => ({
+                      name: loc.name,
+                      lat: loc.lat,
+                      lng: loc.lng,
+                      status: 'pending' as const
+                    }))]);
+                    
+                    toast({
+                      title: 'Demo Locations Added',
+                      description: `Added ${demoLocations.length} demo locations to test list`,
+                    });
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add All Demo Locations
+                </Button>
+              </div>
+            </div>
+
             {locationTests.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No locations added yet. Add locations above to test the Solar API.</p>
+                <p>No locations added yet. Use the demo locations above or add custom coordinates.</p>
                 <p className="text-sm mt-2">
-                  Try: London (51.5074, -0.1278), New York (40.7128, -74.0060), or San Francisco (37.7749, -122.4194)
+                  Demo locations are pre-configured to test Solar API coverage in different regions.
                 </p>
               </div>
             )}
@@ -842,7 +979,21 @@ export function SolarApiTestPanel() {
               locationTests.filter(loc => loc.imagery).map((location, index) => (
                 <Card key={index}>
                   <CardHeader>
-                    <CardTitle className="text-lg">{location.name} - Solar Imagery</CardTitle>
+                    <div className="space-y-2">
+                      <CardTitle className="text-lg">{location.name} - Solar Imagery</CardTitle>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          Requested: {location.lat.toFixed(5)}, {location.lng.toFixed(5)}
+                        </span>
+                        {location.imagery?.center && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3 text-blue-500" />
+                            Building Center: {location.imagery.center.latitude.toFixed(5)}, {location.imagery.center.longitude.toFixed(5)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Imagery Quality and Load All Button */}

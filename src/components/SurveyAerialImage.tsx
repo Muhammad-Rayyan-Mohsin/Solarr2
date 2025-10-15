@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, AlertCircle, Image as ImageIcon, Eye, EyeOff, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { Loader2, AlertCircle, Image as ImageIcon, Eye, EyeOff, ZoomIn, ZoomOut, RotateCcw, Download } from 'lucide-react';
 import { API_CONFIG } from '@/lib/config';
 import { downloadGeoTIFF } from '@/lib/solar/solar';
 import { renderRGB } from '@/lib/solar/visualize';
@@ -65,6 +65,15 @@ export function SurveyAerialImage({
   const handleReset = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
+  };
+
+  const handleDownload = () => {
+    if (!imageUrl) return;
+    
+    const link = document.createElement('a');
+    link.download = `aerial_image_${latitude}_${longitude}.png`;
+    link.href = imageUrl;
+    link.click();
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -214,6 +223,15 @@ export function SurveyAerialImage({
                   >
                     <RotateCcw className="h-4 w-4 mr-1" />
                     Reset
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownload}
+                    className="h-8 px-2"
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Download
                   </Button>
                 </div>
                 <div className="text-xs text-muted-foreground">
