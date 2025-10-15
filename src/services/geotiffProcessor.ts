@@ -4,13 +4,13 @@
  */
 
 export interface GeoTIFFData {
-  width: number;
-  height: number;
+    width: number;
+    height: number;
   data: Float32Array | Uint8Array;
-  bounds: {
+    bounds: {
     north: number;
-    south: number;
-    east: number;
+      south: number;
+      east: number;
     west: number;
   };
   pixelSize: {
@@ -108,7 +108,7 @@ export class GeoTIFFProcessor {
       const value = geoTIFF.data[i];
       const color = colorScale(value);
       const pixelIndex = i * 4;
-
+      
       imageData.data[pixelIndex] = color.r;
       imageData.data[pixelIndex + 1] = color.g;
       imageData.data[pixelIndex + 2] = color.b;
