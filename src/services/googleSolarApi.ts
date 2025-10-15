@@ -114,19 +114,27 @@ export class GoogleSolarApiService {
    * https://developers.google.com/maps/documentation/solar/building-insights
    *
    * @param  {number} latitude      Latitude coordinate
-   * @param  {number} longitude     Longitude coordinate  
+   * @param  {number} longitude     Longitude coordinate
+   * @param  {string} requiredQuality  Optional minimum quality level (omit to accept any quality including BASE)
    * @param  {string} apiKey        Google Cloud API key
    * @return {Promise<BuildingInsightsResponse>}  Building Insights response
    */
   static async getBuildingInsights(
     latitude: number, 
     longitude: number,
-    apiKey: string = API_CONFIG.GOOGLE_MAPS_API_KEY
+    apiKey: string = API_CONFIG.GOOGLE_MAPS_API_KEY,
+    requiredQuality?: 'HIGH' | 'MEDIUM' | 'LOW'
   ): Promise<BuildingInsightsResponse> {
-    const args = {
+    const args: Record<string, string> = {
       'location.latitude': latitude.toFixed(5),
       'location.longitude': longitude.toFixed(5),
     };
+    
+    // Only include requiredQuality if specified (omit to accept any available quality including BASE)
+    if (requiredQuality) {
+      args['requiredQuality'] = requiredQuality;
+    }
+    
     console.log('GET buildingInsights', args);
     const params = new URLSearchParams({ ...args, key: apiKey });
     const url = `${this.BASE_URL}/buildingInsights:findClosest?${params}`;
