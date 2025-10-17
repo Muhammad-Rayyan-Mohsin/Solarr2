@@ -1,6 +1,14 @@
 /**
- * Solar Map Viewer - Based on Google's official js-solar-potential implementation
+ * Solar Map Viewer - Standalone Interactive Map Page
+ * Based on Google's official js-solar-potential implementation
  * https://github.com/googlemaps-samples/js-solar-potential
+ * 
+ * This is a full-screen, standalone page that displays an interactive Google Map
+ * with Solar API overlays, exactly as implemented in the official Google demo.
+ * Features:
+ * - Building Insights: Solar panels, energy production, roof statistics
+ * - Data Layers: RGB aerial imagery, DSM, annual/monthly flux, hourly shade
+ * - Interactive Controls: Panel count slider, layer selection, animation
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -12,7 +20,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, MapPin, Sun, Layers, Home, Github } from 'lucide-react';
+import { Loader2, MapPin, Sun, Layers, Home, ArrowLeft, Menu, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { API_CONFIG } from '@/lib/config';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -47,6 +56,7 @@ const dataLayerOptions: Record<LayerId | 'none', string> = {
 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function SolarMap() {
+  const navigate = useNavigate();
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [location, setLocation] = useState<google.maps.LatLng | null>(null);
@@ -75,6 +85,9 @@ export default function SolarMap() {
   
   // Expanded section state
   const [expandedSection, setExpandedSection] = useState('');
+  
+  // Mobile sidebar state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   const { toast } = useToast();
 
@@ -247,7 +260,7 @@ export default function SolarMap() {
     }
   };
 
-  // Fetch data layers
+  // Fetch data layers (network) WHEN: buildingInsights changes or layer type changes
   useEffect(() => {
     if (!buildingInsights || layerId === 'none' || !map) return;
 
@@ -301,7 +314,33 @@ export default function SolarMap() {
     };
 
     fetchDataLayers();
-  }, [buildingInsights, layerId, showRoofOnly, month, day]);
+  }, [buildingInsights, layerId, map]);
+
+  // Re-render overlays (no network) WHEN: mask toggle changes
+  useEffect(() => {
+    if (!layer || !map) return;
+
+    // Clear existing overlays
+    overlays.forEach(overlay => overlay.setMap(null));
+    setOverlays([]);
+
+    // Re-render canvases with current options
+    const bounds = layer.bounds;
+    const canvases = layer.render(showRoofOnly, month, day);
+    const newOverlays = canvases.map(
+      canvas => new google.maps.GroundOverlay(canvas.toDataURL(), bounds)
+    );
+    setOverlays(newOverlays);
+
+    // Show appropriate overlay(s)
+    if (!['monthlyFlux', 'hourlyShade'].includes(layer.id)) {
+      newOverlays[0]?.setMap(map);
+    } else if (layer.id === 'monthlyFlux') {
+      newOverlays[month]?.setMap(map);
+    } else if (layer.id === 'hourlyShade') {
+      newOverlays[hour]?.setMap(map);
+    }
+  }, [layer, showRoofOnly, month, day, hour, map]);
 
   // Handle monthly flux display
   useEffect(() => {
@@ -340,31 +379,57 @@ export default function SolarMap() {
   const panelConfig = buildingInsights?.solarPotential.solarPanelConfigs[configId];
 
   return (
-    <div className="flex flex-row h-screen">
-      {/* Main map */}
-      <div ref={mapRef} className="w-full" />
+    <div className="flex flex-col h-screen md:flex-row">
+      {/* Back button - Mobile optimized */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => navigate('/')}
+        className="fixed top-2 left-2 md:top-4 md:left-4 z-50 bg-background/95 backdrop-blur-lg border shadow-lg text-xs md:text-sm px-2 md:px-3 py-1 md:py-2"
+      >
+        <ArrowLeft className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+        <span className="hidden sm:inline">Back to Home</span>
+        <span className="sm:hidden">Back</span>
+      </Button>
 
-      {/* Side bar */}
-      <aside className="flex-none w-96 p-4 pt-6 overflow-auto bg-background border-l">
-        <div className="flex flex-col space-y-4 h-full">
-          {/* Search bar */}
+      {/* Mobile menu button */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="fixed top-2 right-2 md:hidden z-50 bg-background/95 backdrop-blur-lg border shadow-lg text-xs px-3 py-2"
+      >
+        {isSidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+        <span className="ml-1">Controls</span>
+      </Button>
+
+      {/* Main map - Mobile gets full height when sidebar closed */}
+      <div ref={mapRef} className={`flex-1 w-full md:w-auto transition-all duration-300 ${isSidebarOpen ? 'h-1/2 md:h-auto' : 'h-full md:h-auto'}`} />
+
+      {/* Side bar - Mobile optimized with collapsible functionality */}
+      <aside className={`flex-none w-full md:w-96 p-2 md:p-4 pt-8 md:pt-6 overflow-auto bg-background border-t md:border-t-0 md:border-l transition-all duration-300 md:max-h-none ${
+        isSidebarOpen ? 'max-h-1/2 block' : 'max-h-0 hidden md:block'
+      }`}>
+        <div className="flex flex-col space-y-2 md:space-y-4 h-full">
+          {/* Search bar - Mobile optimized */}
           <div className="space-y-2">
-            <div className="flex gap-2">
+            <div className="flex gap-1 md:gap-2">
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 placeholder="Search for a location..."
+                className="text-sm md:text-base flex-1"
               />
-              <Button onClick={handleSearch} size="icon">
-                <MapPin className="h-4 w-4" />
+              <Button onClick={handleSearch} size="icon" className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10">
+                <MapPin className="h-3 w-3 md:h-4 md:w-4" />
               </Button>
             </div>
           </div>
 
-          {/* Info Card */}
-          <Card className="p-4 space-y-3">
-            <p className="text-sm">
+          {/* Info Card - Mobile optimized */}
+          <Card className="p-2 md:p-4 space-y-2 md:space-y-3">
+            <p className="text-xs md:text-sm">
               <a
                 className="text-primary hover:underline"
                 href="https://developers.google.com/maps/documentation/solar/overview?hl=en"
@@ -375,76 +440,76 @@ export default function SolarMap() {
               </a>{' '}
               offer many benefits to solar marketplace websites, solar installers, and solar SaaS designers.
             </p>
-            <p className="text-sm">
+            <p className="text-xs md:text-sm">
               <b>Click on an area below</b> to see what type of information the Solar API can provide.
             </p>
           </Card>
 
-          {/* Building Insights Section */}
+          {/* Building Insights Section - Mobile optimized */}
           {isLoadingBuilding ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin" />
+            <div className="flex items-center justify-center py-4 md:py-8">
+              <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin" />
             </div>
           ) : buildingInsights && panelConfig ? (
-            <Card className="p-4 space-y-4">
+            <Card className="p-2 md:p-4 space-y-2 md:space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Home className="h-5 w-5" />
-                  <h3 className="font-semibold">Building Insights</h3>
+                <div className="flex items-center gap-1 md:gap-2">
+                  <Home className="h-4 w-4 md:h-5 md:w-5" />
+                  <h3 className="font-semibold text-sm md:text-base">Building Insights</h3>
                 </div>
-                <Badge>{((panelConfig.yearlyEnergyDcKwh / 1000).toFixed(2))} MWh/yr</Badge>
+                <Badge className="text-xs">{((panelConfig.yearlyEnergyDcKwh / 1000).toFixed(2))} MWh/yr</Badge>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 md:space-y-3">
                 <div>
-                  <Label>Panel Count: {panelConfig.panelsCount}</Label>
+                  <Label className="text-xs md:text-sm">Panel Count: {panelConfig.panelsCount}</Label>
                   <Slider
                     value={[configId]}
                     onValueChange={([value]) => setConfigId(value)}
                     max={buildingInsights.solarPotential.solarPanelConfigs.length - 1}
                     step={1}
-                    className="mt-2"
+                    className="mt-1 md:mt-2"
                   />
                 </div>
 
                 <div>
-                  <Label>Panel Capacity (Watts)</Label>
+                  <Label className="text-xs md:text-sm">Panel Capacity (Watts)</Label>
                   <Input
                     type="number"
                     value={panelCapacityWatts}
                     onChange={(e) => setPanelCapacityWatts(Number(e.target.value))}
-                    className="mt-2"
+                    className="mt-1 md:mt-2 text-sm"
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <Label>Show Panels</Label>
+                  <Label className="text-xs md:text-sm">Show Panels</Label>
                   <Switch checked={showPanels} onCheckedChange={setShowPanels} />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="grid grid-cols-2 gap-2 md:gap-3 pt-1 md:pt-2">
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">Annual Sunshine</p>
-                    <p className="text-lg font-semibold flex items-center gap-1">
-                      <Sun className="h-4 w-4" />
+                    <p className="text-sm md:text-lg font-semibold flex items-center gap-1">
+                      <Sun className="h-3 w-3 md:h-4 md:w-4" />
                       {showNumber(buildingInsights.solarPotential.maxSunshineHoursPerYear)} hr
                     </p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">Roof Area</p>
-                    <p className="text-lg font-semibold">
+                    <p className="text-sm md:text-lg font-semibold">
                       {showNumber(buildingInsights.solarPotential.wholeRoofStats.areaMeters2)} m²
                     </p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">Max Panels</p>
-                    <p className="text-lg font-semibold">
+                    <p className="text-sm md:text-lg font-semibold">
                       {showNumber(buildingInsights.solarPotential.solarPanels.length)}
                     </p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">CO₂ Savings</p>
-                    <p className="text-lg font-semibold">
+                    <p className="text-sm md:text-lg font-semibold">
                       {showNumber(buildingInsights.solarPotential.carbonOffsetFactorKgPerMwh)} Kg/MWh
                     </p>
                   </div>
@@ -453,24 +518,24 @@ export default function SolarMap() {
             </Card>
           ) : null}
 
-          {/* Data Layers Section */}
+          {/* Data Layers Section - Mobile optimized */}
           {buildingInsights && (
-            <Card className="p-4 space-y-4">
-              <div className="flex items-center gap-2">
-                <Layers className="h-5 w-5" />
-                <h3 className="font-semibold">Data Layers</h3>
+            <Card className="p-2 md:p-4 space-y-2 md:space-y-4">
+              <div className="flex items-center gap-1 md:gap-2">
+                <Layers className="h-4 w-4 md:h-5 md:w-5" />
+                <h3 className="font-semibold text-sm md:text-base">Data Layers</h3>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 md:space-y-3">
                 <div>
-                  <Label>Layer Type</Label>
+                  <Label className="text-xs md:text-sm">Layer Type</Label>
                   <Select value={layerId} onValueChange={(value) => setLayerId(value as LayerId | 'none')}>
-                    <SelectTrigger className="mt-2">
+                    <SelectTrigger className="mt-1 md:mt-2 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(dataLayerOptions).map(([key, label]) => (
-                        <SelectItem key={key} value={key}>
+                        <SelectItem key={key} value={key} className="text-sm">
                           {label}
                         </SelectItem>
                       ))}
@@ -479,8 +544,8 @@ export default function SolarMap() {
                 </div>
 
                 {isLoadingLayer && (
-                  <div className="flex items-center justify-center py-4">
-                    <Loader2 className="h-6 w-6 animate-spin" />
+                  <div className="flex items-center justify-center py-2 md:py-4">
+                    <Loader2 className="h-5 w-5 md:h-6 md:w-6 animate-spin" />
                   </div>
                 )}
 
@@ -555,30 +620,15 @@ export default function SolarMap() {
           )}
 
           <div className="grow" />
-
-          <div className="flex flex-col items-center space-y-2">
-            <Button variant="ghost" size="sm" asChild>
-              <a
-                href="https://github.com/googlemaps-samples/js-solar-potential"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2"
-              >
-                <Github className="h-4 w-4" />
-                View code on GitHub
-              </a>
-            </Button>
-            <p className="text-xs text-muted-foreground text-center">
-              This is not an officially supported Google product.
-            </p>
-          </div>
         </div>
       </aside>
 
-      {/* Bottom overlay for month/hour display */}
+      {/* Bottom overlay for month/hour display - Mobile optimized */}
       {layer && ['monthlyFlux', 'hourlyShade'].includes(layer.id) && (
-        <div className="absolute bottom-6 left-0 right-96 flex justify-center">
-          <Card className="px-4 py-2 flex items-center gap-3">
+        <div className={`absolute bottom-2 md:bottom-6 left-2 md:left-0 right-2 md:right-96 flex justify-center transition-all duration-300 ${
+          isSidebarOpen ? 'bottom-2 md:bottom-6' : 'bottom-2 md:bottom-6'
+        }`}>
+          <Card className="px-2 md:px-4 py-1 md:py-2 flex items-center gap-2 md:gap-3">
             {layer.id === 'monthlyFlux' && (
               <>
                 <Slider
@@ -589,9 +639,9 @@ export default function SolarMap() {
                   }}
                   max={11}
                   step={1}
-                  className="w-64"
+                  className="w-32 md:w-64"
                 />
-                <span className="w-12 text-sm font-medium">{monthNames[month]}</span>
+                <span className="w-8 md:w-12 text-xs md:text-sm font-medium">{monthNames[month]}</span>
               </>
             )}
             {layer.id === 'hourlyShade' && (
@@ -604,9 +654,9 @@ export default function SolarMap() {
                   }}
                   max={23}
                   step={1}
-                  className="w-64"
+                  className="w-32 md:w-64"
                 />
-                <span className="w-32 text-sm font-medium whitespace-nowrap">
+                <span className="w-20 md:w-32 text-xs md:text-sm font-medium whitespace-nowrap">
                   {monthNames[month]} {day},{' '}
                   {hour === 0 ? '12am' : hour < 12 ? `${hour}am` : hour === 12 ? '12pm' : `${hour - 12}pm`}
                 </span>

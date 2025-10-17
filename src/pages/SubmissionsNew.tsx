@@ -164,6 +164,7 @@ export default function SubmissionsNew() {
         ['Scaffold Access', fullSurvey.property_overview?.scaffold_access],
         ['Storage Area', fullSurvey.property_overview?.storage_area],
         ['Restricted Parking', fullSurvey.property_overview?.restricted_parking],
+        ['Occupancy Status', fullSurvey.property_overview?.occupancy_status],
 
         // Loft/Attic
         ['Loft Hatch Width', fullSurvey.loft_attic?.loft_hatch_width],

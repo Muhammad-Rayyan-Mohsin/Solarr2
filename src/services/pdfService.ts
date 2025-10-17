@@ -5,19 +5,41 @@ import { supabase } from "@/integrations/supabase/client";
 export class PDFService {
   private static async getImageAsBase64(storagePath: string): Promise<string | null> {
     try {
-      // Determine the bucket based on the storage path
-      // If path starts with 'staging/', use 'staging_uploads', otherwise use 'surveys'
-      const bucket = storagePath.startsWith('staging/') ? 'staging_uploads' : 'surveys';
-      
-      const { data, error } = await supabase.storage
+      let bucket = 'staging-uploads'; // Default to staging-uploads as per recent uploads
+      let cleanPath = storagePath;
+
+      // If path starts with "surveys/", it's old format - strip it and try staging-uploads first
+      if (storagePath.startsWith('surveys/')) {
+        cleanPath = storagePath.replace(/^surveys\//, '');
+        bucket = 'staging-uploads'; // Explicitly set to staging-uploads for old format paths
+        console.log('[PDF] Old format detected, trying staging-uploads:', { original: storagePath, cleaned: cleanPath, bucket });
+      } else if (storagePath.startsWith('staging/')) {
+        bucket = 'staging-uploads';
+        // staging/ prefix is part of the path structure, keep it
+      } else {
+        // For paths that don't start with 'surveys/' or 'staging/', assume 'surveys' bucket
+        bucket = 'surveys';
+      }
+
+      // Try downloading from the determined bucket
+      let { data, error } = await supabase.storage
         .from(bucket)
-        .download(storagePath);
-      
-      if (error) {
-        console.error(`Error downloading image from ${bucket}:`, error, storagePath);
+        .download(cleanPath);
+
+      // If failed and it was old format, try surveys bucket as fallback
+      if (error && storagePath.startsWith('surveys/')) {
+        console.log('[PDF] Staging failed, trying surveys bucket:', cleanPath);
+        const fallback = await supabase.storage.from('surveys').download(cleanPath);
+        data = fallback.data;
+        error = fallback.error;
+      }
+
+      // If still failed, return null
+      if (error || !data) {
+        console.error(`[PDF] Failed to download image:`, error, { original: storagePath, cleaned: cleanPath });
         return null;
       }
-      
+
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = () => {
@@ -124,9 +146,16 @@ export class PDFService {
 
   private static async addImageToDoc(doc: jsPDF, asset: any, yPos: number, label?: string): Promise<number> {
     try {
-      const base64Image = await this.getImageAsBase64(asset.storagePath);
+      // Handle both storagePath (legacy) and storage_object_path (current schema)
+      const storagePath = asset.storage_object_path || asset.storagePath;
+      if (!storagePath) {
+        console.warn('No storage path found for asset:', asset);
+        return yPos;
+      }
+
+      const base64Image = await this.getImageAsBase64(storagePath);
       if (!base64Image) {
-        console.warn(`Failed to load image: ${asset.storagePath}`);
+        console.warn(`Failed to load image: ${storagePath}`);
         return yPos;
       }
 
@@ -144,11 +173,16 @@ export class PDFService {
       doc.text(imageLabel, 20, yPos);
       yPos += 8;
       
-      // Determine image format from mime type
+      // Determine image format from mime type (handle both mime_type and mimeType)
+      const mimeType = asset.mime_type || asset.mimeType;
       let format = 'JPEG';
-      if (asset.mimeType?.includes('png')) format = 'PNG';
-      else if (asset.mimeType?.includes('gif')) format = 'GIF';
-      else if (asset.mimeType?.includes('webp')) format = 'WEBP';
+      if (mimeType?.includes('png')) format = 'PNG';
+      else if (mimeType?.includes('gif')) format = 'GIF';
+      else if (mimeType?.includes('webp')) format = 'WEBP';
+      // Fallback to file extension if mime type not available
+      else if (storagePath.includes('.png')) format = 'PNG';
+      else if (storagePath.includes('.gif')) format = 'GIF';
+      else if (storagePath.includes('.webp')) format = 'WEBP';
       
       doc.addImage(base64Image, format, 20, yPos, imgWidth, imgHeight);
       return yPos + imgHeight + 10;
@@ -161,10 +195,17 @@ export class PDFService {
   static async generateComprehensivePDF(surveyId: string): Promise<void> {
     try {
       // Fetch complete survey data
+      console.log('[PDF] Fetching survey data for:', surveyId);
       const fullSurvey = await SupabaseService.getFullSurvey(surveyId);
       if (!fullSurvey) {
         throw new Error('Survey not found');
       }
+
+      console.log('[PDF] Survey data received:', {
+        id: fullSurvey.id,
+        customerName: fullSurvey.customerName,
+        assetsCount: fullSurvey.assets?.length || 0
+      });
 
       const doc = new jsPDF();
       let yPos = 20;
@@ -260,6 +301,7 @@ export class PDFService {
         yPos = this.addField(doc, "Scaffold Access", po.scaffold_access, yPos);
         yPos = this.addField(doc, "Storage Area", po.storage_area, yPos);
         yPos = this.addField(doc, "Restricted Parking", po.restricted_parking, yPos);
+        yPos = this.addField(doc, "Occupancy Status", po.occupancy_status, yPos);
         yPos += 5;
 
         // Add Section 2 images from assets table
@@ -304,6 +346,13 @@ export class PDFService {
           yPos = this.addField(doc, "Covering Condition", rf.covering_condition, yPos);
           yPos = this.addField(doc, "Obstructions", rf.obstructions, yPos);
           yPos = this.addField(doc, "Shading", rf.shading, yPos);
+          yPos = this.addField(doc, "Gutter Height", rf.gutter_height, yPos);
+          yPos = this.addField(doc, "Rafter Spacing", rf.rafter_spacing, yPos);
+          yPos = this.addField(doc, "Rafter Depth", rf.rafter_depth, yPos);
+          yPos = this.addField(doc, "Batten Depth", rf.batten_depth, yPos);
+          yPos = this.addField(doc, "Membrane Type", rf.membrane_type, yPos);
+          yPos = this.addField(doc, "Membrane Condition", rf.membrane_condition, yPos);
+          yPos = this.addField(doc, "Structural Defects", rf.structural_defects, yPos);
           yPos = this.addField(doc, "Planned Panel Count", rf.planned_panel_count, yPos);
 
           // Add roof face images
@@ -406,6 +455,10 @@ export class PDFService {
         yPos = this.addField(doc, "Distance from CU", bs.distance_from_cu, yPos);
         yPos = this.addField(doc, "Mounting Surface", bs.mounting_surface, yPos);
         yPos = this.addField(doc, "Ventilation Adequate", bs.ventilation_adequate, yPos);
+        yPos = this.addField(doc, "Fire Egress Compliance", bs.fire_egress_compliance, yPos);
+        yPos = this.addField(doc, "Ambient Temp Min", bs.ambient_temp_min ? `${bs.ambient_temp_min}°C` : '', yPos);
+        yPos = this.addField(doc, "Ambient Temp Max", bs.ambient_temp_max ? `${bs.ambient_temp_max}°C` : '', yPos);
+        yPos = this.addField(doc, "IP Rating Required", bs.ip_rating_required, yPos);
         yPos += 5;
 
         // Add Section 6 (Battery Storage) images

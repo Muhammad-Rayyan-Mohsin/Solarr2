@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   Play, 
   CheckCircle, 
@@ -19,12 +20,14 @@ import {
   Clock,
   Plus,
   Trash2,
-  Download
+  Download,
+  X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { runSolarApiTests } from '@/tests/solarApiTest';
 import { GoogleSolarApiService } from '@/services/googleSolarApi';
 import { API_CONFIG } from '@/lib/config';
+  import { SunpathDiagram } from '@/components/SunpathDiagram';
 import { downloadGeoTIFF } from '@/lib/solar/solar';
 import { renderRGB, renderPalette } from '@/lib/solar/visualize';
 import { ironPalette, rainbowPalette } from '@/lib/solar/colors';
@@ -175,7 +178,7 @@ function GeoTIFFImage({ url, type, location }: { url: string; type: 'rgb' | 'dsm
     return (
       <div className="flex items-center justify-center h-32 bg-gray-50 rounded border border-dashed border-gray-300">
         <Button 
-          onClick={renderImage}
+          onClick={() => renderImage()}
           variant="outline"
           size="sm"
           className="flex items-center gap-2"
@@ -205,7 +208,7 @@ function GeoTIFFImage({ url, type, location }: { url: string; type: 'rgb' | 'dsm
           <AlertCircle className="h-8 w-8 mx-auto mb-2" />
           <p className="text-sm">{error}</p>
           <Button 
-            onClick={renderImage}
+            onClick={() => renderImage()}
             variant="outline"
             size="sm"
             className="mt-2"
@@ -291,6 +294,7 @@ export function SolarApiTestPanel() {
   const [currentTest, setCurrentTest] = useState('');
   const [locationTests, setLocationTests] = useState<LocationTest[]>([]);
   const [locationInput, setLocationInput] = useState({ name: '', lat: '', lng: '' });
+  const [isAddLocationOpen, setIsAddLocationOpen] = useState(false);
   const { toast } = useToast();
 
   const addLocation = () => {
@@ -333,6 +337,7 @@ export function SolarApiTestPanel() {
 
     setLocationTests(prev => [...prev, newLocation]);
     setLocationInput({ name: '', lat: '', lng: '' });
+    setIsAddLocationOpen(false);
 
     toast({
       title: 'Location Added',
@@ -618,17 +623,21 @@ export function SolarApiTestPanel() {
   };
 
   return (
-    <Card className="w-full max-w-4xl">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-primary" />
+    <div className="w-full max-w-4xl mx-auto space-y-4 md:space-y-6">
+      {/* Mobile-optimized Header Card */}
+      <Card>
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+            <Zap className="h-4 w-4 md:h-5 md:w-5 text-primary" />
           Google Solar API Test Suite
         </CardTitle>
-        <div className="flex gap-2">
+          
+          {/* Mobile: Stack buttons vertically, Desktop: Horizontal */}
+          <div className="flex flex-col gap-2 md:flex-row md:gap-2">
           <Button 
             onClick={runInteractiveTests} 
             disabled={isRunning}
-            className="flex items-center gap-2"
+              className="w-full md:w-auto h-12 md:h-10 flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
           >
             {isRunning ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -642,267 +651,277 @@ export function SolarApiTestPanel() {
             onClick={runConsoleTests} 
             disabled={isRunning}
             variant="outline"
-            className="flex items-center gap-2"
+              className="w-full md:w-auto h-12 md:h-10 flex items-center justify-center gap-2"
           >
             <BarChart3 className="h-4 w-4" />
             Run Full Console Tests
           </Button>
         </div>
       </CardHeader>
+      </Card>
 
-      <CardContent className="space-y-6">
-        {/* Location Input Form */}
-        <Card className="mb-6">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
-              Add Test Locations
+      {/* Location Management Card */}
+      <Card>
+        <CardHeader className="pb-3 md:pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base md:text-lg flex items-center gap-2">
+              <MapPin className="h-4 w-4 md:h-5 md:w-5" />
+              Test Locations
             </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-              <div>
-                <Label htmlFor="location-name">Location Name</Label>
-                <Input
-                  id="location-name"
-                  placeholder="e.g., London, UK"
-                  value={locationInput.name}
-                  onChange={(e) => setLocationInput(prev => ({ ...prev, name: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="latitude">Latitude</Label>
-                <Input
-                  id="latitude"
-                  type="number"
-                  step="any"
-                  placeholder="51.5074"
-                  value={locationInput.lat}
-                  onChange={(e) => setLocationInput(prev => ({ ...prev, lat: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="longitude">Longitude</Label>
-                <Input
-                  id="longitude"
-                  type="number"
-                  step="any"
-                  placeholder="-0.1278"
-                  value={locationInput.lng}
-                  onChange={(e) => setLocationInput(prev => ({ ...prev, lng: e.target.value }))}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={addLocation} className="flex items-center gap-2">
+            
+            {/* Mobile: Add Location Button */}
+            <Dialog open={isAddLocationOpen} onOpenChange={setIsAddLocationOpen}>
+              <DialogTrigger asChild>
+                <Button className="h-10 w-10 md:h-auto md:w-auto md:px-4 md:py-2 flex items-center gap-2">
                   <Plus className="h-4 w-4" />
-                  Add
+                  <span className="hidden md:inline">Add Location</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md mx-4">
+                <DialogHeader>
+                  <DialogTitle>Add Test Location</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div>
+                    <Label htmlFor="modal-location-name" className="text-sm font-medium">
+                      Location Name
+                    </Label>
+                    <Input
+                      id="modal-location-name"
+                      placeholder="e.g., London, UK"
+                      value={locationInput.name}
+                      onChange={(e) => setLocationInput(prev => ({ ...prev, name: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="modal-latitude" className="text-sm font-medium">
+                      Latitude
+                    </Label>
+                    <Input
+                      id="modal-latitude"
+                      type="number"
+                      step="0.0001"
+                      placeholder="51.5074"
+                      value={locationInput.lat}
+                      onChange={(e) => setLocationInput(prev => ({ ...prev, lat: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="modal-longitude" className="text-sm font-medium">
+                      Longitude
+                    </Label>
+                    <Input
+                      id="modal-longitude"
+                      type="number"
+                      step="0.0001"
+                      placeholder="-0.1278"
+                      value={locationInput.lng}
+                      onChange={(e) => setLocationInput(prev => ({ ...prev, lng: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <Button onClick={addLocation} className="flex-1 h-11">
+                      Add Location
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsAddLocationOpen(false)}
+                      className="flex-1 h-11"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+
+          {/* Location List */}
+          {locationTests.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm md:text-base font-medium">Test Locations ({locationTests.length})</h4>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearAllLocations}
+                  className="h-8 px-3 text-xs md:text-sm"
+                >
+                  <Trash2 className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                  Clear All
                 </Button>
               </div>
+              
+              <div className="space-y-2">
+                {locationTests.map((location, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <Badge variant={
+                        location.status === 'success' ? 'default' :
+                        location.status === 'error' ? 'destructive' :
+                        location.status === 'running' ? 'secondary' : 'outline'
+                      } className="text-xs flex-shrink-0">
+                        {location.status}
+                      </Badge>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm md:text-base truncate">{location.name}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">
+                          {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeLocation(index)}
+                      className="h-8 w-8 p-0 flex-shrink-0 ml-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </div>
+          )}
 
-            {/* Location List */}
-            {locationTests.length > 0 && (
-              <div className="mt-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium">Test Locations ({locationTests.length})</h4>
+          {/* Demo Locations - Mobile: Horizontal scroll, Desktop: Grid */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm md:text-base font-medium">Quick Add Demo Locations</h4>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const demoLocations = [
+                    { name: 'London, UK', lat: 51.5074, lng: -0.1278 },
+                    { name: 'New York, USA', lat: 40.7128, lng: -74.0060 },
+                    { name: 'San Francisco, USA', lat: 37.7749, lng: -122.4194 },
+                    { name: 'Berlin, Germany', lat: 52.5200, lng: 13.4050 },
+                    { name: 'Tokyo, Japan', lat: 35.6762, lng: 139.6503 },
+                    { name: 'Sydney, Australia', lat: -33.8688, lng: 151.2093 },
+                    { name: 'Toronto, Canada', lat: 43.6532, lng: -79.3832 },
+                    { name: 'Dubai, UAE', lat: 25.2048, lng: 55.2708 }
+                  ];
+                  
+                  setLocationTests(prev => [...prev, ...demoLocations.map(loc => ({
+                    name: loc.name,
+                    lat: loc.lat,
+                    lng: loc.lng,
+                    status: 'pending' as const
+                  }))]);
+                  
+                  toast({
+                    title: 'Demo Locations Added',
+                    description: `Added ${demoLocations.length} demo locations to test list`,
+                  });
+                }}
+                className="h-8 px-3 text-xs"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Add All
+              </Button>
+            </div>
+            
+            {/* Mobile: Horizontal scrollable chips */}
+            <div className="overflow-x-auto pb-2">
+              <div className="flex gap-2 min-w-max">
+                {[
+                  { name: 'London, UK', lat: '51.5074', lng: '-0.1278' },
+                  { name: 'New York, USA', lat: '40.7128', lng: '-74.0060' },
+                  { name: 'San Francisco, USA', lat: '37.7749', lng: '-122.4194' },
+                  { name: 'Berlin, Germany', lat: '52.5200', lng: '13.4050' },
+                  { name: 'Tokyo, Japan', lat: '35.6762', lng: '139.6503' },
+                  { name: 'Sydney, Australia', lat: '-33.8688', lng: '151.2093' },
+                  { name: 'Toronto, Canada', lat: '43.6532', lng: '-79.3832' },
+                  { name: 'Dubai, UAE', lat: '25.2048', lng: '55.2708' }
+                ].map((location, index) => (
                   <Button
+                    key={index}
                     variant="outline"
                     size="sm"
-                    onClick={clearAllLocations}
-                    className="flex items-center gap-2"
+                    onClick={() => {
+                      setLocationInput({ name: location.name, lat: location.lat, lng: location.lng });
+                      setIsAddLocationOpen(true);
+                    }}
+                    className="flex-shrink-0 h-8 px-3 text-xs border rounded-full inline-flex items-center gap-1"
                   >
-                    <Trash2 className="h-4 w-4" />
-                    Clear All
+                    <MapPin className="h-3 w-3" />
+                    {location.name}
                   </Button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {locationTests.map((location, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <Badge variant={
-                          location.status === 'success' ? 'default' :
-                          location.status === 'error' ? 'destructive' :
-                          location.status === 'running' ? 'secondary' : 'outline'
-                        }>
-                          {location.status}
-                        </Badge>
-                        <div>
-                          <p className="font-medium">{location.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeLocation(index)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Demo Locations */}
-            <div className="mt-4">
-              <h4 className="font-medium mb-3">Quick Add Demo Locations</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setLocationInput({ name: 'London, UK', lat: '51.5074', lng: '-0.1278' })}
-                  className="text-left justify-start"
-                >
-                  <MapPin className="h-3 w-3 mr-2" />
-                  London, UK
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setLocationInput({ name: 'New York, USA', lat: '40.7128', lng: '-74.0060' })}
-                  className="text-left justify-start"
-                >
-                  <MapPin className="h-3 w-3 mr-2" />
-                  New York, USA
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setLocationInput({ name: 'San Francisco, USA', lat: '37.7749', lng: '-122.4194' })}
-                  className="text-left justify-start"
-                >
-                  <MapPin className="h-3 w-3 mr-2" />
-                  San Francisco, USA
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setLocationInput({ name: 'Berlin, Germany', lat: '52.5200', lng: '13.4050' })}
-                  className="text-left justify-start"
-                >
-                  <MapPin className="h-3 w-3 mr-2" />
-                  Berlin, Germany
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setLocationInput({ name: 'Tokyo, Japan', lat: '35.6762', lng: '139.6503' })}
-                  className="text-left justify-start"
-                >
-                  <MapPin className="h-3 w-3 mr-2" />
-                  Tokyo, Japan
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setLocationInput({ name: 'Sydney, Australia', lat: '-33.8688', lng: '151.2093' })}
-                  className="text-left justify-start"
-                >
-                  <MapPin className="h-3 w-3 mr-2" />
-                  Sydney, Australia
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setLocationInput({ name: 'Toronto, Canada', lat: '43.6532', lng: '-79.3832' })}
-                  className="text-left justify-start"
-                >
-                  <MapPin className="h-3 w-3 mr-2" />
-                  Toronto, Canada
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setLocationInput({ name: 'Dubai, UAE', lat: '25.2048', lng: '55.2708' })}
-                  className="text-left justify-start"
-                >
-                  <MapPin className="h-3 w-3 mr-2" />
-                  Dubai, UAE
-                </Button>
-              </div>
-              <div className="flex items-center justify-between mt-3">
-                <p className="text-xs text-muted-foreground">
-                  Click any button above to auto-fill the form, then click "Add" to add it to your test list.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const demoLocations = [
-                      { name: 'London, UK', lat: 51.5074, lng: -0.1278 },
-                      { name: 'New York, USA', lat: 40.7128, lng: -74.0060 },
-                      { name: 'San Francisco, USA', lat: 37.7749, lng: -122.4194 },
-                      { name: 'Berlin, Germany', lat: 52.5200, lng: 13.4050 },
-                      { name: 'Tokyo, Japan', lat: 35.6762, lng: 139.6503 },
-                      { name: 'Sydney, Australia', lat: -33.8688, lng: 151.2093 },
-                      { name: 'Toronto, Canada', lat: 43.6532, lng: -79.3832 },
-                      { name: 'Dubai, UAE', lat: 25.2048, lng: 55.2708 }
-                    ];
-                    
-                    setLocationTests(prev => [...prev, ...demoLocations.map(loc => ({
-                      name: loc.name,
-                      lat: loc.lat,
-                      lng: loc.lng,
-                      status: 'pending' as const
-                    }))]);
-                    
-                    toast({
-                      title: 'Demo Locations Added',
-                      description: `Added ${demoLocations.length} demo locations to test list`,
-                    });
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-3 w-3" />
-                  Add All Demo Locations
-                </Button>
+                ))}
               </div>
             </div>
+            
+            <p className="text-xs text-muted-foreground">
+              Tap any location above to auto-fill the form and add it to your test list.
+            </p>
+          </div>
 
-            {locationTests.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No locations added yet. Use the demo locations above or add custom coordinates.</p>
-                <p className="text-sm mt-2">
-                  Demo locations are pre-configured to test Solar API coverage in different regions.
-                </p>
+          {/* Empty State */}
+          {locationTests.length === 0 && (
+            <div className="text-center py-8 px-4">
+              <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                <MapPin className="h-8 w-8 text-muted-foreground" />
               </div>
-            )}
-          </CardContent>
-        </Card>
+              <h3 className="text-lg font-medium mb-2">No locations added yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Add test locations to validate Solar API coverage in different regions.
+              </p>
+              <Button 
+                onClick={() => setIsAddLocationOpen(true)}
+                className="h-11 px-6"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add a Location
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
         {/* Progress Bar */}
         {isRunning && (
-          <div className="space-y-2">
+        <Card>
+          <CardContent className="p-4">
+            <div className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span>{currentTest}</span>
-              <span>{progress}%</span>
+                <span className="font-medium">{currentTest}</span>
+                <span className="text-muted-foreground">{progress}%</span>
             </div>
-            <Progress value={progress} className="w-full" />
+              <Progress value={progress} className="w-full h-2" />
           </div>
+          </CardContent>
+        </Card>
         )}
 
+      {/* Tabs - Mobile optimized */}
+      <Card>
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="locations">Location Tests</TabsTrigger>
-            <TabsTrigger value="imagery">Solar Imagery</TabsTrigger>
-            <TabsTrigger value="results">Detailed Results</TabsTrigger>
+          <div className="p-4">
+            <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 h-10 bg-muted">
+              <TabsTrigger value="overview" className="text-xs md:text-sm data-[state=active]:bg-background data-[state=active]:text-foreground">Overview</TabsTrigger>
+              <TabsTrigger value="locations" className="text-xs md:text-sm data-[state=active]:bg-background data-[state=active]:text-foreground">Tests</TabsTrigger>
+              <TabsTrigger value="imagery" className="text-xs md:text-sm data-[state=active]:bg-background data-[state=active]:text-foreground">Imagery</TabsTrigger>
+              <TabsTrigger value="sunpath" className="text-xs md:text-sm hidden md:flex data-[state=active]:bg-background data-[state=active]:text-foreground">Sun Path</TabsTrigger>
+              <TabsTrigger value="results" className="text-xs md:text-sm hidden md:flex data-[state=active]:bg-background data-[state=active]:text-foreground">Results</TabsTrigger>
           </TabsList>
+          </div>
 
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <TabsContent value="overview" className="p-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-3 md:p-4">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-green-500" />
                     <div>
-                      <p className="font-medium">API Configuration</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="font-medium text-sm md:text-base">API Configuration</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         Key: {API_CONFIG.GOOGLE_MAPS_API_KEY ? 'Configured' : 'Missing'}
                       </p>
                     </div>
@@ -911,12 +930,12 @@ export function SolarApiTestPanel() {
               </Card>
 
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-3 md:p-4">
                   <div className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-blue-500" />
+                    <MapPin className="h-4 w-4 md:h-5 md:w-5 text-blue-500" />
                     <div>
-                      <p className="font-medium">Test Locations</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="font-medium text-sm md:text-base">Test Locations</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         {locationTests.filter(l => l.status === 'success').length}/{locationTests.length} Complete
                       </p>
                     </div>
@@ -925,12 +944,12 @@ export function SolarApiTestPanel() {
               </Card>
 
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-3 md:p-4">
                   <div className="flex items-center gap-2">
-                    <Image className="h-5 w-5 text-purple-500" />
+                    <Image className="h-4 w-4 md:h-5 md:w-5 text-purple-500" />
                     <div>
-                      <p className="font-medium">Total Tests</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="font-medium text-sm md:text-base">Total Tests</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         {results.filter(r => r.status === 'PASS').length}/{results.length} Passed
                       </p>
                     </div>
@@ -940,66 +959,77 @@ export function SolarApiTestPanel() {
             </div>
           </TabsContent>
 
-          <TabsContent value="locations" className="space-y-4">
-            {locationTests.map((location, index) => (
+          <TabsContent value="locations" className="p-4 space-y-3">
+            {locationTests.length === 0 ? (
+              <div className="text-center py-8">
+                <MapPin className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                <p className="text-muted-foreground">No test results yet</p>
+              </div>
+            ) : (
+              locationTests.map((location, index) => (
               <Card key={index}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
+                  <CardContent className="p-3 md:p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
                       {getStatusIcon(location.status)}
-                      <div>
-                        <h4 className="font-medium">{location.name}</h4>
-                        <p className="text-sm text-muted-foreground">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-medium text-sm md:text-base truncate">{location.name}</h4>
+                          <p className="text-xs md:text-sm text-muted-foreground">
                           {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                         </p>
                       </div>
                     </div>
+                      <div className="flex-shrink-0 ml-2">
                     {getStatusBadge(location.status)}
+                      </div>
                   </div>
                   
                   {location.result && (
-                    <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 text-xs md:text-sm">
                       <div>
-                        <p className="text-muted-foreground">Max Panels</p>
+                          <p className="text-muted-foreground mb-1">Max Panels</p>
                         <p className="font-medium">{location.result.maxPanels}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Roof Area</p>
+                          <p className="text-muted-foreground mb-1">Roof Area</p>
                         <p className="font-medium">{location.result.roofArea}m²</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Est. Energy</p>
+                          <p className="text-muted-foreground mb-1">Est. Energy</p>
                         <p className="font-medium">{Math.round(location.result.estimatedYearlyEnergy)}kWh</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Response Time</p>
+                          <p className="text-muted-foreground mb-1">Response Time</p>
                         <p className="font-medium">{location.result.duration}ms</p>
                       </div>
                     </div>
                   )}
                   
                   {location.error && (
-                    <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+                      <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded text-xs md:text-sm text-red-600">
                       {location.error}
                     </div>
                   )}
                 </CardContent>
               </Card>
-            ))}
+              ))
+            )}
           </TabsContent>
 
-          <TabsContent value="imagery" className="space-y-4">
+          <TabsContent value="imagery" className="p-4 space-y-4">
             {locationTests.filter(loc => loc.imagery).length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No imagery data yet. Run tests to fetch solar imagery.
+              <div className="text-center py-8">
+                <Image className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                <p className="text-muted-foreground">No imagery data yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Run tests to fetch solar imagery</p>
               </div>
             ) : (
               locationTests.filter(loc => loc.imagery).map((location, index) => (
                 <Card key={index}>
-                  <CardHeader>
+                  <CardHeader className="pb-3">
                     <div className="space-y-2">
-                      <CardTitle className="text-lg">{location.name} - Solar Imagery</CardTitle>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <CardTitle className="text-base md:text-lg">{location.name} - Solar Imagery</CardTitle>
+                      <div className="flex flex-col gap-1 md:flex-row md:gap-4 text-xs md:text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
                           Requested: {location.lat.toFixed(5)}, {location.lng.toFixed(5)}
@@ -1013,16 +1043,16 @@ export function SolarApiTestPanel() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-4 md:space-y-6">
                     {/* Imagery Quality and Load All Button */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2">
                         {location.imagery.imageryQuality && (
                           <Badge variant={
                             location.imagery.imageryQuality === 'HIGH' ? 'default' :
                             location.imagery.imageryQuality === 'MEDIUM' ? 'secondary' : 'outline'
-                          }>
-                            Imagery Quality: {location.imagery.imageryQuality}
+                          } className="text-xs w-fit">
+                            Quality: {location.imagery.imageryQuality}
                           </Badge>
                         )}
                         <p className="text-xs text-muted-foreground">
@@ -1037,9 +1067,9 @@ export function SolarApiTestPanel() {
                           const event = new CustomEvent('loadAllImages', { detail: location.name });
                           window.dispatchEvent(event);
                         }}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 h-9 text-xs md:text-sm"
                       >
-                        <Image className="h-4 w-4" />
+                        <Image className="h-3 w-3 md:h-4 md:w-4" />
                         Load All Images
                       </Button>
                     </div>
@@ -1047,8 +1077,8 @@ export function SolarApiTestPanel() {
                     {/* RGB Aerial Imagery */}
                     {location.imagery.rgbUrl && (
                       <div className="space-y-2">
-                        <h4 className="font-medium flex items-center gap-2">
-                          <Image className="h-4 w-4" />
+                        <h4 className="font-medium flex items-center gap-2 text-sm md:text-base">
+                          <Image className="h-3 w-3 md:h-4 md:w-4" />
                           HD Aerial Imagery
                         </h4>
                         <GeoTIFFImage url={location.imagery.rgbUrl} type="rgb" location={location} />
@@ -1058,8 +1088,8 @@ export function SolarApiTestPanel() {
                     {/* DSM */}
                     {location.imagery.dsmUrl && (
                       <div className="space-y-2">
-                        <h4 className="font-medium flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
+                        <h4 className="font-medium flex items-center gap-2 text-sm md:text-base">
+                          <MapPin className="h-3 w-3 md:h-4 md:w-4" />
                           Digital Surface Model
                         </h4>
                         <GeoTIFFImage url={location.imagery.dsmUrl} type="dsm" location={location} />
@@ -1072,8 +1102,8 @@ export function SolarApiTestPanel() {
                     {/* Annual Flux */}
                     {location.imagery.annualFluxUrl && (
                       <div className="space-y-2">
-                        <h4 className="font-medium flex items-center gap-2">
-                          <Zap className="h-4 w-4" />
+                        <h4 className="font-medium flex items-center gap-2 text-sm md:text-base">
+                          <Zap className="h-3 w-3 md:h-4 md:w-4" />
                           Annual Solar Flux Map
                         </h4>
                         <GeoTIFFImage url={location.imagery.annualFluxUrl} type="annualFlux" location={location} />
@@ -1087,7 +1117,7 @@ export function SolarApiTestPanel() {
                     {/* Mask */}
                     {location.imagery.maskUrl && (
                       <div className="space-y-2">
-                        <h4 className="font-medium">Roof Mask (Available Area)</h4>
+                        <h4 className="font-medium text-sm md:text-base">Roof Mask (Available Area)</h4>
                         <GeoTIFFImage url={location.imagery.maskUrl} type="mask" location={location} />
                         <p className="text-xs text-muted-foreground">
                           Black = No roof, White = Roof area suitable for solar panels
@@ -1098,8 +1128,8 @@ export function SolarApiTestPanel() {
                     {/* Additional info */}
                     {location.imagery.monthlyFluxUrl && (
                       <div className="p-3 bg-blue-50 border border-blue-200 rounded">
-                        <p className="text-sm text-blue-900">
-                          <CheckCircle className="h-4 w-4 inline mr-1" />
+                        <p className="text-xs md:text-sm text-blue-900">
+                          <CheckCircle className="h-3 w-3 md:h-4 md:w-4 inline mr-1" />
                           Monthly flux data available (12 months)
                         </p>
                       </div>
@@ -1107,8 +1137,8 @@ export function SolarApiTestPanel() {
 
                     {location.imagery.hourlyShadeUrls && location.imagery.hourlyShadeUrls.length > 0 && (
                       <div className="p-3 bg-blue-50 border border-blue-200 rounded">
-                        <p className="text-sm text-blue-900">
-                          <CheckCircle className="h-4 w-4 inline mr-1" />
+                        <p className="text-xs md:text-sm text-blue-900">
+                          <CheckCircle className="h-3 w-3 md:h-4 md:w-4 inline mr-1" />
                           Hourly shade analysis available ({location.imagery.hourlyShadeUrls.length} months × 24 hours)
                         </p>
                       </div>
@@ -1119,18 +1149,58 @@ export function SolarApiTestPanel() {
             )}
           </TabsContent>
 
-          <TabsContent value="results" className="space-y-4">
+          {/* Sun Path tab: live diagram from Building Insights */}
+          <TabsContent value="sunpath" className="p-4 space-y-4">
+            {locationTests.filter(loc => loc.result?.fullData?.solarPotential?.roofSegmentStats).length === 0 ? (
+              <div className="text-center py-8">
+                <Zap className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                <p className="text-muted-foreground">No sun path data yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Run tests to fetch building insights</p>
+              </div>
+            ) : (
+              locationTests.filter(loc => loc.result?.fullData?.solarPotential?.roofSegmentStats).map((location, index) => {
+                const insights = location.result.fullData as any;
+                const segments = (insights?.solarPotential?.roofSegmentStats ?? []).map((seg: any, i: number) => ({
+                  pitchDegrees: seg.pitchDegrees,
+                  azimuthDegrees: seg.azimuthDegrees,
+                  areaMeters2: seg.stats?.areaMeters2,
+                  sunshineQuantiles: seg.stats?.sunshineQuantiles,
+                  label: `Seg ${i + 1}`,
+                }));
+                const maxSun = insights?.solarPotential?.maxSunshineHoursPerYear ?? 1100;
+                return (
+                  <Card key={index}>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base md:text-lg">{location.name} — Sun Path</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <SunpathDiagram
+                        latitude={insights?.center?.latitude ?? location.lat}
+                        longitude={insights?.center?.longitude ?? location.lng}
+                        segments={segments}
+                        maxSunshineHoursPerYear={maxSun}
+                      />
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </TabsContent>
+
+          <TabsContent value="results" className="p-4 space-y-4">
             {results.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No test results yet. Run tests to see detailed results.
+              <div className="text-center py-8">
+                <BarChart3 className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                <p className="text-muted-foreground">No test results yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Run tests to see detailed results</p>
               </div>
             ) : (
               <>
                 {/* Complete Solar Data */}
                 {locationTests.filter(loc => loc.result?.fullData).map((location, index) => (
                   <Card key={`full-${index}`}>
-                    <CardHeader>
-                      <CardTitle className="text-lg flex items-center justify-between">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base md:text-lg flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                         <span>{location.name} - Complete Solar Data</span>
                         <Button
                           variant="outline"
@@ -1143,51 +1213,52 @@ export function SolarApiTestPanel() {
                               description: "Full solar data copied successfully",
                             });
                           }}
+                          className="h-8 text-xs md:text-sm"
                         >
                           Copy JSON
                         </Button>
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-4 md:space-y-6">
                       {/* Financial Analyses */}
                       {location.result.fullData.solarPotential.financialAnalyses && (
                         <div className="space-y-3">
-                          <h4 className="font-semibold text-lg">Financial Analyses</h4>
+                          <h4 className="font-semibold text-base md:text-lg">Financial Analyses</h4>
                           <div className="grid gap-3">
                             {location.result.fullData.solarPotential.financialAnalyses
                               .filter((fa: any) => fa.financialDetails)
                               .map((analysis: any, idx: number) => (
                               <Card key={idx} className="bg-blue-50">
-                                <CardContent className="p-4">
+                                <CardContent className="p-3 md:p-4">
                                   <div className="space-y-2">
-                                    <div className="flex justify-between items-center">
-                                      <span className="font-medium">Monthly Bill: ${analysis.monthlyBill.units}</span>
-                                      <Badge>Panel Config #{analysis.panelConfigIndex}</Badge>
+                                    <div className="flex flex-col gap-2 md:flex-row md:justify-between md:items-center">
+                                      <span className="font-medium text-sm md:text-base">Monthly Bill: ${analysis.monthlyBill.units}</span>
+                                      <Badge className="text-xs w-fit">Panel Config #{analysis.panelConfigIndex}</Badge>
                                     </div>
                                     {analysis.financialDetails && (
-                                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm mt-3">
+                                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3 text-xs md:text-sm mt-3">
                                         <div>
-                                          <p className="text-gray-600">Initial AC kWh/Year</p>
+                                          <p className="text-gray-600 mb-1">Initial AC kWh/Year</p>
                                           <p className="font-semibold">{Math.round(analysis.financialDetails.initialAcKwhPerYear)}</p>
                                         </div>
                                         <div>
-                                          <p className="text-gray-600">Lifetime Utility Bill</p>
+                                          <p className="text-gray-600 mb-1">Lifetime Utility Bill</p>
                                           <p className="font-semibold">${analysis.financialDetails.remainingLifetimeUtilityBill?.units || 0}</p>
                                         </div>
                                         <div>
-                                          <p className="text-gray-600">Federal Incentive</p>
+                                          <p className="text-gray-600 mb-1">Federal Incentive</p>
                                           <p className="font-semibold">${analysis.financialDetails.federalIncentive?.units || 0}</p>
                                         </div>
                                         <div>
-                                          <p className="text-gray-600">Solar Percentage</p>
+                                          <p className="text-gray-600 mb-1">Solar Percentage</p>
                                           <p className="font-semibold">{analysis.financialDetails.solarPercentage?.toFixed(1)}%</p>
                                         </div>
                                         <div>
-                                          <p className="text-gray-600">Net Metering</p>
+                                          <p className="text-gray-600 mb-1">Net Metering</p>
                                           <p className="font-semibold">{analysis.financialDetails.netMeteringAllowed ? 'Yes' : 'No'}</p>
                                         </div>
                                         <div>
-                                          <p className="text-gray-600">Export to Grid</p>
+                                          <p className="text-gray-600 mb-1">Export to Grid</p>
                                           <p className="font-semibold">{analysis.financialDetails.percentageExportedToGrid?.toFixed(1)}%</p>
                                         </div>
                                       </div>
@@ -1196,7 +1267,7 @@ export function SolarApiTestPanel() {
                                     {/* Cash Purchase */}
                                     {analysis.cashPurchaseSavings && (
                                       <div className="mt-3 p-3 bg-white rounded">
-                                        <p className="font-medium mb-2">Cash Purchase</p>
+                                        <p className="font-medium mb-2 text-sm md:text-base">Cash Purchase</p>
                                         <div className="grid grid-cols-2 gap-2 text-xs">
                                           <div>Upfront Cost: ${analysis.cashPurchaseSavings.upfrontCost?.units}</div>
                                           <div>Payback: {analysis.cashPurchaseSavings.paybackYears} years</div>
@@ -1216,21 +1287,21 @@ export function SolarApiTestPanel() {
                       {/* Solar Panel Configs */}
                       {location.result.fullData.solarPotential.solarPanelConfigs && (
                         <div className="space-y-3">
-                          <h4 className="font-semibold text-lg">Solar Panel Configurations</h4>
+                          <h4 className="font-semibold text-base md:text-lg">Solar Panel Configurations</h4>
                           <div className="grid gap-2">
                             {location.result.fullData.solarPotential.solarPanelConfigs.slice(0, 10).map((config: any, idx: number) => (
                               <div key={idx} className="p-3 bg-gray-50 rounded border">
-                                <div className="grid grid-cols-3 gap-4 text-sm">
+                                <div className="grid grid-cols-3 gap-2 md:gap-4 text-xs md:text-sm">
                                   <div>
-                                    <p className="text-gray-600">Panels</p>
+                                    <p className="text-gray-600 mb-1">Panels</p>
                                     <p className="font-semibold">{config.panelsCount}</p>
                                   </div>
                                   <div>
-                                    <p className="text-gray-600">Yearly Energy</p>
+                                    <p className="text-gray-600 mb-1">Yearly Energy</p>
                                     <p className="font-semibold">{Math.round(config.yearlyEnergyDcKwh)} kWh</p>
                                   </div>
                                   <div>
-                                    <p className="text-gray-600">Roof Segments</p>
+                                    <p className="text-gray-600 mb-1">Roof Segments</p>
                                     <p className="font-semibold">{config.roofSegmentSummaries?.length || 0}</p>
                                   </div>
                                 </div>
@@ -1242,9 +1313,9 @@ export function SolarApiTestPanel() {
 
                       {/* Raw JSON */}
                       <div className="space-y-2">
-                        <h4 className="font-semibold text-lg">Complete Raw Data (JSON)</h4>
-                        <div className="max-h-96 overflow-auto">
-                          <pre className="bg-gray-900 text-green-400 p-4 rounded text-xs">
+                        <h4 className="font-semibold text-base md:text-lg">Complete Raw Data (JSON)</h4>
+                        <div className="max-h-64 md:max-h-96 overflow-auto">
+                          <pre className="bg-gray-900 text-green-400 p-3 md:p-4 rounded text-xs">
                             {JSON.stringify(location.result.fullData, null, 2)}
                           </pre>
                         </div>
@@ -1255,26 +1326,29 @@ export function SolarApiTestPanel() {
 
                 {/* Test Results Summary */}
                 {results.map((result, index) => (
-                  <Card key={index}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          {getStatusIcon(result.status)}
-                          <div>
-                            <h4 className="font-medium">{result.test}</h4>
-                            <p className="text-sm text-muted-foreground">{result.message}</p>
-                          </div>
+                <Card key={index}>
+                    <CardContent className="p-3 md:p-4">
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                        {getStatusIcon(result.status)}
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-medium text-sm md:text-base">{result.test}</h4>
+                            <p className="text-xs md:text-sm text-muted-foreground">{result.message}</p>
                         </div>
-                        {getStatusBadge(result.status)}
                       </div>
-                    </CardContent>
-                  </Card>
+                        <div className="flex-shrink-0 ml-2">
+                      {getStatusBadge(result.status)}
+                    </div>
+                      </div>
+                  </CardContent>
+                </Card>
                 ))}
               </>
             )}
           </TabsContent>
         </Tabs>
-      </CardContent>
     </Card>
+    </div>
   );
 }
+

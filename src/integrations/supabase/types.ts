@@ -437,6 +437,7 @@ export type Database = {
           conservation_area: string | null
           listed_building: string | null
           new_build: string | null
+          occupancy_status: string | null
           property_age: string | null
           property_type: string | null
           restricted_parking: string | null
@@ -449,6 +450,7 @@ export type Database = {
           conservation_area?: string | null
           listed_building?: string | null
           new_build?: string | null
+          occupancy_status?: string | null
           property_age?: string | null
           property_type?: string | null
           restricted_parking?: string | null
@@ -461,6 +463,7 @@ export type Database = {
           conservation_area?: string | null
           listed_building?: string | null
           new_build?: string | null
+          occupancy_status?: string | null
           property_age?: string | null
           property_type?: string | null
           restricted_parking?: string | null
@@ -575,6 +578,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           customer_name: string
+          customer_signature: string | null
           email: string
           grid_reference: string | null
           id: string
@@ -597,6 +601,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_name: string
+          customer_signature?: string | null
           email: string
           grid_reference?: string | null
           id?: string
@@ -619,6 +624,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_name?: string
+          customer_signature?: string | null
           email?: string
           grid_reference?: string | null
           id?: string

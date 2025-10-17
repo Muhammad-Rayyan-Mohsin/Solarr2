@@ -57,14 +57,14 @@ const FAQSection = () => {
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="border border-border/20 rounded-lg bg-card/50 backdrop-blur-sm scroll-reveal"
+                className="border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800/90 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow scroll-reveal"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <AccordionTrigger className="text-left text-foreground font-semibold hover:no-underline py-4 sm:py-5 px-4 sm:px-6 text-sm sm:text-base [&[data-state=open]]:bg-muted/30 transition-colors">
+                <AccordionTrigger className="text-left text-gray-900 dark:text-gray-100 font-semibold hover:no-underline py-4 sm:py-5 px-4 sm:px-6 text-sm sm:text-base [&[data-state=open]]:bg-gray-50 dark:[&[data-state=open]]:bg-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                   <span className="mr-4">{faq.question}</span>
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground leading-relaxed text-sm sm:text-base px-4 sm:px-6 py-4 sm:py-5 bg-muted/20 rounded-b-lg">
-                  <div className="pl-4 border-l-2 border-muted-foreground/20">
+                <AccordionContent className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm sm:text-base px-4 sm:px-6 py-4 sm:py-5 bg-gray-50 dark:bg-gray-700/30 rounded-b-lg">
+                  <div className="pl-4 border-l-2 border-gray-300 dark:border-gray-600">
                     {faq.answer}
                   </div>
                 </AccordionContent>

@@ -9,6 +9,7 @@ import {
   Users,
   FileText,
   Sun,
+  Map,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { NavBar } from "@/components/ui/tubelight-navbar";
@@ -22,6 +23,7 @@ const Navigation = () => {
     { name: "Survey", url: "/survey", icon: FileText },
     { name: "About", url: "#how-it-works", icon: Users },
     { name: "FAQ", url: "#faq", icon: HelpCircle },
+    { name: "Solar Map", url: "/solar-map", icon: Map },
     { name: "API Test", url: "/solar-api-test", icon: Zap },
   ];
 

@@ -36,7 +36,7 @@ const HeroSection = () => {
                 </div>
                 <div className="flex items-center justify-center space-x-2 bg-white rounded-full px-4 py-2 border border-black shadow-sm">
                   <Clock className="h-3 w-3 text-black flex-shrink-0" />
-                  <span className="font-medium text-xs text-black">~3-5 mins</span>
+                  <span className="font-medium text-xs text-black">45-60 mins</span>
                 </div>
                 <div className="flex items-center justify-center space-x-2 bg-white rounded-full px-4 py-2 border border-black shadow-sm">
                   <CheckCircle className="h-3 w-3 text-black flex-shrink-0" />
