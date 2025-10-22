@@ -2080,6 +2080,9 @@ const Index = () => {
                     rgbUrl={solarData.rawDataLayers.rgbUrl}
                     maskUrl={solarData.rawDataLayers.maskUrl}
                     imageryQuality={solarData.rawDataLayers.imageryQuality}
+                    imageryDate={solarData.rawDataLayers.imageryDate}
+                    imageryProcessedDate={solarData.rawDataLayers.imageryProcessedDate}
+                    pixelSizeMeters={0.1}
                   />
                 </div>
               )}
