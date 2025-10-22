@@ -13,6 +13,17 @@ interface SurveyAerialImageProps {
   rgbUrl?: string;
   maskUrl?: string;
   imageryQuality?: 'HIGH' | 'MEDIUM' | 'LOW';
+  imageryDate?: {
+    year: number;
+    month: number;
+    day: number;
+  };
+  imageryProcessedDate?: {
+    year: number;
+    month: number;
+    day: number;
+  };
+  pixelSizeMeters?: number;
 }
 
 export function SurveyAerialImage({ 
@@ -20,7 +31,10 @@ export function SurveyAerialImage({
   longitude, 
   rgbUrl, 
   maskUrl,
-  imageryQuality 
+  imageryQuality,
+  imageryDate,
+  imageryProcessedDate,
+  pixelSizeMeters
 }: SurveyAerialImageProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -153,12 +167,22 @@ export function SurveyAerialImage({
           </div>
           <div className="flex items-center gap-2">
             {imageryQuality && (
-              <Badge variant={
-                imageryQuality === 'HIGH' ? 'default' :
-                imageryQuality === 'MEDIUM' ? 'secondary' : 'outline'
-              } className="text-xs">
-                {imageryQuality === 'HIGH' ? '10' : imageryQuality === 'MEDIUM' ? '25' : '50'} cm/pixel
-              </Badge>
+              <>
+                <Badge variant={
+                  imageryQuality === 'HIGH' ? 'default' :
+                  imageryQuality === 'MEDIUM' ? 'secondary' : 'outline'
+                } className="text-xs">
+                  {pixelSizeMeters ? `${(pixelSizeMeters * 100).toFixed(0)}cm/pixel` : 
+                   imageryQuality === 'HIGH' ? '10cm/pixel' : 
+                   imageryQuality === 'MEDIUM' ? '25cm/pixel' : '50cm/pixel'}
+                </Badge>
+                <Badge variant={
+                  imageryQuality === 'HIGH' ? 'default' :
+                  imageryQuality === 'MEDIUM' ? 'secondary' : 'outline'
+                } className="text-xs">
+                  {imageryQuality} Quality
+                </Badge>
+              </>
             )}
             <Button
               variant="ghost"
@@ -169,9 +193,21 @@ export function SurveyAerialImage({
             </Button>
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">
-          {latitude.toFixed(5)}, {longitude.toFixed(5)}
-        </p>
+        <div className="space-y-1">
+          <p className="text-sm text-muted-foreground">
+            {latitude.toFixed(5)}, {longitude.toFixed(5)}
+          </p>
+          {imageryDate && (
+            <p className="text-xs text-muted-foreground">
+              Imagery captured: {imageryDate.year}-{imageryDate.month.toString().padStart(2, '0')}-{imageryDate.day.toString().padStart(2, '0')}
+            </p>
+          )}
+          {imageryProcessedDate && imageryProcessedDate !== imageryDate && (
+            <p className="text-xs text-muted-foreground">
+              Processed: {imageryProcessedDate.year}-{imageryProcessedDate.month.toString().padStart(2, '0')}-{imageryProcessedDate.day.toString().padStart(2, '0')}
+            </p>
+          )}
+        </div>
       </CardHeader>
 
       {isExpanded && (
