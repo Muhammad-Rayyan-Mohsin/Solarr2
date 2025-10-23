@@ -48,19 +48,36 @@ export function SunpathDiagramEditor({
     img.src = '/sunpath-diagram.png'; // Path to your sunpath diagram
     
     img.onload = () => {
-      // Set canvas size to match image
-      canvas.width = img.width;
-      canvas.height = img.height;
+      // Calculate display size while maintaining aspect ratio
+      const maxDisplayWidth = 800;
+      const maxDisplayHeight = 800;
       
-      // Draw the base image
-      ctx.drawImage(img, 0, 0);
+      let displayWidth = img.width;
+      let displayHeight = img.height;
+      
+      // Scale down if image is too large
+      if (img.width > maxDisplayWidth || img.height > maxDisplayHeight) {
+        const scaleX = maxDisplayWidth / img.width;
+        const scaleY = maxDisplayHeight / img.height;
+        const scale = Math.min(scaleX, scaleY);
+        
+        displayWidth = img.width * scale;
+        displayHeight = img.height * scale;
+      }
+      
+      // Set canvas size to display size
+      canvas.width = displayWidth;
+      canvas.height = displayHeight;
+      
+      // Draw the base image scaled to display size
+      ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
       
       // If there's initial data, load it
       if (initialImageData) {
         const savedImg = new Image();
         savedImg.src = initialImageData;
         savedImg.onload = () => {
-          ctx.drawImage(savedImg, 0, 0);
+          ctx.drawImage(savedImg, 0, 0, displayWidth, displayHeight);
           saveToHistory();
           setIsLoaded(true);
         };
@@ -214,8 +231,25 @@ export function SunpathDiagramEditor({
     const img = new Image();
     img.src = '/sunpath-diagram.png';
     img.onload = () => {
+      // Calculate display size while maintaining aspect ratio
+      const maxDisplayWidth = 800;
+      const maxDisplayHeight = 800;
+      
+      let displayWidth = img.width;
+      let displayHeight = img.height;
+      
+      // Scale down if image is too large
+      if (img.width > maxDisplayWidth || img.height > maxDisplayHeight) {
+        const scaleX = maxDisplayWidth / img.width;
+        const scaleY = maxDisplayHeight / img.height;
+        const scale = Math.min(scaleX, scaleY);
+        
+        displayWidth = img.width * scale;
+        displayHeight = img.height * scale;
+      }
+      
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
+      ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
       saveToHistory();
     };
   };
@@ -356,19 +390,26 @@ export function SunpathDiagramEditor({
         </div>
 
         {/* Canvas */}
-        <div className="border-2 border-gray-300 rounded-lg overflow-hidden bg-white">
-          <canvas
-            ref={canvasRef}
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
-            onTouchEnd={stopDrawing}
-            className="w-full h-auto cursor-crosshair touch-none"
-            style={{ maxHeight: '600px' }}
-          />
+        <div className="border-2 border-gray-300 rounded-lg overflow-hidden bg-white" style={{ minHeight: '600px' }}>
+          <div className="flex justify-center items-center" style={{ minHeight: '600px' }}>
+            <canvas
+              ref={canvasRef}
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={stopDrawing}
+              onMouseLeave={stopDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={stopDrawing}
+              className="cursor-crosshair touch-none"
+              style={{ 
+                maxWidth: '100%', 
+                maxHeight: '800px',
+                minHeight: '600px',
+                objectFit: 'contain'
+              }}
+            />
+          </div>
         </div>
 
         {/* Instructions */}
