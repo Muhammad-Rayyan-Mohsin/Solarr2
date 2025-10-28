@@ -67,6 +67,7 @@ interface RoofFace {
   structuralDefects: string;
   plannedPanelCount: string;
   photos: string[];
+  sunpathDiagram?: string; // Base64 encoded annotated sunpath diagram
 }
 
 interface FormData {

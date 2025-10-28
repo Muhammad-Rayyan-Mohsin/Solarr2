@@ -10,6 +10,7 @@ import { DropdownSelect } from "@/components/inputs/DropdownSelect";
 import { PhotoUpload } from "@/components/inputs/PhotoUpload";
 import { TextareaInput } from "@/components/inputs/TextareaInput";
 import { TextWithPhotoInput } from "@/components/inputs/TextWithPhotoInput";
+import { SunpathDiagramEditor } from "@/components/SunpathDiagramEditor";
 
 interface RoofFace {
   id: string;
@@ -32,6 +33,7 @@ interface RoofFace {
   structuralDefects: string;
   plannedPanelCount: string;
   photos: string[];
+  sunpathDiagram?: string;
 }
 
 interface RoofSectionProps {
@@ -444,6 +446,16 @@ export function RoofSection({ roofFaces, onRoofFacesChange }: RoofSectionProps) 
                       icon: "•"
                     }
                   ]}
+                />
+              </div>
+
+              {/* Sunpath Diagram Editor */}
+              <div className="space-y-4">
+                <SunpathDiagramEditor
+                  roofId={face.id}
+                  roofLabel={face.label}
+                  initialImageData={face.sunpathDiagram}
+                  onSave={(imageData) => updateRoofFace(face.id, 'sunpathDiagram', imageData)}
                 />
               </div>
 
