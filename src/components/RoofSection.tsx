@@ -34,6 +34,7 @@ interface RoofFace {
   plannedPanelCount: string;
   photos: string[];
   sunpathDiagram?: string;
+  noShading?: boolean;
 }
 
 interface RoofSectionProps {
@@ -456,6 +457,8 @@ export function RoofSection({ roofFaces, onRoofFacesChange }: RoofSectionProps) 
                   roofLabel={face.label}
                   initialImageData={face.sunpathDiagram}
                   onSave={(imageData) => updateRoofFace(face.id, 'sunpathDiagram', imageData)}
+                  noShading={face.noShading}
+                  onNoShadingChange={(noShading) => updateRoofFace(face.id, 'noShading', noShading)}
                 />
               </div>
 
