@@ -516,8 +516,11 @@ export default function SolarMap() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs md:text-sm">Show Panels</Label>
+                <div className="flex items-center justify-between p-2 rounded-md border bg-background/70">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs md:text-sm font-semibold">Show Panels</Label>
+                    <Badge className={`${showPanels ? 'bg-emerald-600 hover:bg-emerald-600 text-white' : 'bg-muted text-foreground'} text-[10px] md:text-xs`}`}>{showPanels ? 'On' : 'Off'}</Badge>
+                  </div>
                   <Switch checked={showPanels} onCheckedChange={setShowPanels} />
                 </div>
 
@@ -621,14 +624,20 @@ export default function SolarMap() {
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between">
-                      <Label>Roof Only</Label>
+                    <div className="flex items-center justify-between p-2 rounded-md border bg-background/70">
+                      <div className="flex items-center gap-2">
+                        <Label className="font-semibold">Roof Only</Label>
+                        <Badge className={`${showRoofOnly ? 'bg-emerald-600 hover:bg-emerald-600 text-white' : 'bg-muted text-foreground'} text-[10px] md:text-xs`}`}>{showRoofOnly ? 'On' : 'Off'}</Badge>
+                      </div>
                       <Switch checked={showRoofOnly} onCheckedChange={setShowRoofOnly} />
                     </div>
 
                     {['monthlyFlux', 'hourlyShade'].includes(layerId) && (
-                      <div className="flex items-center justify-between">
-                        <Label>Play Animation</Label>
+                      <div className="flex items-center justify-between p-2 rounded-md border bg-background/70">
+                        <div className="flex items-center gap-2">
+                          <Label className="font-semibold">Play Animation</Label>
+                          <Badge className={`${playAnimation ? 'bg-emerald-600 hover:bg-emerald-600 text-white' : 'bg-muted text-foreground'} text-[10px] md:text-xs`}`}>{playAnimation ? 'On' : 'Off'}</Badge>
+                        </div>
                         <Switch checked={playAnimation} onCheckedChange={setPlayAnimation} />
                       </div>
                     )}
