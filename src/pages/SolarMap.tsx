@@ -21,7 +21,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, MapPin, Sun, Layers, Home, ArrowLeft, Menu, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { API_CONFIG } from '@/lib/config';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -57,6 +57,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep
 
 export default function SolarMap() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [location, setLocation] = useState<google.maps.LatLng | null>(null);
@@ -110,16 +111,25 @@ export default function SolarMap() {
         }
 
         if (mapRef.current && window.google) {
-          // Geocode default location
-          const geocoder = new google.maps.Geocoder();
-          const result = await geocoder.geocode({ address: defaultPlace.address });
-          
-          if (result.results[0]) {
-            const loc = result.results[0].geometry.location;
-            
+          // Determine initial center: URL lat/lng or geocoded default
+          let initialCenter: google.maps.LatLng | null = null;
+
+          const latParam = searchParams.get('lat');
+          const lngParam = searchParams.get('lng');
+          if (latParam && lngParam && !Number.isNaN(Number(latParam)) && !Number.isNaN(Number(lngParam))) {
+            initialCenter = new google.maps.LatLng(Number(latParam), Number(lngParam));
+          } else {
+            const geocoder = new google.maps.Geocoder();
+            const result = await geocoder.geocode({ address: defaultPlace.address });
+            if (result.results[0]) {
+              initialCenter = result.results[0].geometry.location;
+            }
+          }
+
+          if (initialCenter) {
             // Initialize map
             const mapInstance = new google.maps.Map(mapRef.current, {
-              center: loc,
+              center: initialCenter,
               zoom: 19,
               tilt: 0,
               mapTypeId: 'satellite',
@@ -131,7 +141,7 @@ export default function SolarMap() {
             });
 
             setMap(mapInstance);
-            setLocation(loc);
+            setLocation(initialCenter);
           }
         }
       } catch (error) {
@@ -245,14 +255,25 @@ export default function SolarMap() {
     }
   }, [showPanels, configId, solarPanels, buildingInsights, map]);
 
-  // Handle search
+  // Handle search (accepts address or "lat,lng")
   const handleSearch = async () => {
     if (!map || !searchQuery.trim()) return;
 
     try {
+      // Check for "lat,lng" input
+      const coordMatch = searchQuery.trim().match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+      if (coordMatch) {
+        const lat = Number(coordMatch[1]);
+        const lng = Number(coordMatch[2]);
+        const newLocation = new google.maps.LatLng(lat, lng);
+        setLocation(newLocation);
+        map.setCenter(newLocation);
+        return;
+      }
+
+      // Fallback: geocode address
       const geocoder = new google.maps.Geocoder();
       const result = await geocoder.geocode({ address: searchQuery });
-      
       if (result.results[0]) {
         const newLocation = result.results[0].geometry.location;
         setLocation(newLocation);
@@ -261,7 +282,7 @@ export default function SolarMap() {
     } catch (error) {
       toast({
         title: 'Search Error',
-        description: 'Could not find location',
+        description: 'Enter an address or coordinates like "52.06290, -1.33977"',
         variant: 'destructive',
       });
     }
@@ -425,7 +446,7 @@ export default function SolarMap() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="Search for a location..."
+                placeholder="Search address or coordinates (e.g., 52.06290, -1.33977)"
                 className="text-sm md:text-base flex-1"
               />
               <Button onClick={handleSearch} size="icon" className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10">
