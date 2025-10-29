@@ -48,31 +48,33 @@ export function SunpathDiagramEditor({
     img.src = '/sunpath-diagram.png'; // Path to your sunpath diagram
     
     img.onload = () => {
-      // Calculate display size while maintaining aspect ratio
+      // Rotate 90 degrees clockwise - swap width/height for horizontal display
       const maxDisplayWidth = 800;
       const maxDisplayHeight = 800;
       
-      let displayWidth = img.width;
-      let displayHeight = img.height;
+      // Swap dimensions because we're rotating 90 degrees
+      let displayWidth = img.height;
+      let displayHeight = img.width;
       
       // Scale down if image is too large
-      if (img.width > maxDisplayWidth || img.height > maxDisplayHeight) {
-        const scaleX = maxDisplayWidth / img.width;
-        const scaleY = maxDisplayHeight / img.height;
+      if (displayWidth > maxDisplayWidth || displayHeight > maxDisplayHeight) {
+        const scaleX = maxDisplayWidth / displayWidth;
+        const scaleY = maxDisplayHeight / displayHeight;
         const scale = Math.min(scaleX, scaleY);
         
-        displayWidth = img.width * scale;
-        displayHeight = img.height * scale;
+        displayWidth = displayWidth * scale;
+        displayHeight = displayHeight * scale;
       }
       
-      // Rotate 90 degrees clockwise so the diagram displays horizontally
-      canvas.width = displayHeight; // swap
-      canvas.height = displayWidth; // swap
+      // Set canvas size to rotated display size
+      canvas.width = displayWidth;
+      canvas.height = displayHeight;
       
+      // Rotate and draw the image 90 degrees clockwise
       ctx.save();
-      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.translate(displayWidth / 2, displayHeight / 2);
       ctx.rotate(90 * Math.PI / 180);
-      ctx.drawImage(img, -displayWidth / 2, -displayHeight / 2, displayWidth, displayHeight);
+      ctx.drawImage(img, -displayHeight / 2, -displayWidth / 2, displayHeight, displayWidth);
       ctx.restore();
       
       // If there's initial data, load it
@@ -80,11 +82,7 @@ export function SunpathDiagramEditor({
         const savedImg = new Image();
         savedImg.src = initialImageData;
         savedImg.onload = () => {
-          ctx.save();
-          ctx.translate(canvas.width / 2, canvas.height / 2);
-          ctx.rotate(90 * Math.PI / 180);
-          ctx.drawImage(savedImg, -displayWidth / 2, -displayHeight / 2, displayWidth, displayHeight);
-          ctx.restore();
+          ctx.drawImage(savedImg, 0, 0, displayWidth, displayHeight);
           saveToHistory();
           setIsLoaded(true);
         };
@@ -238,32 +236,33 @@ export function SunpathDiagramEditor({
     const img = new Image();
     img.src = '/sunpath-diagram.png';
     img.onload = () => {
-      // Calculate display size while maintaining aspect ratio
+      // Rotate 90 degrees clockwise - swap width/height for horizontal display
       const maxDisplayWidth = 800;
       const maxDisplayHeight = 800;
       
-      let displayWidth = img.width;
-      let displayHeight = img.height;
+      // Swap dimensions because we're rotating 90 degrees
+      let displayWidth = img.height;
+      let displayHeight = img.width;
       
       // Scale down if image is too large
-      if (img.width > maxDisplayWidth || img.height > maxDisplayHeight) {
-        const scaleX = maxDisplayWidth / img.width;
-        const scaleY = maxDisplayHeight / img.height;
+      if (displayWidth > maxDisplayWidth || displayHeight > maxDisplayHeight) {
+        const scaleX = maxDisplayWidth / displayWidth;
+        const scaleY = maxDisplayHeight / displayHeight;
         const scale = Math.min(scaleX, scaleY);
         
-        displayWidth = img.width * scale;
-        displayHeight = img.height * scale;
+        displayWidth = displayWidth * scale;
+        displayHeight = displayHeight * scale;
       }
       
-      // Rotate 90 degrees clockwise on clear as well
-      canvas.width = displayHeight;
-      canvas.height = displayWidth;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Rotate and draw the image 90 degrees clockwise
       ctx.save();
-      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.translate(displayWidth / 2, displayHeight / 2);
       ctx.rotate(90 * Math.PI / 180);
-      ctx.drawImage(img, -displayWidth / 2, -displayHeight / 2, displayWidth, displayHeight);
+      ctx.drawImage(img, -displayHeight / 2, -displayWidth / 2, displayHeight, displayWidth);
       ctx.restore();
+      
       saveToHistory();
     };
   };
