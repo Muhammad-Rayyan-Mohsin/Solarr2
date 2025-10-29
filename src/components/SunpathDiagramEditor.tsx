@@ -65,19 +65,26 @@ export function SunpathDiagramEditor({
         displayHeight = img.height * scale;
       }
       
-      // Set canvas size to display size
-      canvas.width = displayWidth;
-      canvas.height = displayHeight;
+      // Rotate 90 degrees clockwise so the diagram displays horizontally
+      canvas.width = displayHeight; // swap
+      canvas.height = displayWidth; // swap
       
-      // Draw the base image scaled to display size
-      ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(90 * Math.PI / 180);
+      ctx.drawImage(img, -displayWidth / 2, -displayHeight / 2, displayWidth, displayHeight);
+      ctx.restore();
       
       // If there's initial data, load it
       if (initialImageData) {
         const savedImg = new Image();
         savedImg.src = initialImageData;
         savedImg.onload = () => {
-          ctx.drawImage(savedImg, 0, 0, displayWidth, displayHeight);
+          ctx.save();
+          ctx.translate(canvas.width / 2, canvas.height / 2);
+          ctx.rotate(90 * Math.PI / 180);
+          ctx.drawImage(savedImg, -displayWidth / 2, -displayHeight / 2, displayWidth, displayHeight);
+          ctx.restore();
           saveToHistory();
           setIsLoaded(true);
         };
@@ -248,8 +255,15 @@ export function SunpathDiagramEditor({
         displayHeight = img.height * scale;
       }
       
+      // Rotate 90 degrees clockwise on clear as well
+      canvas.width = displayHeight;
+      canvas.height = displayWidth;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(90 * Math.PI / 180);
+      ctx.drawImage(img, -displayWidth / 2, -displayHeight / 2, displayWidth, displayHeight);
+      ctx.restore();
       saveToHistory();
     };
   };
