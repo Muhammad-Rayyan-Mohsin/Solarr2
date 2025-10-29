@@ -211,11 +211,18 @@ export default function SolarMap() {
         );
         setConfigId(defaultConfigId);
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching building insights:', error);
+        
+        // Check error type
+        const is404 = error?.error?.code === 404 || error?.error?.status === 'NOT_FOUND';
+        const errorMessage = error?.error?.message || error?.message || 'Unknown error';
+        
         toast({
-          title: 'Error',
-          description: 'Failed to fetch building insights',
+          title: is404 ? 'No Solar Data Available' : 'Error Loading Solar Data',
+          description: is404 
+            ? 'Solar data is not available for this location. Try a different address or major city.'
+            : `Failed to fetch building insights: ${errorMessage}`,
           variant: 'destructive',
         });
       } finally {
@@ -441,8 +448,14 @@ export default function SolarMap() {
               offer many benefits to solar marketplace websites, solar installers, and solar SaaS designers.
             </p>
             <p className="text-xs md:text-sm">
-              <b>Click on an area below</b> to see what type of information the Solar API can provide.
+              <b>Search for a location</b> to see solar potential data. 
             </p>
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded p-2 text-xs">
+              <p className="font-semibold text-blue-900 dark:text-blue-100 mb-1">ℹ️ Solar API Info</p>
+              <p className="text-blue-800 dark:text-blue-200">
+                Coverage includes 320M+ buildings in 40+ countries. Imagery quality varies by region (HIGH/MEDIUM/LOW).
+              </p>
+            </div>
           </Card>
 
           {/* Building Insights Section - Mobile optimized */}
